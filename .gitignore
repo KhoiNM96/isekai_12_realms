@@ -1,0 +1,50 @@
+# Unity generated folders
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+UserSettings/
+
+# Unity cache / package artifacts
+*.csproj
+*.sln
+*.unityproj
+*.booproj
+*.pidb
+*.suo
+*.user
+*.userprefs
+*.tmp
+*.booproj
+*.appdata
+
+# Rider / Visual Studio / VS Code
+.idea/
+.vs/
+.vscode/
+*.DotSettings.user
+
+# OS junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Crash / logs
+*.log
+*.stacktrace
+Error/
+
+# Asset import metadata from external tools
+*.apk
+*.aab
+*.keystore
+
+# Firebase / local cache / sync outputs
+Assets/_Game/Data/Json/cloud_saves/
+Assets/_Game/Data/Json/remote_content/
+Assets/_Game/Data/Json/remote_config/
+
+# Local replaceable art placeholders
