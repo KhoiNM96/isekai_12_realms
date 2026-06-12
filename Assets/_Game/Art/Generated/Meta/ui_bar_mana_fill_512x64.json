@@ -1,0 +1,14 @@
+﻿{
+    "id":  "ui_bar_mana_fill",
+    "file":  "ui_bar_mana_fill_512x64.png",
+    "size":  [
+                 512,
+                 64
+             ],
+    "category":  "ui",
+    "usage":  "ui_bar_mana_fill placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for ui_bar_mana_fill, no copied art, no watermark"
+}

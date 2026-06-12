@@ -3,7 +3,9 @@ using System.IO;
 using Isekai12Realms.Data;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Enemies;
+using Isekai12Realms.Equipment;
 using Isekai12Realms.Realms;
+using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 using UnityEditor;
 using UnityEngine;
@@ -82,20 +84,20 @@ namespace Isekai12Realms.Editor
             List<string> errors = new List<string>();
             HashSet<string> stageIds = new HashSet<string>();
             HashSet<string> realmIds = new HashSet<string>();
-            foreach (RealmDefinition realm in db.realms)
+            foreach (RealmDefinition realm in db.realms ?? new List<RealmDefinition>())
             {
                 if (realm == null || string.IsNullOrEmpty(realm.id)) errors.Add("Realm missing id.");
                 else if (!realmIds.Add(realm.id)) errors.Add("Duplicate realm id: " + realm.id);
                 if (realm != null && (realm.stages == null || realm.stages.Count == 0)) errors.Add("Realm has no stages: " + realm.id);
             }
-            foreach (StageDefinition stage in db.stages)
+            foreach (StageDefinition stage in db.stages ?? new List<StageDefinition>())
             {
                 if (stage == null || string.IsNullOrEmpty(stage.id)) { errors.Add("Stage missing id."); continue; }
                 if (!stageIds.Add(stage.id)) errors.Add("Duplicate stage id: " + stage.id);
                 if (stage.enemy == null) errors.Add("Stage missing enemy: " + stage.id);
                 if (stage.dropTable == null) errors.Add("Stage missing drop table: " + stage.id);
             }
-            foreach (StageDefinition stage in db.stages)
+            foreach (StageDefinition stage in db.stages ?? new List<StageDefinition>())
             {
                 if (stage == null || stage.requiredCompletedStageIds == null) continue;
                 foreach (string required in stage.requiredCompletedStageIds)
@@ -103,13 +105,63 @@ namespace Isekai12Realms.Editor
                     if (!stageIds.Contains(required)) errors.Add($"Stage {stage.id} requires missing stage {required}");
                 }
             }
-            foreach (DropTableDefinition dropTable in db.dropTables)
+            foreach (DropTableDefinition dropTable in db.dropTables ?? new List<DropTableDefinition>())
             {
                 if (dropTable == null) continue;
                 foreach (DropEntry drop in dropTable.drops)
                 {
                     if (drop.isEquipment && string.IsNullOrEmpty(drop.equipmentId)) errors.Add("Drop entry missing equipmentId in " + dropTable.id);
                     if (!drop.isEquipment && string.IsNullOrEmpty(drop.itemId)) errors.Add("Drop entry missing itemId in " + dropTable.id);
+                }
+            }
+            HashSet<string> skillIds = new HashSet<string>();
+            HashSet<string> equipmentIds = new HashSet<string>();
+            if (db.equipmentDefinitions != null)
+            {
+                foreach (EquipmentDefinition equipment in db.equipmentDefinitions)
+                {
+                    if (equipment == null || string.IsNullOrEmpty(equipment.id)) { errors.Add("Equipment missing id."); continue; }
+                    if (!equipmentIds.Add(equipment.id)) errors.Add("Duplicate equipment id: " + equipment.id);
+                    if (string.IsNullOrEmpty(equipment.displayName)) errors.Add("Equipment missing displayName: " + equipment.id);
+                    if (equipment.maxLevel < 1) errors.Add("Equipment maxLevel < 1: " + equipment.id);
+                    if (!System.Enum.IsDefined(typeof(EquipmentSlot), equipment.slot)) errors.Add("Equipment slot invalid: " + equipment.id);
+                    if (!System.Enum.IsDefined(typeof(EquipmentRarity), equipment.rarity)) errors.Add("Equipment rarity invalid: " + equipment.id);
+                    foreach (EquipmentUpgradeCostData cost in equipment.upgradeCosts ?? new List<EquipmentUpgradeCostData>())
+                    {
+                        if (cost.targetLevel < 2 || cost.targetLevel > equipment.maxLevel) errors.Add("Equipment upgrade targetLevel out of range: " + equipment.id);
+                    }
+                }
+            }
+            if (db.skills != null)
+            {
+                foreach (SkillDefinition skill in db.skills)
+                {
+                    if (skill == null || string.IsNullOrEmpty(skill.id)) { errors.Add("Skill missing id."); continue; }
+                    if (!skillIds.Add(skill.id)) errors.Add("Duplicate skill id: " + skill.id);
+                    if (string.IsNullOrEmpty(skill.displayName)) errors.Add("Skill missing displayName: " + skill.id);
+                    if (string.IsNullOrEmpty(skill.classId)) errors.Add("Skill missing classId: " + skill.id);
+                    if (skill.maxLevel < 1) errors.Add("Skill maxLevel < 1: " + skill.id);
+                    if (skill.activationType == SkillActivationType.Active && skill.baseManaCost < 0) errors.Add("Skill mana cost < 0: " + skill.id);
+                    foreach (SkillLevelData level in skill.levels ?? new List<SkillLevelData>())
+                    {
+                        if (level.level < 1 || level.level > skill.maxLevel) errors.Add("Skill level out of range: " + skill.id);
+                    }
+                    foreach (SkillEffectData effect in skill.effects ?? new List<SkillEffectData>())
+                    {
+                        if (!System.Enum.IsDefined(typeof(SkillEffectType), effect.effectType)) errors.Add("Skill effectType invalid: " + skill.id);
+                    }
+                }
+            }
+            foreach (string defaultSkill in new[] { "skill_flame_spark_slash", "skill_flame_shuffle_bell", "skill_flame_realm_burst", "skill_tide_aqua_heal", "skill_tide_bubble_guard", "skill_tide_moon_tide", "skill_storm_quick_jab", "skill_storm_static_step", "skill_storm_thunder_chain" })
+            {
+                if (!skillIds.Contains(defaultSkill)) errors.Add("Default skill missing: " + defaultSkill);
+            }
+            foreach (DropTableDefinition dropTable in db.dropTables ?? new List<DropTableDefinition>())
+            {
+                if (dropTable == null) continue;
+                foreach (DropEntry drop in dropTable.drops ?? new List<DropEntry>())
+                {
+                    if (drop.isEquipment && !equipmentIds.Contains(drop.equipmentId)) errors.Add($"Drop table {dropTable.id} references missing equipment {drop.equipmentId}");
                 }
             }
 

@@ -11,5 +11,6 @@ namespace Isekai12Realms.Board
         public bool createsSpecial;
         public SpecialTileType specialCreated;
         public int count;
+        public bool grantsExtraTurn;
     }
 }

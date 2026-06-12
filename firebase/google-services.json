@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "906121826384",
+    "project_id": "isekai-12-realms",
+    "storage_bucket": "isekai-12-realms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906121826384:android:2bb38fa704747cb4288155",
+        "android_client_info": {
+          "package_name": "com.nmksinobi.isekai12realms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMyldyU3yE3h2zmNHicj72Ipe1ANvJSf4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

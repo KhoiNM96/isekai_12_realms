@@ -1,0 +1,14 @@
+﻿{
+    "id":  "ui_panel_popup",
+    "file":  "ui_panel_popup_768x512.png",
+    "size":  [
+                 768,
+                 512
+             ],
+    "category":  "ui",
+    "usage":  "ui_panel_popup placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for ui_panel_popup, no copied art, no watermark"
+}

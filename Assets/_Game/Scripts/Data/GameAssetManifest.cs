@@ -6,57 +6,67 @@ namespace Isekai12Realms.Data
 {
     public enum GameAssetCategory
     {
-        Backgrounds,
-        Characters,
-        NPCs,
-        Enemies,
-        Tokens,
-        Skills,
+        Background,
+        Character,
+        Enemy,
+        NPC,
+        Token,
+        Skill,
         Equipment,
-        Items,
+        Item,
         UI,
-        Tilesets,
+        Tileset,
         VFX,
-        Maps,
-        Icons,
+        Map,
         Loading,
-        Meta
-    }
-
-    [Serializable]
-    public class GameAssetEntry
-    {
-        public string id;
-        public string fileName;
-        public string relativePath;
-        public Vector2Int size;
-        public Sprite sprite;
-        public GameAssetCategory category;
-        public bool transparent;
-        public int priority = 1;
+        Currency,
+        Misc
     }
 
     [CreateAssetMenu(fileName = "GameAssetManifest", menuName = "Isekai 12 Realms/Asset Manifest")]
     public class GameAssetManifest : ScriptableObject
     {
         public List<GameAssetEntry> entries = new List<GameAssetEntry>();
+        public Sprite missingSprite;
 
-        public Sprite GetSprite(string assetId)
+        private Dictionary<string, GameAssetEntry> lookup;
+
+        public Sprite GetSprite(string id)
         {
-            var entry = entries.Find(e => e.id == assetId);
+            GameAssetEntry entry = GetEntry(id);
             if (entry != null && entry.sprite != null)
             {
                 return entry.sprite;
             }
-            
-            // Fallback
-            var fallbackEntry = entries.Find(e => e.id == "missing_sprite");
-            if (fallbackEntry != null)
+
+            return missingSprite;
+        }
+
+        public bool HasAsset(string id)
+        {
+            GameAssetEntry entry = GetEntry(id);
+            return entry != null && entry.sprite != null;
+        }
+
+        public GameAssetEntry GetEntry(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (lookup == null || lookup.Count != entries.Count)
             {
-                return fallbackEntry.sprite;
+                RebuildLookup();
             }
 
-            return null;
+            return lookup.TryGetValue(id, out GameAssetEntry entry) ? entry : null;
+        }
+
+        public void RebuildLookup()
+        {
+            lookup = new Dictionary<string, GameAssetEntry>();
+            foreach (GameAssetEntry entry in entries)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.id) || lookup.ContainsKey(entry.id)) continue;
+                lookup.Add(entry.id, entry);
+            }
         }
     }
 }

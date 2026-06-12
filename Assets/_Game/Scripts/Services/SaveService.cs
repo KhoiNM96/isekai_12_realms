@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using UnityEngine;
 using Isekai12Realms.Data;
+using Isekai12Realms.Skills;
 
 namespace Isekai12Realms.Services
 {
@@ -38,7 +39,9 @@ namespace Isekai12Realms.Services
                 try
                 {
                     CurrentSave = LoadSaveFromFile(SaveFilePath);
+                    bool skillMigrationNeeded = NeedsSkillMigration(CurrentSave);
                     EnsureSaveDefaults(CurrentSave);
+                    if (skillMigrationNeeded) SaveNow();
                     Debug.Log("[Save] Loaded save");
                     return;
                 }
@@ -50,8 +53,10 @@ namespace Isekai12Realms.Services
                         try
                         {
                             CurrentSave = LoadSaveFromFile(BackupFilePath);
+                            bool skillMigrationNeeded = NeedsSkillMigration(CurrentSave);
                             EnsureSaveDefaults(CurrentSave);
                             File.Copy(BackupFilePath, SaveFilePath, true);
+                            if (skillMigrationNeeded) SaveNow();
                             Debug.Log("[Save] Backup restored");
                             return;
                         }
@@ -154,6 +159,16 @@ namespace Isekai12Realms.Services
             return string.IsNullOrEmpty(data.checksum) || data.checksum == CalculateChecksum(data);
         }
 
+        private static bool NeedsSkillMigration(PlayerSaveData data)
+        {
+            return data == null ||
+                   data.skills == null ||
+                   data.skills.Count == 0 ||
+                   string.IsNullOrEmpty(data.equippedSkill1Id) ||
+                   string.IsNullOrEmpty(data.equippedSkill2Id) ||
+                   string.IsNullOrEmpty(data.equippedUltimateId);
+        }
+
         private void EnsureSaveDefaults(PlayerSaveData data)
         {
             if (data.inventory == null)
@@ -166,6 +181,16 @@ namespace Isekai12Realms.Services
                 data.equipment = new Isekai12Realms.Equipment.EquipmentLoadoutData();
             }
 
+            if (data.inventory.items == null)
+            {
+                data.inventory.items = new System.Collections.Generic.List<Isekai12Realms.Inventory.ItemStackData>();
+            }
+
+            if (data.inventory.equipments == null)
+            {
+                data.inventory.equipments = new System.Collections.Generic.List<Isekai12Realms.Equipment.EquipmentInstanceData>();
+            }
+
             if (data.completedStageIds == null)
             {
                 data.completedStageIds = new System.Collections.Generic.List<string>();
@@ -176,13 +201,46 @@ namespace Isekai12Realms.Services
                 data.stageProgress = new System.Collections.Generic.List<Isekai12Realms.Stages.StageProgressData>();
             }
 
+            if (data.skills == null)
+            {
+                data.skills = new System.Collections.Generic.List<PlayerSkillData>();
+            }
+
             if (string.IsNullOrEmpty(data.playerName)) data.playerName = "Guest Hero";
             if (string.IsNullOrEmpty(data.selectedClassId)) data.selectedClassId = "flame_squire";
+            EnsureSkillDefaults(data);
             if (string.IsNullOrEmpty(data.currentRealmId)) data.currentRealmId = "realm_01_meadow";
             if (string.IsNullOrEmpty(data.currentStageId)) data.currentStageId = "stage_01_01";
             if (data.maxHp <= 0) data.maxHp = 100;
             if (data.maxMana <= 0) data.maxMana = 100;
             if (data.level <= 0) data.level = 1;
+            foreach (Isekai12Realms.Equipment.EquipmentInstanceData equipment in data.inventory.equipments)
+            {
+                if (equipment == null) continue;
+                if (string.IsNullOrEmpty(equipment.instanceId)) equipment.instanceId = Guid.NewGuid().ToString();
+                if (equipment.level <= 0) equipment.level = 1;
+                if (equipment.acquiredAt <= 0) equipment.acquiredAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            }
+        }
+
+        private void EnsureSkillDefaults(PlayerSaveData data)
+        {
+            if (data.skills.Count == 0)
+            {
+                AddDefaultSkill(data, "skill_flame_spark_slash");
+                AddDefaultSkill(data, "skill_flame_shuffle_bell");
+                AddDefaultSkill(data, "skill_flame_realm_burst");
+            }
+
+            if (string.IsNullOrEmpty(data.equippedSkill1Id)) data.equippedSkill1Id = "skill_flame_spark_slash";
+            if (string.IsNullOrEmpty(data.equippedSkill2Id)) data.equippedSkill2Id = "skill_flame_shuffle_bell";
+            if (string.IsNullOrEmpty(data.equippedUltimateId)) data.equippedUltimateId = "skill_flame_realm_burst";
+        }
+
+        private void AddDefaultSkill(PlayerSaveData data, string skillId)
+        {
+            if (data.skills.Exists(s => s.skillId == skillId)) return;
+            data.skills.Add(new PlayerSkillData { skillId = skillId, level = 1, unlocked = true, cooldownRemaining = 0 });
         }
     }
 }

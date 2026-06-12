@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Isekai12Realms.Data;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Enemies;
+using Isekai12Realms.Equipment;
 using Isekai12Realms.Realms;
 using UnityEngine;
 
@@ -53,7 +54,10 @@ namespace Isekai12Realms.Stages
             stage.id = "stage_01_01"; stage.realmId = "realm_01_meadow"; stage.displayName = "First Slime"; stage.stageNumber = 1; stage.recommendedLevel = 1; stage.baseGoldReward = 30; stage.baseExpReward = 50; stage.enemy = slime; stage.dropTable = drop; stage.replayable = true;
             RealmDefinition realm = ScriptableObject.CreateInstance<RealmDefinition>();
             realm.id = "realm_01_meadow"; realm.displayName = "Meadow Gate"; realm.description = "A peaceful floating meadow where the reborn hero begins the journey."; realm.order = 1; realm.stages.Add(stage);
+            EquipmentDefinition sword = ScriptableObject.CreateInstance<EquipmentDefinition>();
+            sword.id = "equip_weapon_wooden_sword"; sword.displayName = "Wooden Sword"; sword.iconAssetId = sword.id; sword.slot = EquipmentSlot.Weapon; sword.rarity = EquipmentRarity.Common; sword.baseAtk = 5; sword.maxLevel = 5;
             db.enemies.Add(slime); db.dropTables.Add(drop); db.stages.Add(stage); db.realms.Add(realm);
+            db.equipmentDefinitions.Add(sword);
             return db;
         }
     }

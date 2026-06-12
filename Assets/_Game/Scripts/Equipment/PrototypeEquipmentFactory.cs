@@ -11,7 +11,8 @@ namespace Isekai12Realms.Equipment
                 instanceId = Guid.NewGuid().ToString(),
                 equipmentId = equipmentId,
                 level = 1,
-                rarity = EquipmentRarity.Common
+                rarity = EquipmentRarity.Common,
+                acquiredAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
 
             switch (equipmentId)

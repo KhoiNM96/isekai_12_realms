@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
+using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 
 namespace Isekai12Realms.Data
@@ -31,6 +32,10 @@ namespace Isekai12Realms.Data
         public List<StageProgressData> stageProgress = new List<StageProgressData>();
         public InventorySaveData inventory = new InventorySaveData();
         public EquipmentLoadoutData equipment = new EquipmentLoadoutData();
+        public List<PlayerSkillData> skills = new List<PlayerSkillData>();
+        public string equippedSkill1Id = "skill_flame_spark_slash";
+        public string equippedSkill2Id = "skill_flame_shuffle_bell";
+        public string equippedUltimateId = "skill_flame_realm_burst";
 
         public long createdAt;
         public long updatedAt;

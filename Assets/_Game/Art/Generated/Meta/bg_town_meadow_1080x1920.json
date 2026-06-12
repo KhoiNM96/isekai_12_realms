@@ -1,0 +1,14 @@
+﻿{
+    "id":  "bg_town_meadow",
+    "file":  "bg_town_meadow_1080x1920.png",
+    "size":  [
+                 1080,
+                 1920
+             ],
+    "category":  "background",
+    "usage":  "bg_town_meadow placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  false,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for bg_town_meadow, no copied art, no watermark"
+}

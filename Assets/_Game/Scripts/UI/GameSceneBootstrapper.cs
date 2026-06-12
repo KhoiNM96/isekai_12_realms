@@ -1,14 +1,18 @@
 using System;
+using System.Collections.Generic;
 using Isekai12Realms.Battle;
 using Isekai12Realms.Board;
 using Isekai12Realms.Character;
 using Isekai12Realms.Core;
 using Isekai12Realms.Data;
+using Isekai12Realms.Audio;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
 using Isekai12Realms.Services;
+using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 using Isekai12Realms.Realms;
+using Isekai12Realms.VFX;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -25,13 +29,21 @@ namespace Isekai12Realms.UI
         private PlayerProgressionService progressionService;
         private ContentDatabaseService contentService;
         private StageProgressionService stageProgressionService;
+        private SkillService skillService;
+        private EquipmentService equipmentService;
+        [SerializeField] private GameAssetManifest assetManifest;
         private StageDefinition selectedStage;
         private string selectedRealmId;
+        private string selectedCreationClassId = "flame_squire";
+        private string selectedSkillClassId = "flame_squire";
+        private string selectedSkillId;
+        private string selectedEquipmentInstanceId;
         private RectTransform mainLayer;
         private RectTransform navigationLayer;
         private RectTransform popupLayer;
         private RectTransform toastLayer;
         private RectTransform loadingLayer;
+        private AudioService audioService;
 
         private readonly Color panelCream = new Color(1f, 0.95f, 0.84f, 0.94f);
         private readonly Color panelDark = new Color(0.08f, 0.11f, 0.28f, 0.94f);
@@ -88,6 +100,7 @@ namespace Isekai12Realms.UI
             toastLayer = EnsureLayer(safeAreaRoot, "ToastLayer");
             loadingLayer = EnsureLayer(safeAreaRoot, "LoadingLayer");
 
+            RegisterAssetManifest();
             EnsureBackground(backgroundLayer);
             screenManager = EnsureUIScreenManager();
             RegisterServices();
@@ -97,6 +110,17 @@ namespace Isekai12Realms.UI
             screenManager.RegisterNavigationRoot(EnsureBottomNavigation(navigationLayer).gameObject);
             RegisterPopups();
             RegisterProgression();
+        }
+
+        private void RegisterAssetManifest()
+        {
+#if UNITY_EDITOR
+            if (assetManifest == null)
+            {
+                assetManifest = UnityEditor.AssetDatabase.LoadAssetAtPath<GameAssetManifest>("Assets/_Game/ScriptableObjects/AssetManifest/GameAssetManifest.asset");
+            }
+#endif
+            AssetSpriteBinder.SetManifest(assetManifest);
         }
 
         private void RegisterContentServices()
@@ -127,6 +151,18 @@ namespace Isekai12Realms.UI
             {
                 progressionService.Initialize(saveService, screenManager.ToastService);
                 stageProgressionService.Initialize(saveService, contentService);
+                equipmentService = GetComponent<EquipmentService>();
+                if (equipmentService == null)
+                {
+                    equipmentService = gameObject.AddComponent<EquipmentService>();
+                }
+                equipmentService.Initialize(saveService, contentService, screenManager.ToastService);
+                skillService = GetComponent<SkillService>();
+                if (skillService == null)
+                {
+                    skillService = gameObject.AddComponent<SkillService>();
+                }
+                skillService.Initialize(saveService, contentService, screenManager.ToastService);
                 progressionService.Changed -= RefreshSaveBackedUi;
                 progressionService.Changed += RefreshSaveBackedUi;
             }
@@ -231,6 +267,7 @@ namespace Isekai12Realms.UI
             RectTransform bg = EnsureChildRect(parent, "Background_Image");
             Stretch(bg);
             Image image = EnsureImage(bg.gameObject, new Color(0.08f, 0.11f, 0.28f, 1f));
+            BindImage(image, "bg_title_sky_realm");
             image.raycastTarget = false;
             bg.SetAsFirstSibling();
         }
@@ -276,10 +313,10 @@ namespace Isekai12Realms.UI
         private GameObject CreateTitleScreen()
         {
             RectTransform root = CreateScreenRoot("TitleScreenUI", new Color(0.06f, 0.08f, 0.2f, 0.35f));
+            ImageAsset(root, "Logo_Image", "logo_game_main", Anchor.TopCenter, new Vector2(0f, -185f), new Vector2(620f, 300f));
             Text(root, "Title_Text", "ISEKAI 12 REALMS", 68, new Color(1f, 0.86f, 0.38f, 1f), Anchor.TopCenter, new Vector2(0f, -250f), new Vector2(940f, 110f));
             Text(root, "Subtitle_Text", "Offline Match-3 RPG", 38, Color.white, Anchor.TopCenter, new Vector2(0f, -340f), new Vector2(760f, 70f));
-            Panel(root, "Hero_Preview", new Color(1f, 0.95f, 0.84f, 0.85f), Anchor.Center, new Vector2(0f, 120f), new Vector2(360f, 360f));
-            Text(root, "Hero_Preview_Text", "Hero\nPreview", 36, textDark, Anchor.Center, new Vector2(0f, 120f), new Vector2(320f, 160f));
+            ImageAsset(root, "Hero_Preview", "char_hero_flame_idle", Anchor.Center, new Vector2(0f, 105f), new Vector2(360f, 360f));
 
             Button(root, "Button_Start", "Start Game", primary, Anchor.Center, new Vector2(0f, -330f), new Vector2(520f, 112f), StartExistingGame);
             Button(root, "Button_NewHero", "New Hero", secondary, Anchor.Center, new Vector2(0f, -462f), new Vector2(520f, 104f), () => screenManager.ShowScreen(GameUIScreen.CharacterCreation));
@@ -296,9 +333,9 @@ namespace Isekai12Realms.UI
             Text(root, "CharacterPreview_Text", "Character Preview Placeholder", 38, textDark, Anchor.Center, new Vector2(0f, 230f), new Vector2(650f, 80f));
             Text(root, "HeroName_Text", "Hero Name: Guest Hero", 34, textDark, Anchor.Center, new Vector2(0f, 70f), new Vector2(650f, 70f));
 
-            Button(root, "Button_Class_Flame", "Flame Squire", danger, Anchor.Center, new Vector2(-260f, -70f), new Vector2(240f, 88f), screenManager.ShowDisabledToast);
-            Button(root, "Button_Class_Tide", "Tide Acolyte", primary, Anchor.Center, new Vector2(0f, -70f), new Vector2(240f, 88f), screenManager.ShowDisabledToast);
-            Button(root, "Button_Class_Storm", "Storm Scout", secondary, Anchor.Center, new Vector2(260f, -70f), new Vector2(240f, 88f), screenManager.ShowDisabledToast);
+            Button(root, "Button_Class_Flame", "Flame Squire", danger, Anchor.Center, new Vector2(-260f, -70f), new Vector2(240f, 88f), () => SelectCreationClass("flame_squire"));
+            Button(root, "Button_Class_Tide", "Tide Acolyte", primary, Anchor.Center, new Vector2(0f, -70f), new Vector2(240f, 88f), () => SelectCreationClass("tide_acolyte"));
+            Button(root, "Button_Class_Storm", "Storm Scout", secondary, Anchor.Center, new Vector2(260f, -70f), new Vector2(240f, 88f), () => SelectCreationClass("storm_scout"));
             Button(root, "Button_StartJourney", "Start Journey", primary, Anchor.BottomCenter, new Vector2(0f, 190f), new Vector2(520f, 112f), StartNewHero);
             Button(root, "Button_Back", "Back", secondary, Anchor.BottomCenter, new Vector2(0f, 70f), new Vector2(520f, 96f), () => screenManager.ShowScreen(GameUIScreen.Title));
             return root.gameObject;
@@ -308,11 +345,13 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = CreateScreenRoot("MainTownUI", new Color(0.04f, 0.12f, 0.16f, 0.35f));
             Panel(root, "TopHud", panelDark, Anchor.TopCenter, new Vector2(0f, -70f), new Vector2(1040f, 140f));
-            Panel(root, "AvatarPlaceholder", secondary, Anchor.TopLeft, new Vector2(65f, -70f), new Vector2(90f, 90f));
+            ImageAsset(root, "AvatarPlaceholder", "char_hero_flame_idle", Anchor.TopLeft, new Vector2(65f, -70f), new Vector2(96f, 96f));
             Text(root, "Name_Text", "Guest Hero", 32, Color.white, Anchor.TopLeft, new Vector2(130f, -48f), new Vector2(240f, 48f));
             Text(root, "Level_Text", "Lv. 1", 30, Color.white, Anchor.TopLeft, new Vector2(130f, -92f), new Vector2(160f, 42f));
-            Text(root, "Gold_Text", "Gold: 0", 30, Color.white, Anchor.TopCenter, new Vector2(160f, -70f), new Vector2(220f, 52f));
-            Text(root, "Gems_Text", "Gems: 0", 30, Color.white, Anchor.TopCenter, new Vector2(390f, -70f), new Vector2(220f, 52f));
+            ImageAsset(root, "Gold_Icon", "currency_gold", Anchor.TopCenter, new Vector2(55f, -70f), new Vector2(56f, 56f));
+            Text(root, "Gold_Text", "Gold: 0", 30, Color.white, Anchor.TopCenter, new Vector2(185f, -70f), new Vector2(220f, 52f));
+            ImageAsset(root, "Gems_Icon", "currency_soul_gem", Anchor.TopCenter, new Vector2(300f, -70f), new Vector2(56f, 56f));
+            Text(root, "Gems_Text", "Gems: 0", 30, Color.white, Anchor.TopCenter, new Vector2(430f, -70f), new Vector2(220f, 52f));
             Button(root, "Button_Settings", "Settings", primary, Anchor.TopRight, new Vector2(-110f, -70f), new Vector2(170f, 82f), screenManager.OpenSettings);
 
             Panel(root, "TownPanel", panelCream, Anchor.Center, new Vector2(0f, 60f), new Vector2(900f, 980f));
@@ -444,6 +483,7 @@ namespace Isekai12Realms.UI
             Header(root, "Battle Placeholder", controller.BackToWorldMap);
 
             Panel(root, "EnemyArea", panelDark, Anchor.TopCenter, new Vector2(0f, -190f), new Vector2(900f, 170f));
+            ImageAsset(root, "EnemySprite", "enemy_meadow_slime", Anchor.TopCenter, new Vector2(-405f, -190f), new Vector2(150f, 150f));
             Text(root, "EnemyName", "Meadow Slime", 34, Color.white, Anchor.TopCenter, new Vector2(-210f, -165f), new Vector2(360f, 60f));
             Bar(root, "EnemyHp", Anchor.TopCenter, new Vector2(190f, -165f), new Vector2(360f, 42f), danger);
             Text(root, "TurnText", "Your Turn", 30, Color.white, Anchor.TopCenter, new Vector2(-300f, -285f), new Vector2(230f, 54f));
@@ -451,6 +491,7 @@ namespace Isekai12Realms.UI
             Text(root, "ComboText", "Combo: 0", 30, Color.white, Anchor.TopCenter, new Vector2(300f, -285f), new Vector2(230f, 54f));
             BoardController boardController = CreateBoardGrid(root);
             Panel(root, "PlayerArea", panelDark, Anchor.BottomCenter, new Vector2(0f, 340f), new Vector2(900f, 150f));
+            ImageAsset(root, "PlayerSprite", "char_hero_flame_idle", Anchor.BottomCenter, new Vector2(-420f, 340f), new Vector2(130f, 130f));
             Text(root, "PlayerName", "Guest Hero", 32, Color.white, Anchor.BottomCenter, new Vector2(-300f, 360f), new Vector2(240f, 50f));
             Bar(root, "PlayerHp", Anchor.BottomCenter, new Vector2(0f, 380f), new Vector2(330f, 38f), new Color(0.5f, 0.85f, 0.34f, 1f));
             Bar(root, "PlayerMana", Anchor.BottomCenter, new Vector2(0f, 330f), new Vector2(330f, 38f), new Color(0.4f, 0.55f, 1f, 1f));
@@ -464,6 +505,11 @@ namespace Isekai12Realms.UI
             Button(root, "Button_BackWorldMap", "World Map", primary, Anchor.BottomCenter, new Vector2(-70f, 90f), new Vector2(230f, 90f), controller.BackToWorldMap);
             Button(root, "Button_WinTest", "Win Test", new Color(0.5f, 0.85f, 0.34f, 1f), Anchor.BottomCenter, new Vector2(170f, 90f), new Vector2(190f, 90f), controller.WinTest);
             Button(root, "Button_LoseTest", "Lose Test", danger, Anchor.BottomCenter, new Vector2(385f, 90f), new Vector2(190f, 90f), controller.LoseTest);
+            RectTransform debug = EnsureChildRect(root, "BattleDebugPanel");
+            SetRect(debug, Anchor.TopRight, new Vector2(-160f, -360f), new Vector2(300f, 220f));
+            EnsureImage(debug.gameObject, new Color(0f, 0f, 0f, 0.68f));
+            Text(debug, "DebugText", "Battle Debug\nHidden by default", 22, Color.white, Anchor.Center, Vector2.zero, new Vector2(280f, 200f));
+            debug.gameObject.SetActive(false);
             controller.Initialize(screenManager, boardController);
             return root.gameObject;
         }
@@ -476,6 +522,8 @@ namespace Isekai12Realms.UI
             Text(root, "HeroPreview_Text", "Character\nPreview", 36, textDark, Anchor.Center, new Vector2(-230f, 160f), new Vector2(300f, 160f));
             Text(root, "Stats_Text", "HP 100\nATK 10\nMAG 8\nDEF 5\nSPD 5\nLUCK 1", 36, Color.white, Anchor.Center, new Vector2(240f, 160f), new Vector2(360f, 340f));
             Text(root, "Exp_Text", "EXP 0 / 50", 30, Color.white, Anchor.Center, new Vector2(240f, -65f), new Vector2(420f, 70f));
+            Text(root, "Class_Text", "Class: Flame Squire", 30, Color.white, Anchor.Center, new Vector2(240f, -130f), new Vector2(420f, 60f));
+            Text(root, "EquippedSkills_Text", "Skills: Spark Slash / Shuffle Bell / Realm Burst", 26, Color.white, Anchor.Center, new Vector2(240f, -200f), new Vector2(520f, 90f));
             Button(root, "Button_Skills", "Skills", primary, Anchor.BottomCenter, new Vector2(-170f, 240f), new Vector2(300f, 104f), () => screenManager.ShowScreen(GameUIScreen.Skills));
             Button(root, "Button_Equipment", "Equipment", secondary, Anchor.BottomCenter, new Vector2(170f, 240f), new Vector2(300f, 104f), () => screenManager.ShowScreen(GameUIScreen.Equipment));
             return root.gameObject;
@@ -485,12 +533,13 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = CreateScreenRoot("SkillsUI", new Color(0.06f, 0.08f, 0.2f, 0.35f));
             Header(root, "Skills", () => screenManager.ShowScreen(GameUIScreen.Hero));
-            Button(root, "Tab_Flame", "Flame", danger, Anchor.TopCenter, new Vector2(-260f, -210f), new Vector2(220f, 86f), screenManager.ShowDisabledToast);
-            Button(root, "Tab_Tide", "Tide", primary, Anchor.TopCenter, new Vector2(0f, -210f), new Vector2(220f, 86f), screenManager.ShowDisabledToast);
-            Button(root, "Tab_Storm", "Storm", secondary, Anchor.TopCenter, new Vector2(260f, -210f), new Vector2(220f, 86f), screenManager.ShowDisabledToast);
+            Button(root, "Tab_Flame", "Flame", danger, Anchor.TopCenter, new Vector2(-260f, -210f), new Vector2(220f, 86f), () => SelectSkillClass("flame_squire"));
+            Button(root, "Tab_Tide", "Tide", primary, Anchor.TopCenter, new Vector2(0f, -210f), new Vector2(220f, 86f), () => SelectSkillClass("tide_acolyte"));
+            Button(root, "Tab_Storm", "Storm", secondary, Anchor.TopCenter, new Vector2(260f, -210f), new Vector2(220f, 86f), () => SelectSkillClass("storm_scout"));
             Panel(root, "SkillList", panelCream, Anchor.Center, new Vector2(0f, 80f), new Vector2(860f, 860f));
-            Text(root, "SkillList_Text", "[Icon] Spark Slash     Level 1\n[Icon] Aqua Heal       Level 1\n[Icon] Quick Jab       Level 1", 36, textDark, Anchor.Center, new Vector2(-40f, 140f), new Vector2(720f, 240f));
-            Button(root, "Button_UpgradeDisabled", "Upgrade (Disabled)", new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.BottomCenter, new Vector2(0f, 210f), new Vector2(520f, 100f), screenManager.ShowDisabledToast);
+            Text(root, "SkillList_Text", "Skill data loading...", 28, textDark, Anchor.Center, new Vector2(0f, 130f), new Vector2(760f, 620f));
+            Button(root, "Button_UpgradeSelected", "Upgrade Selected", secondary, Anchor.BottomCenter, new Vector2(-180f, 210f), new Vector2(340f, 100f), UpgradeSelectedSkill);
+            Button(root, "Button_EquipSelected", "Equip Selected", primary, Anchor.BottomCenter, new Vector2(210f, 210f), new Vector2(340f, 100f), EquipSelectedSkill);
             return root.gameObject;
         }
 
@@ -501,10 +550,15 @@ namespace Isekai12Realms.UI
             string[] slots = { "Weapon", "Armor", "Head", "Boots", "Ring", "Charm" };
             for (int i = 0; i < slots.Length; i++)
             {
-                Button(root, "Slot_" + slots[i], slots[i], secondary, Anchor.TopCenter, new Vector2(i % 2 == 0 ? -230f : 230f, -240f - (i / 2) * 120f), new Vector2(360f, 92f), screenManager.ShowDisabledToast);
+                EquipmentSlot slot = (EquipmentSlot)Enum.Parse(typeof(EquipmentSlot), slots[i]);
+                Button(root, "Slot_" + slots[i], slots[i], secondary, Anchor.TopCenter, new Vector2(i % 2 == 0 ? -230f : 230f, -240f - (i / 2) * 120f), new Vector2(360f, 92f), () => SelectEquippedSlot(slot));
             }
             Panel(root, "EquipmentDetail", panelCream, Anchor.BottomCenter, new Vector2(0f, 270f), new Vector2(860f, 400f));
             Text(root, "EquipmentDetail_Text", "Equipment detail placeholder", 38, textDark, Anchor.BottomCenter, new Vector2(0f, 270f), new Vector2(720f, 140f));
+            Button(root, "Button_EquipChange", "Change", primary, Anchor.BottomCenter, new Vector2(-300f, 90f), new Vector2(180f, 72f), () => screenManager.ShowScreen(GameUIScreen.Inventory));
+            Button(root, "Button_Unequip", "Unequip", secondary, Anchor.BottomCenter, new Vector2(-100f, 90f), new Vector2(180f, 72f), UnequipSelectedEquipment);
+            Button(root, "Button_UpgradeEquipment", "Upgrade", secondary, Anchor.BottomCenter, new Vector2(100f, 90f), new Vector2(180f, 72f), UpgradeSelectedEquipment);
+            Button(root, "Button_LockEquipment", "Lock", primary, Anchor.BottomCenter, new Vector2(300f, 90f), new Vector2(180f, 72f), ToggleSelectedEquipmentLock);
             return root.gameObject;
         }
 
@@ -515,13 +569,17 @@ namespace Isekai12Realms.UI
             string[] tabs = { "All", "Equipment", "Material", "Consumable", "Quest" };
             for (int i = 0; i < tabs.Length; i++)
             {
-                Button(root, "Tab_" + tabs[i], tabs[i], primary, Anchor.TopCenter, new Vector2(-400f + i * 200f, -205f), new Vector2(180f, 82f), screenManager.ShowDisabledToast);
+                Button(root, "Tab_" + tabs[i], tabs[i], primary, Anchor.TopCenter, new Vector2(-400f + i * 200f, -205f), new Vector2(180f, 82f), RefreshSaveBackedUi);
             }
             CreateInventoryGrid(root);
             Panel(root, "ItemDetail", panelCream, Anchor.BottomCenter, new Vector2(0f, 200f), new Vector2(860f, 230f));
             Text(root, "ItemDetail_Text", "Item detail placeholder", 34, textDark, Anchor.BottomCenter, new Vector2(0f, 200f), new Vector2(720f, 90f));
             Text(root, "InventoryList_Text", "Inventory empty", 28, textDark, Anchor.Center, new Vector2(0f, 120f), new Vector2(720f, 500f));
             Button(root, "Button_EquipFirst", "Equip First Equipment", secondary, Anchor.BottomCenter, new Vector2(0f, 335f), new Vector2(460f, 86f), EquipFirstEquipment);
+            Button(root, "Button_EquipSelected", "Equip Selected", primary, Anchor.BottomCenter, new Vector2(-310f, 335f), new Vector2(250f, 76f), EquipSelectedEquipment);
+            Button(root, "Button_UpgradeSelectedEquipment", "Upgrade", secondary, Anchor.BottomCenter, new Vector2(-55f, 335f), new Vector2(210f, 76f), UpgradeSelectedEquipment);
+            Button(root, "Button_SellSelectedEquipment", "Sell", danger, Anchor.BottomCenter, new Vector2(175f, 335f), new Vector2(170f, 76f), SellSelectedEquipment);
+            Button(root, "Button_LockSelectedEquipment", "Lock", primary, Anchor.BottomCenter, new Vector2(365f, 335f), new Vector2(170f, 76f), ToggleSelectedEquipmentLock);
             return root.gameObject;
         }
 
@@ -583,11 +641,20 @@ namespace Isekai12Realms.UI
             RectTransform root = EnsureChildRect(popupLayer, "SettingsPopup");
             Stretch(root);
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.45f)).raycastTarget = true;
-            Panel(root, "SettingsPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(820f, 760f));
+            Panel(root, "SettingsPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(880f, 900f));
             Text(root, "Title", "Settings", 54, textDark, Anchor.Center, new Vector2(0f, 260f), new Vector2(660f, 80f));
-            Text(root, "Body", "Music Toggle Placeholder\nSFX Toggle Placeholder\nCloud Save Placeholder", 36, textDark, Anchor.Center, new Vector2(0f, 70f), new Vector2(680f, 260f));
-            Button(root, "Button_DeleteSave", "Delete Local Save", danger, Anchor.Center, new Vector2(0f, -190f), new Vector2(420f, 90f), OpenDeleteConfirm);
-            Button(root, "Button_Close", "Close", primary, Anchor.Center, new Vector2(0f, -300f), new Vector2(360f, 90f), screenManager.CloseSettings);
+            Text(root, "Body", "Audio Settings", 36, textDark, Anchor.Center, new Vector2(0f, 165f), new Vector2(680f, 70f));
+            Toggle(root, "Toggle_Music", "Music", Anchor.Center, new Vector2(-180f, 70f), new Vector2(280f, 72f), audioService == null || audioService.MusicEnabled, value => audioService?.MuteMusic(!value));
+            Toggle(root, "Toggle_Sfx", "SFX", Anchor.Center, new Vector2(180f, 70f), new Vector2(280f, 72f), audioService == null || audioService.SfxEnabled, value => audioService?.MuteSfx(!value));
+            Slider(root, "Slider_MusicVolume", "Music Volume", Anchor.Center, new Vector2(0f, -25f), new Vector2(620f, 60f), audioService != null ? audioService.MusicVolume : 0.7f, value => audioService?.SetMusicVolume(value));
+            Slider(root, "Slider_SfxVolume", "SFX Volume", Anchor.Center, new Vector2(0f, -105f), new Vector2(620f, 60f), audioService != null ? audioService.SfxVolume : 0.85f, value => audioService?.SetSfxVolume(value));
+            Button(root, "Button_DebugGold", "DEBUG +500 Gold", secondary, Anchor.Center, new Vector2(-220f, -175f), new Vector2(300f, 62f), () => DebugAddGold(500));
+            Button(root, "Button_DebugScrolls", "DEBUG +5 Scrolls", secondary, Anchor.Center, new Vector2(220f, -175f), new Vector2(300f, 62f), () => DebugAddItem("item_skill_scroll", 5));
+            Button(root, "Button_DebugJelly", "DEBUG +10 Jelly", secondary, Anchor.Center, new Vector2(-220f, -245f), new Vector2(300f, 62f), () => DebugAddItem("mat_slime_jelly", 10));
+            Button(root, "Button_DebugSword", "DEBUG Wooden Sword", secondary, Anchor.Center, new Vector2(220f, -245f), new Vector2(300f, 62f), () => DebugAddEquipment("equip_weapon_wooden_sword"));
+            Button(root, "Button_DebugCoat", "DEBUG Traveler Coat", secondary, Anchor.Center, new Vector2(0f, -315f), new Vector2(340f, 62f), () => DebugAddEquipment("equip_armor_traveler_coat"));
+            Button(root, "Button_DeleteSave", "Delete Local Save", danger, Anchor.Center, new Vector2(-210f, -395f), new Vector2(360f, 76f), OpenDeleteConfirm);
+            Button(root, "Button_Close", "Close", primary, Anchor.Center, new Vector2(210f, -395f), new Vector2(300f, 76f), screenManager.CloseSettings);
             root.gameObject.SetActive(false);
             return root.gameObject;
         }
@@ -613,6 +680,8 @@ namespace Isekai12Realms.UI
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.55f)).raycastTarget = true;
             Panel(root, "ResultPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(820f, 820f));
             title = Text(root, "ResultTitle", "Victory!", 58, textDark, Anchor.Center, new Vector2(0f, 275f), new Vector2(680f, 90f));
+            ImageAsset(root, "RewardGoldIcon", "currency_gold", Anchor.Center, new Vector2(-240f, 165f), new Vector2(64f, 64f));
+            ImageAsset(root, "RewardItemIcon", "missing_sprite", Anchor.Center, new Vector2(240f, 165f), new Vector2(64f, 64f));
             rewards = Text(root, "ResultRewards", "EXP +50\nGold +30", 38, textDark, Anchor.Center, new Vector2(0f, 110f), new Vector2(680f, 180f));
 
             victoryButtons = EnsureChildRect(root, "VictoryButtons").gameObject;
@@ -658,6 +727,31 @@ namespace Isekai12Realms.UI
             loading.Initialize(loadingRoot.gameObject, loadingText);
 
             screenManager.RegisterServices(toast, loading);
+
+            audioService = GetComponent<AudioService>();
+            if (audioService == null)
+            {
+                audioService = gameObject.AddComponent<AudioService>();
+            }
+
+            RectTransform battleFloatingTextLayer = EnsureChildRect(toastLayer, "BattleFloatingTextLayer");
+            Stretch(battleFloatingTextLayer);
+            FloatingTextService floatingText = GetComponent<FloatingTextService>();
+            if (floatingText == null)
+            {
+                floatingText = gameObject.AddComponent<FloatingTextService>();
+            }
+            floatingText.Initialize(battleFloatingTextLayer, 0.75f);
+
+            RectTransform vfxLayer = EnsureChildRect(toastLayer, "BattleVFXLayer");
+            Stretch(vfxLayer);
+            VFXService vfx = GetComponent<VFXService>();
+            if (vfx == null)
+            {
+                vfx = gameObject.AddComponent<VFXService>();
+            }
+            vfx.Initialize(vfxLayer);
+            battleFloatingTextLayer.SetAsLastSibling();
         }
 
         private void StartExistingGame()
@@ -669,9 +763,65 @@ namespace Isekai12Realms.UI
 
         private void StartNewHero()
         {
-            progressionService?.CreateNewSave("flame_squire", "Guest Hero");
+            progressionService?.CreateNewSave(selectedCreationClassId, "Guest Hero");
+            skillService?.SetDefaultClassSkills(selectedCreationClassId);
             RefreshSaveBackedUi();
             screenManager.ShowScreen(GameUIScreen.MainTown);
+        }
+
+        private void SelectCreationClass(string classId)
+        {
+            selectedCreationClassId = classId;
+            SetText("CharacterCreationUI/HeroName_Text", "Hero Class: " + DisplayClass(classId));
+        }
+
+        private void SelectSkillClass(string classId)
+        {
+            PlayerSaveData save = progressionService?.CurrentSave;
+            if (save != null && save.selectedClassId != classId)
+            {
+                screenManager.ToastService?.ShowToast("Class switching will be added later.");
+                return;
+            }
+            selectedSkillClassId = classId;
+            RefreshSkillsUi();
+        }
+
+        private void SelectSkill(string skillId)
+        {
+            selectedSkillId = skillId;
+            RefreshSkillsUi();
+        }
+
+        private void UpgradeSelectedSkill()
+        {
+            SkillDefinition skill = SelectedSkillOrFirstVisible();
+            if (skill != null && skillService != null)
+            {
+                skillService.UpgradeSkill(skill.id);
+                RefreshSaveBackedUi();
+            }
+        }
+
+        private void EquipSelectedSkill()
+        {
+            SkillDefinition skill = SelectedSkillOrFirstVisible();
+            if (skill != null && skillService != null)
+            {
+                skillService.EquipSkill(skill.id, skill.slotType);
+                RefreshSaveBackedUi();
+            }
+        }
+
+        private SkillDefinition SelectedSkillOrFirstVisible()
+        {
+            SkillDefinition selected = !string.IsNullOrEmpty(selectedSkillId) ? contentService?.Database?.GetSkillById(selectedSkillId) : null;
+            return selected != null && selected.classId == selectedSkillClassId ? selected : FirstVisibleSkill();
+        }
+
+        private SkillDefinition FirstVisibleSkill()
+        {
+            return contentService?.Database?.GetSkillsByClass(selectedSkillClassId).Find(s => s != null && s.activationType == SkillActivationType.Active);
         }
 
         private void EquipFirstEquipment()
@@ -684,6 +834,80 @@ namespace Isekai12Realms.UI
             }
 
             progressionService.Equip(save.inventory.equipments[0].instanceId);
+            selectedEquipmentInstanceId = save.inventory.equipments[0].instanceId;
+            RefreshSaveBackedUi();
+        }
+
+        private void SelectEquippedSlot(EquipmentSlot slot)
+        {
+            EquipmentInstanceData equipment = equipmentService?.GetEquipped(slot);
+            selectedEquipmentInstanceId = equipment != null ? equipment.instanceId : string.Empty;
+            RefreshSaveBackedUi();
+        }
+
+        private void SelectEquipment(string instanceId)
+        {
+            selectedEquipmentInstanceId = instanceId;
+            RefreshSaveBackedUi();
+        }
+
+        private void EquipSelectedEquipment()
+        {
+            if (string.IsNullOrEmpty(selectedEquipmentInstanceId))
+            {
+                screenManager.ToastService?.ShowToast("Select equipment first.");
+                return;
+            }
+            equipmentService?.Equip(selectedEquipmentInstanceId);
+            RefreshSaveBackedUi();
+        }
+
+        private void UnequipSelectedEquipment()
+        {
+            EquipmentInstanceData equipment = equipmentService?.GetEquipmentByInstanceId(selectedEquipmentInstanceId);
+            if (equipment == null)
+            {
+                screenManager.ToastService?.ShowToast("No equipped item selected.");
+                return;
+            }
+            equipmentService?.Unequip(equipment.slot);
+            RefreshSaveBackedUi();
+        }
+
+        private void UpgradeSelectedEquipment()
+        {
+            if (string.IsNullOrEmpty(selectedEquipmentInstanceId))
+            {
+                screenManager.ToastService?.ShowToast("Select equipment first.");
+                return;
+            }
+            equipmentService?.UpgradeEquipment(selectedEquipmentInstanceId);
+            RefreshSaveBackedUi();
+        }
+
+        private void SellSelectedEquipment()
+        {
+            if (string.IsNullOrEmpty(selectedEquipmentInstanceId))
+            {
+                screenManager.ToastService?.ShowToast("Select equipment first.");
+                return;
+            }
+            if (equipmentService != null && equipmentService.SellEquipment(selectedEquipmentInstanceId))
+            {
+                selectedEquipmentInstanceId = string.Empty;
+            }
+            RefreshSaveBackedUi();
+        }
+
+        private void ToggleSelectedEquipmentLock()
+        {
+            EquipmentInstanceData equipment = equipmentService?.GetEquipmentByInstanceId(selectedEquipmentInstanceId);
+            if (equipment == null)
+            {
+                screenManager.ToastService?.ShowToast("Select equipment first.");
+                return;
+            }
+            equipmentService.LockEquipment(equipment.instanceId, !equipment.locked);
             RefreshSaveBackedUi();
         }
 
@@ -713,6 +937,26 @@ namespace Isekai12Realms.UI
             screenManager.ShowScreen(GameUIScreen.Title);
         }
 
+        private void DebugAddGold(int amount)
+        {
+            progressionService?.AddGold(amount);
+            RefreshSaveBackedUi();
+        }
+
+        private void DebugAddItem(string itemId, int amount)
+        {
+            progressionService?.AddItem(itemId, amount);
+            RefreshSaveBackedUi();
+        }
+
+        private void DebugAddEquipment(string equipmentId)
+        {
+            EquipmentInstanceData equipment = equipmentService != null ? equipmentService.CreateEquipmentInstance(equipmentId) : PrototypeEquipmentFactory.Create(equipmentId);
+            progressionService?.AddEquipment(equipment);
+            selectedEquipmentInstanceId = equipment.instanceId;
+            RefreshSaveBackedUi();
+        }
+
         private void RefreshSaveBackedUi()
         {
             PlayerSaveData save = progressionService?.CurrentSave;
@@ -727,11 +971,86 @@ namespace Isekai12Realms.UI
             SetText("MainTownUI/Gems_Text", $"Gems: {save.soulGem}");
 
             PlayerStats stats = progressionService.CalculateTotalStats();
-            SetText("HeroUI/Stats_Text", $"Lv. {save.level}\nHP {stats.hp}\nMana {stats.mana}\nATK {stats.atk}\nMAG {stats.mag}\nDEF {stats.def}\nSPD {stats.spd}\nLUCK 1");
+            SetText("HeroUI/Stats_Text", $"Lv. {save.level}\nHP {stats.maxHp}\nMana {stats.mana}\nATK {stats.atk}\nMAG {stats.mag}\nDEF {stats.def}\nSPD {stats.spd}\nLUCK {stats.luck}");
             SetText("HeroUI/Exp_Text", $"EXP {save.exp} / {progressionService.GetExpRequired(save.level)}");
+            SetText("HeroUI/Class_Text", "Class: " + DisplayClass(save.selectedClassId));
+            SetText("HeroUI/EquippedSkills_Text", "Skills: " + SkillName(save.equippedSkill1Id) + " / " + SkillName(save.equippedSkill2Id) + " / " + SkillName(save.equippedUltimateId));
+            selectedSkillClassId = save.selectedClassId;
+            RefreshSkillsUi();
 
             SetText("InventoryUI/InventoryList_Text", BuildInventoryText(save));
+            SetText("InventoryUI/ItemDetail_Text", BuildSelectedEquipmentText());
             SetText("EquipmentUI/EquipmentDetail_Text", BuildEquipmentText(save));
+            RefreshEquipmentCards(save);
+        }
+
+        private void RefreshSkillsUi()
+        {
+            PlayerSaveData save = progressionService?.CurrentSave;
+            if (save == null || contentService?.Database == null) return;
+            List<SkillDefinition> skills = contentService.Database.GetSkillsByClass(selectedSkillClassId);
+            if (string.IsNullOrEmpty(selectedSkillId) || !skills.Exists(s => s != null && s.id == selectedSkillId))
+            {
+                selectedSkillId = skills.Find(s => s != null && s.activationType == SkillActivationType.Active)?.id;
+            }
+
+            string text = $"Equipped\nSkill 1: {SkillName(save.equippedSkill1Id)}\nSkill 2: {SkillName(save.equippedSkill2Id)}\nUltimate: {SkillName(save.equippedUltimateId)}\n\n";
+            foreach (SkillDefinition skill in skills)
+            {
+                PlayerSkillData ps = skillService?.GetPlayerSkill(skill.id);
+                int level = ps != null ? ps.level : 1;
+                SkillLevelData next = skill.GetLevelData(Mathf.Min(level + 1, skill.maxLevel));
+                string itemCost = next != null && !string.IsNullOrEmpty(next.requiredItemId) && next.requiredItemAmount > 0 ? $" + {PrototypeItemDatabase.Get(next.requiredItemId).displayName} x{next.requiredItemAmount}" : string.Empty;
+                string selectedMarker = skill.id == selectedSkillId ? "> " : string.Empty;
+                text += $"{selectedMarker}{skill.displayName} Lv {level}/{skill.maxLevel} ({skill.slotType})\n{skill.description}\nMana {skillService?.GetManaCost(skill.id) ?? skill.baseManaCost}  CD {skillService?.GetCooldown(skill.id) ?? skill.baseCooldown}\nUpgrade: {(level >= skill.maxLevel ? "MAX" : (next != null ? next.upgradeGoldCost + " gold" + itemCost : "Missing data"))}\n\n";
+            }
+            SetText("SkillsUI/SkillList_Text", text);
+            RefreshSkillCards(skills, save);
+        }
+
+        private void RefreshSkillCards(List<SkillDefinition> skills, PlayerSaveData save)
+        {
+            Transform root = mainLayer != null ? mainLayer.Find("SkillsUI") : null;
+            if (root == null) return;
+
+            for (int i = 0; i < 6; i++)
+            {
+                Transform existing = root.Find("SkillCard_" + i);
+                if (existing != null) existing.gameObject.SetActive(false);
+            }
+
+            int count = Mathf.Min(skills.Count, 6);
+            for (int i = 0; i < count; i++)
+            {
+                SkillDefinition skill = skills[i];
+                if (skill == null) continue;
+                PlayerSkillData ps = skillService?.GetPlayerSkill(skill.id);
+                int level = ps != null ? ps.level : 1;
+                bool equipped = save.equippedSkill1Id == skill.id || save.equippedSkill2Id == skill.id || save.equippedUltimateId == skill.id;
+                string label = $"{(skill.id == selectedSkillId ? "> " : string.Empty)}{skill.displayName} Lv {level}/{skill.maxLevel}  {skill.slotType}{(equipped ? "  Equipped" : string.Empty)}";
+                string capturedSkillId = skill.id;
+                Button card = Button(root, "SkillCard_" + i, label, skill.id == selectedSkillId ? secondary : primary, Anchor.Center, new Vector2(0f, 330f - i * 98f), new Vector2(760f, 82f), () => SelectSkill(capturedSkillId));
+                card.gameObject.SetActive(true);
+                Image icon = ImageAsset(card.transform, "Icon", skill.iconAssetId, Anchor.Center, new Vector2(-330f, 0f), new Vector2(58f, 58f));
+                icon.raycastTarget = false;
+                Button upgrade = Button(card.transform, "Button_Upgrade", "Upgrade", secondary, Anchor.Center, new Vector2(190f, -20f), new Vector2(145f, 44f), () => { selectedSkillId = capturedSkillId; UpgradeSelectedSkill(); });
+                Button equip = Button(card.transform, "Button_Equip", equipped ? "Equipped" : "Equip", equipped ? new Color(0.35f, 0.38f, 0.44f, 1f) : primary, Anchor.Center, new Vector2(335f, -20f), new Vector2(120f, 44f), () => { selectedSkillId = capturedSkillId; EquipSelectedSkill(); });
+                SetButtonEnabled(upgrade, level < skill.maxLevel);
+                SetButtonEnabled(equip, !equipped);
+            }
+        }
+
+        private string SkillName(string skillId)
+        {
+            SkillDefinition skill = contentService?.Database?.GetSkillById(skillId);
+            return skill != null ? skill.displayName : skillId;
+        }
+
+        private static string DisplayClass(string classId)
+        {
+            if (classId == "tide_acolyte") return "Tide Acolyte";
+            if (classId == "storm_scout") return "Storm Scout";
+            return "Flame Squire";
         }
 
         private string BuildInventoryText(PlayerSaveData save)
@@ -758,7 +1077,9 @@ namespace Isekai12Realms.UI
             {
                 foreach (EquipmentInstanceData equipment in save.inventory.equipments)
                 {
-                    text += $"- {equipment.displayName} ({equipment.slot})\n";
+                    string equipped = equipmentService != null && equipmentService.IsEquipped(equipment.instanceId) ? " [E]" : string.Empty;
+                    string locked = equipment.locked ? " [L]" : string.Empty;
+                    text += $"- {equipment.displayName} Lv {equipment.level} {equipment.rarity} {equipment.slot}{equipped}{locked}\n";
                 }
             }
             return text;
@@ -766,13 +1087,60 @@ namespace Isekai12Realms.UI
 
         private string BuildEquipmentText(PlayerSaveData save)
         {
-            return "Equipped Slots:\n" +
+            string detail = "Equipped Slots:\n" +
                    $"Weapon: {GetEquippedName(save, save.equipment.weaponInstanceId)}\n" +
                    $"Armor: {GetEquippedName(save, save.equipment.armorInstanceId)}\n" +
                    $"Head: {GetEquippedName(save, save.equipment.headInstanceId)}\n" +
                    $"Boots: {GetEquippedName(save, save.equipment.bootsInstanceId)}\n" +
                    $"Ring: {GetEquippedName(save, save.equipment.ringInstanceId)}\n" +
                    $"Charm: {GetEquippedName(save, save.equipment.charmInstanceId)}";
+            string selected = BuildSelectedEquipmentText();
+            return string.IsNullOrEmpty(selected) ? detail : detail + "\n\n" + selected;
+        }
+
+        private string BuildSelectedEquipmentText()
+        {
+            EquipmentInstanceData equipment = equipmentService?.GetEquipmentByInstanceId(selectedEquipmentInstanceId);
+            if (equipment == null) return "Select equipment to view details.";
+            EquipmentDefinition definition = equipmentService.GetDefinition(equipment.equipmentId);
+            EquipmentUpgradeCostData nextCost = definition != null ? equipmentService.GetUpgradeCost(definition, equipment.level + 1) : null;
+            string upgrade = equipment.level >= (definition != null ? definition.maxLevel : equipment.level) ? "MAX" : nextCost != null ? $"{nextCost.goldCost} gold + {nextCost.materialItemId} x{nextCost.materialAmount}" : "Missing cost";
+            return $"{equipment.displayName} {(equipment.locked ? "[Locked]" : string.Empty)}\n{equipment.rarity} {equipment.slot} Lv {equipment.level}/{(definition != null ? definition.maxLevel : 1)}\n{equipmentService.BuildStatText(equipment)}\nUpgrade: {upgrade}\nSell: {equipmentService.GetSellValue(equipment)} gold\n{equipmentService.BuildComparisonText(equipment)}";
+        }
+
+        private void RefreshEquipmentCards(PlayerSaveData save)
+        {
+            Transform inventoryRoot = mainLayer != null ? mainLayer.Find("InventoryUI") : null;
+            if (inventoryRoot != null)
+            {
+                for (int i = 0; i < 12; i++)
+                {
+                    Transform existing = inventoryRoot.Find("EquipmentCard_" + i);
+                    if (existing != null) existing.gameObject.SetActive(false);
+                }
+                int count = Mathf.Min(save.inventory.equipments.Count, 12);
+                for (int i = 0; i < count; i++)
+                {
+                    EquipmentInstanceData equipment = save.inventory.equipments[i];
+                    string captured = equipment.instanceId;
+                    bool equipped = equipmentService != null && equipmentService.IsEquipped(equipment.instanceId);
+                    string label = $"{equipment.displayName}\nLv {equipment.level} {equipment.rarity} {equipment.slot}{(equipped ? " [E]" : string.Empty)}{(equipment.locked ? " [L]" : string.Empty)}";
+                    Button card = Button(inventoryRoot, "EquipmentCard_" + i, label, equipment.instanceId == selectedEquipmentInstanceId ? secondary : primary, Anchor.Center, new Vector2(i % 2 == 0 ? -235f : 235f, 345f - (i / 2) * 95f), new Vector2(430f, 82f), () => SelectEquipment(captured));
+                    Image icon = ImageAsset(card.transform, "Icon", equipment.equipmentId, Anchor.Center, new Vector2(-180f, 0f), new Vector2(52f, 52f));
+                    icon.raycastTarget = false;
+                    card.gameObject.SetActive(true);
+                }
+            }
+
+            Transform equipmentRoot = mainLayer != null ? mainLayer.Find("EquipmentUI") : null;
+            if (equipmentRoot == null) return;
+            foreach (EquipmentSlot slot in Enum.GetValues(typeof(EquipmentSlot)))
+            {
+                Transform slotTransform = equipmentRoot.Find("Slot_" + slot);
+                TextMeshProUGUI label = slotTransform != null ? slotTransform.GetComponentInChildren<TextMeshProUGUI>() : null;
+                EquipmentInstanceData equipped = equipmentService?.GetEquipped(slot);
+                if (label != null) label.text = equipped != null ? $"{slot}\n{equipped.displayName} Lv {equipped.level}" : $"{slot}\nEmpty";
+            }
         }
 
         private string GetEquippedName(PlayerSaveData save, string instanceId)
@@ -797,14 +1165,10 @@ namespace Isekai12Realms.UI
             RectTransform board = EnsureChildRect(root, "BoardGrid");
             SetRect(board, Anchor.Center, new Vector2(0f, -50f), new Vector2(768f, 768f));
             GridLayoutGroup grid = board.GetComponent<GridLayoutGroup>();
-            if (grid == null)
+            if (grid != null)
             {
-                grid = board.gameObject.AddComponent<GridLayoutGroup>();
+                grid.enabled = false;
             }
-            grid.cellSize = new Vector2(88f, 88f);
-            grid.spacing = new Vector2(8f, 8f);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 8;
             Image boardBackground = board.GetComponent<Image>();
             if (boardBackground == null)
             {
@@ -853,7 +1217,8 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = EnsureChildRect(mainLayer, name);
             Stretch(root);
-            EnsureImage(root.gameObject, backgroundColor);
+            Image image = EnsureImage(root.gameObject, backgroundColor);
+            BindImage(image, GetScreenBackgroundAssetId(name));
             root.gameObject.SetActive(false);
             return root;
         }
@@ -862,7 +1227,19 @@ namespace Isekai12Realms.UI
         {
             RectTransform rect = EnsureChildRect(parent, name);
             SetRect(rect, anchor, pos, size);
-            return EnsureImage(rect.gameObject, color);
+            Image image = EnsureImage(rect.gameObject, color);
+            BindImage(image, name.Contains("Popup") || name.Contains("Result") || name.Contains("Settings") ? "ui_panel_popup" : "ui_panel_main");
+            return image;
+        }
+
+        private Image ImageAsset(Transform parent, string name, string assetId, Anchor anchor, Vector2 pos, Vector2 size)
+        {
+            RectTransform rect = EnsureChildRect(parent, name);
+            SetRect(rect, anchor, pos, size);
+            Image image = EnsureImage(rect.gameObject, Color.white);
+            image.raycastTarget = false;
+            BindImage(image, assetId);
+            return image;
         }
 
         private TextMeshProUGUI Text(Transform parent, string name, string text, int size, Color color, Anchor anchor, Vector2 pos, Vector2 rectSize)
@@ -886,7 +1263,9 @@ namespace Isekai12Realms.UI
         {
             RectTransform rect = EnsureChildRect(parent, name);
             SetRect(rect, anchor, pos, size);
-            EnsureImage(rect.gameObject, color).raycastTarget = true;
+            Image image = EnsureImage(rect.gameObject, color);
+            image.raycastTarget = true;
+            BindImage(image, GetButtonAssetId(name, color));
             Button button = rect.GetComponent<Button>();
             if (button == null)
             {
@@ -895,23 +1274,109 @@ namespace Isekai12Realms.UI
             button.onClick.RemoveAllListeners();
             if (action != null)
             {
+                button.onClick.AddListener(() => audioService?.PlaySfx("sfx_button_click"));
                 button.onClick.AddListener(action);
             }
             Text(rect, "Text", text, Mathf.RoundToInt(size.y * 0.34f), Color.white, Anchor.Center, Vector2.zero, size);
             return button;
         }
 
+        private Toggle Toggle(Transform parent, string name, string text, Anchor anchor, Vector2 pos, Vector2 size, bool isOn, UnityEngine.Events.UnityAction<bool> action)
+        {
+            RectTransform rect = EnsureChildRect(parent, name);
+            SetRect(rect, anchor, pos, size);
+            Toggle toggle = rect.GetComponent<Toggle>();
+            if (toggle == null) toggle = rect.gameObject.AddComponent<Toggle>();
+            Image bg = EnsureImage(rect.gameObject, new Color(0.12f, 0.18f, 0.28f, 0.95f));
+            toggle.targetGraphic = bg;
+            Text(rect, "Text", text, 30, Color.white, Anchor.Center, new Vector2(20f, 0f), size);
+            toggle.isOn = isOn;
+            toggle.onValueChanged.RemoveAllListeners();
+            if (action != null) toggle.onValueChanged.AddListener(action);
+            return toggle;
+        }
+
+        private Slider Slider(Transform parent, string name, string label, Anchor anchor, Vector2 pos, Vector2 size, float value, UnityEngine.Events.UnityAction<float> action)
+        {
+            RectTransform rect = EnsureChildRect(parent, name);
+            SetRect(rect, anchor, pos, size);
+            Text(rect, "Label", label, 26, textDark, Anchor.TopLeft, new Vector2(130f, -8f), new Vector2(260f, 36f));
+            Slider slider = rect.GetComponent<Slider>();
+            if (slider == null) slider = rect.gameObject.AddComponent<Slider>();
+            RectTransform background = EnsureChildRect(rect, "Background");
+            SetRect(background, Anchor.Center, new Vector2(90f, -8f), new Vector2(360f, 18f));
+            slider.targetGraphic = EnsureImage(background.gameObject, new Color(0.08f, 0.12f, 0.2f, 1f));
+            RectTransform fill = EnsureChildRect(background, "Fill");
+            fill.anchorMin = Vector2.zero; fill.anchorMax = new Vector2(0.5f, 1f); fill.offsetMin = Vector2.zero; fill.offsetMax = Vector2.zero;
+            slider.fillRect = fill;
+            EnsureImage(fill.gameObject, primary);
+            slider.minValue = 0f; slider.maxValue = 1f; slider.value = value;
+            slider.onValueChanged.RemoveAllListeners();
+            if (action != null) slider.onValueChanged.AddListener(action);
+            return slider;
+        }
+
         private void Bar(Transform parent, string name, Anchor anchor, Vector2 pos, Vector2 size, Color fillColor)
         {
             RectTransform root = EnsureChildRect(parent, name);
             SetRect(root, anchor, pos, size);
-            EnsureImage(root.gameObject, new Color(0.04f, 0.05f, 0.08f, 1f));
+            Image bg = EnsureImage(root.gameObject, new Color(0.04f, 0.05f, 0.08f, 1f));
+            BindImage(bg, name.Contains("Mana") ? "ui_bar_mana_bg" : "ui_bar_hp_bg");
             RectTransform fill = EnsureChildRect(root, "Fill");
             fill.anchorMin = new Vector2(0f, 0f);
             fill.anchorMax = new Vector2(0.75f, 1f);
             fill.offsetMin = new Vector2(4f, 4f);
             fill.offsetMax = new Vector2(-4f, -4f);
-            EnsureImage(fill.gameObject, fillColor);
+            Image fillImage = EnsureImage(fill.gameObject, fillColor);
+            BindImage(fillImage, name.Contains("Mana") ? "ui_bar_mana_fill" : "ui_bar_hp_fill");
+        }
+
+        private static string GetScreenBackgroundAssetId(string screenName)
+        {
+            switch (screenName)
+            {
+                case "TitleScreenUI": return "bg_title_sky_realm";
+                case "MainTownUI": return "bg_town_meadow";
+                case "WorldMapUI": return "bg_world_map_scroll";
+                case "BattleUI": return "bg_battle_meadow";
+                default: return string.Empty;
+            }
+        }
+
+        private string GetButtonAssetId(string name, Color color)
+        {
+            if (name.Contains("Close")) return "ui_btn_close";
+            if (ColorDistance(color, secondary) < 0.08f) return "ui_btn_secondary";
+            return "ui_btn_primary";
+        }
+
+        private static float ColorDistance(Color a, Color b)
+        {
+            return Mathf.Abs(a.r - b.r) + Mathf.Abs(a.g - b.g) + Mathf.Abs(a.b - b.b);
+        }
+
+        private static void BindImage(Image image, string assetId)
+        {
+            if (image == null || string.IsNullOrEmpty(assetId)) return;
+            AssetSpriteBinder binder = image.GetComponent<AssetSpriteBinder>();
+            if (binder == null)
+            {
+                binder = image.gameObject.AddComponent<AssetSpriteBinder>();
+            }
+            binder.assetId = assetId;
+            binder.targetImage = image;
+            binder.Apply();
+        }
+
+        private static void SetButtonEnabled(Button button, bool enabled)
+        {
+            if (button == null) return;
+            button.interactable = enabled;
+            Image image = button.GetComponent<Image>();
+            if (image != null)
+            {
+                image.color = enabled ? image.color : new Color(0.35f, 0.38f, 0.44f, 1f);
+            }
         }
 
         public static RectTransform EnsureChildRect(Transform parent, string childName)

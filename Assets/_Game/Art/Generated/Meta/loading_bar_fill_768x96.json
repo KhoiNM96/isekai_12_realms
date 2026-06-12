@@ -1,0 +1,14 @@
+﻿{
+    "id":  "loading_bar_fill",
+    "file":  "loading_bar_fill_768x96.png",
+    "size":  [
+                 768,
+                 96
+             ],
+    "category":  "loading",
+    "usage":  "loading_bar_fill placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for loading_bar_fill, no copied art, no watermark"
+}

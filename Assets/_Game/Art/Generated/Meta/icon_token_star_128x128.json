@@ -1,0 +1,14 @@
+﻿{
+    "id":  "icon_token_star",
+    "file":  "icon_token_star_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "token",
+    "usage":  "icon_token_star placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for icon_token_star, no copied art, no watermark"
+}

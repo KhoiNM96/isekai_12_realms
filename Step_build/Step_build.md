@@ -2728,3 +2728,2218 @@ Tools/Isekai 12 Realms/Apply Placeholder Art To Current UI
 
 ### Prompt 10
 
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Local save and progression
+* Data-driven stages/enemies/drop tables
+* Content Editor tools
+* Placeholder PNG asset pipeline
+* AssetManifest
+* Battle board using token sprites
+
+Next task: improve battle game feel with animation, VFX, SFX hooks, damage numbers, skill feedback, and better player/enemy visual states.
+
+Do not implement Firebase yet.
+Do not implement IAP yet.
+Do not implement Addressables yet.
+Do not rewrite the battle logic.
+Do not break save/progression/stage flow.
+
+Goal:
+Make the existing battle feel responsive and readable on mobile portrait.
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/VFX
+   Assets/_Game/Scripts/Audio
+   Assets/_Game/Prefabs/VFX
+   Assets/_Game/Prefabs/UI/Battle
+
+2. Create BattleAnimationSettings.cs as ScriptableObject.
+
+Fields:
+
+* float tileSwapDuration = 0.12f
+* float invalidSwapReturnDuration = 0.10f
+* float tilePopDuration = 0.14f
+* float tileDropDuration = 0.18f
+* float cascadeDelay = 0.08f
+* float damageNumberDuration = 0.75f
+* float characterHitShakeDuration = 0.15f
+* float characterHitShakeStrength = 12f
+* float skillFlashDuration = 0.18f
+* float resultPopupDelay = 0.35f
+
+Path:
+Assets/_Game/ScriptableObjects/Economy/BattleAnimationSettings.asset
+
+If missing, create default settings at runtime or via editor menu.
+
+3. Update TileView animation.
+
+TileView must support:
+
+* SetSelected(bool selected)
+* PlaySwapMove(Vector3 targetPosition, float duration)
+* PlayInvalidShake()
+* PlayMatchPop()
+* PlayDropMove(Vector3 targetPosition, float duration)
+* PlaySpawn()
+* PlayHintPulse()
+
+Use coroutine-based animation if tween library is not installed.
+Do not add DOTween dependency unless already present.
+
+Animation rules:
+
+* Selected tile scales to 1.08 and shows highlight border
+* Swap moves smoothly
+* Invalid swap shakes left/right and returns
+* Matched tile scales up slightly then fades/pops
+* New spawned tile fades/scales in
+* Dropping tile moves smoothly into position
+
+4. Update BoardController to use async/coroutine animation flow.
+
+The board must:
+
+* prevent input while resolving
+* allow input only on player's turn
+* wait for swap animation before resolving
+* wait for pop animation before removing tiles
+* wait for drop animation before cascade check
+* never allow double tap to break board state
+
+Add bool:
+
+* isResolving
+* inputLocked
+
+5. Add VFXService.cs.
+
+Responsibilities:
+
+* Spawn simple VFX prefabs or procedural UI effects
+* Show match pop
+* Show heal effect
+* Show shield effect
+* Show mana gain effect
+* Show coin gain effect
+* Show food gain effect
+* Show row clear effect
+* Show column clear effect
+* Show bomb effect
+* Show ultimate flash
+
+Methods:
+
+* PlayTileMatchVfx(Vector3 position, TileType type)
+* PlayDamageVfx(Vector3 position)
+* PlayHealVfx(Vector3 position)
+* PlayShieldVfx(Vector3 position)
+* PlayManaVfx(Vector3 position)
+* PlaySkillVfx(string skillId, Vector3 position)
+* PlayFullScreenFlash(Color color, float duration)
+
+Use generated PNG VFX assets if available from AssetManifest.
+Fallback to simple UI Image circles/particles.
+
+6. Add FloatingTextService.cs.
+
+Create floating text under:
+RootCanvas/SafeAreaRoot/ToastLayer or a new BattleFloatingTextLayer under BattleUI.
+
+Floating text types:
+
+* Damage: "-12"
+* Heal: "+8"
+* Shield: "+5 Shield"
+* Mana: "+16 Mana"
+* Food: "+4 Food"
+* Gold: "+9 Gold"
+* EXP: "+12 EXP"
+* Combo: "Combo x2"
+* Extra turn: "Extra Turn!"
+
+Rules:
+
+* Text floats upward
+* Fades out
+* Duration around 0.75s
+* Does not block input
+* Uses TextMeshPro
+* Has outline/shadow for readability
+
+7. Add BattleCharacterView.cs.
+
+Attach to player and enemy visual containers in BattleUI.
+
+Responsibilities:
+
+* SetName(string)
+* SetLevel(int)
+* SetHp(int current, int max)
+* SetMana(int current, int max)
+* SetShield(int shield)
+* SetSprite(string assetId)
+* PlayIdle()
+* PlayAttack()
+* PlayCast()
+* PlayHurt()
+* PlayVictory()
+* PlayDefeat()
+* PlaySmallShake()
+* FlashWhite()
+
+If actual animation sprites are missing, simulate with:
+
+* small scale punch
+* shake
+* alpha flash
+* position bounce
+
+8. Update BattleUIController.
+
+BattleUIController must:
+
+* use BattleCharacterView for player/enemy
+* show current turn with clear visual state
+* animate HP bar changes smoothly
+* animate Mana bar changes smoothly
+* show Food warning if Food <= 5
+* show Combo count with pulse when combo increases
+* show Extra Turn feedback
+* show skill button cooldown/mana state clearly
+
+9. Update BattleResolver feedback.
+
+When resolving matched tokens:
+
+* Sword: play attack VFX and floating damage text near enemy
+* Heart: play heal VFX and floating heal text near player
+* Coin: play coin VFX and floating gold text near board/HUD
+* Food: play food VFX and floating food text
+* Book: play EXP floating text
+* Mana: play mana VFX and floating mana text
+* Shield: play shield VFX and floating shield text
+* Star: play star/mana VFX and small damage text
+
+10. Add combo feedback.
+
+On cascade:
+
+* increment combo count
+* show "Combo xN"
+* if combo >= 2, play stronger match sound/VFX
+* if match 4+ grants extra turn, show "Extra Turn!"
+
+11. Add skill feedback.
+
+Skill 1: Spark Slash
+
+* player cast animation
+* slash VFX toward enemy
+* enemy hurt shake
+* floating damage text
+
+Skill 2: Shuffle Bell
+
+* board dim briefly
+* tiles pulse
+* shuffle board with animation if possible
+* show floating text "Board Shuffled"
+
+Ultimate: Realm Burst
+
+* screen flash
+* player cast animation
+* enemy hurt shake
+* random 3x3 tile area highlight
+* tiles pop
+* floating damage text
+* big text "Realm Burst!"
+
+12. Add enemy turn feedback.
+
+Enemy turn must:
+
+* show "Enemy Turn"
+* wait briefly before action
+* enemy attack/heal/shield animation
+* show floating damage/heal/shield text
+* player hurt shake if damaged
+* then show "Your Turn"
+
+Do not make enemy instant with no feedback.
+
+13. Add AudioService.cs.
+
+Responsibilities:
+
+* PlaySfx(string id)
+* PlayBgm(string id)
+* StopBgm()
+* SetMusicVolume(float)
+* SetSfxVolume(float)
+* MuteMusic(bool)
+* MuteSfx(bool)
+
+For now, no real audio files are required.
+If audio clips are missing:
+
+* do not crash
+* log once or silently ignore
+* keep API ready
+
+SFX ids:
+
+* sfx_button_click
+* sfx_tile_select
+* sfx_tile_swap
+* sfx_tile_invalid
+* sfx_match
+* sfx_combo
+* sfx_damage
+* sfx_heal
+* sfx_shield
+* sfx_coin
+* sfx_mana
+* sfx_skill
+* sfx_ultimate
+* sfx_victory
+* sfx_defeat
+
+14. Hook SFX calls.
+
+Call AudioService.PlaySfx for:
+
+* button click
+* tile select
+* valid swap
+* invalid swap
+* match
+* combo
+* damage
+* heal
+* coin gain
+* skill cast
+* victory
+* defeat
+
+No console spam if clips are missing.
+
+15. Add simple settings integration.
+
+Settings popup should include:
+
+* Music toggle
+* SFX toggle
+* Music volume slider
+* SFX volume slider
+
+Save settings locally using existing save/settings service or a simple PlayerPrefs wrapper:
+
+* music_enabled
+* sfx_enabled
+* music_volume
+* sfx_volume
+
+16. Add BattleDebugPanel optional.
+
+In BattleUI, create a small hidden debug panel that can be toggled by editor/dev key or button:
+
+* Player HP
+* Enemy HP
+* Mana
+* Food
+* Turn
+* Board resolving state
+* Current selected stage id
+
+It must be hidden by default in normal play.
+
+17. Mobile readability polish.
+
+Improve BattleUI:
+
+* board remains centered
+* tile touch target is large enough
+* damage numbers do not cover buttons
+* skill buttons remain readable
+* enemy/player HP bars are clear
+* bottom skill bar is not too close to device safe area
+
+18. Add editor menu:
+
+Tools/Isekai 12 Realms/Create Battle Polish Defaults
+
+This menu must:
+
+* create BattleAnimationSettings.asset if missing
+* create placeholder VFX prefabs if useful
+* ensure AudioService object/prefab exists if needed
+* not duplicate existing objects
+
+19. Preserve existing systems.
+
+Do not break:
+
+* StageDefinition battle start
+* enemy stats from selected stage
+* victory rewards
+* drop table rewards
+* local save
+* world map stage unlock
+* battle restart
+* battle result popup
+
+20. Acceptance criteria:
+
+* Open GameScene and press Play
+* Start Game
+* Enter Stage 1-1 battle
+* Tap tile: selected tile highlights
+* Invalid swap shakes and returns
+* Valid swap animates
+* Match tiles pop/fade
+* Tiles drop smoothly
+* Cascades show combo feedback
+* Sword match shows damage number and enemy hurt feedback
+* Heart match shows heal number and player heal feedback
+* Mana match updates mana bar smoothly
+* Food match updates food text
+* Match 4+ shows Extra Turn feedback
+* Enemy turn has visible delay and attack/heal/shield feedback
+* Skill 1 shows cast/damage feedback
+* Skill 2 shuffles board with feedback
+* Ultimate shows bigger feedback
+* Victory popup appears after a short delay
+* Defeat popup appears after a short delay
+* SFX hooks do not cause errors if audio clips are missing
+* Existing reward/save/progression still works
+* No console errors
+* No missing script errors
+
+### Prompt 11
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish with animation/VFX/SFX hooks
+* Local save and progression
+* Inventory/equipment basics
+* Data-driven Realm/Stage/Enemy/DropTable
+* Content Editor tools
+* Placeholder PNG asset pipeline and AssetManifest
+
+Next task: implement a data-driven player skill system and skill upgrade flow.
+
+Do not implement Firebase yet.
+Do not implement IAP yet.
+Do not implement Addressables yet.
+Do not rewrite the battle system.
+Do not break existing stage/battle/reward/save flow.
+
+Goal:
+Replace hard-coded battle skills with SkillDefinition ScriptableObjects.
+The player can view skills, upgrade skills, and use equipped skills in battle.
+Skill levels must persist in local save.
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Skills
+   Assets/_Game/ScriptableObjects/Skills
+
+2. Create SkillDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string id
+* string displayName
+* string description
+* string classId
+* string iconAssetId
+* SkillSlotType slotType
+* SkillTargetType targetType
+* SkillActivationType activationType
+* int maxLevel
+* int baseManaCost
+* int baseCooldown
+* List<SkillLevelData> levels
+* List<SkillEffectData> effects
+
+Create enums:
+
+SkillSlotType:
+
+* Skill1
+* Skill2
+* Ultimate
+* Passive
+
+SkillTargetType:
+
+* Enemy
+* Player
+* Board
+* RandomTiles
+* SelectedTile
+* Self
+
+SkillActivationType:
+
+* Active
+* Passive
+
+SkillEffectType:
+
+* Damage
+* Heal
+* Shield
+* GainMana
+* DestroyRandomTiles
+* DestroyArea
+* ShuffleBoard
+* ConvertTiles
+* ExtraTurn
+* BuffDamage
+* BuffHeal
+* CleanseDebuff
+
+3. Create SkillLevelData.cs.
+
+Fields:
+
+* int level
+* int manaCost
+* int cooldown
+* int upgradeGoldCost
+* string requiredItemId
+* int requiredItemAmount
+* string descriptionOverride
+
+4. Create SkillEffectData.cs.
+
+Fields:
+
+* SkillEffectType effectType
+* int baseValue
+* float multiplier
+* int tileCount
+* int areaSize
+* TileType fromTileType
+* TileType toTileType
+* bool scalesWithLevel
+
+5. Create PlayerSkillData.cs.
+
+Fields:
+
+* string skillId
+* int level
+* bool unlocked
+* int cooldownRemaining
+
+6. Update PlayerSaveData.
+
+Add:
+
+* List<PlayerSkillData> skills
+* string equippedSkill1Id
+* string equippedSkill2Id
+* string equippedUltimateId
+
+Migration rule:
+If old save has no skills:
+
+* initialize default Flame Squire skills
+* equippedSkill1Id = "skill_flame_spark_slash"
+* equippedSkill2Id = "skill_flame_shuffle_bell"
+* equippedUltimateId = "skill_flame_realm_burst"
+
+Do not reset existing player progress.
+
+7. Create SkillDatabase.cs or add skills to existing GameContentDatabase.
+
+Preferred:
+Extend GameContentDatabase with:
+
+* List<SkillDefinition> skills
+
+Methods:
+
+* GetSkillById(string id)
+* GetSkillsByClass(string classId)
+* GetDefaultSkillsForClass(string classId)
+
+8. Create SkillService.cs.
+
+Responsibilities:
+
+* Initialize skills from save
+* GetPlayerSkill(string skillId)
+* GetSkillDefinition(string skillId)
+* GetEquippedSkill(SkillSlotType slot)
+* EquipSkill(string skillId, SkillSlotType slot)
+* CanUpgradeSkill(string skillId)
+* UpgradeSkill(string skillId)
+* GetSkillLevel(string skillId)
+* GetManaCost(string skillId)
+* GetCooldown(string skillId)
+* StartCooldown(string skillId)
+* TickCooldownsAfterPlayerTurn()
+* IsSkillUsable(string skillId, BattleState battleState)
+* Save after skill upgrade/equip
+
+Upgrade rule:
+
+* Need enough gold
+* If requiredItemId is not empty, need enough item amount
+* Consume gold and required item
+* Increase skill level by 1
+* Cannot exceed maxLevel
+* Show toast after upgrade
+
+9. Create SkillEffectResolver.cs.
+
+Responsibilities:
+
+* Apply SkillDefinition effects to battle
+* Support these effects for MVP:
+
+  * Damage enemy
+  * Heal player
+  * Add shield
+  * Gain mana
+  * Shuffle board
+  * Destroy random tiles
+  * Destroy area 3x3
+  * Extra turn
+
+SkillEffectResolver must not directly depend on UI.
+It should return a SkillResolveResult.
+
+Create SkillResolveResult fields:
+
+* int damageDealt
+* int healingDone
+* int shieldGained
+* int manaGained
+* int tilesDestroyed
+* bool boardShuffled
+* bool extraTurnGranted
+* List<string> messages
+
+10. Update BattleService.
+
+Replace hard-coded:
+
+* UseSkill1()
+* UseSkill2()
+* UseUltimate()
+
+With:
+
+* UseEquippedSkill(SkillSlotType slotType)
+
+Flow:
+
+* Get equipped skill from SkillService
+* Check mana and cooldown
+* Spend mana
+* Apply skill effects through SkillEffectResolver
+* Start cooldown
+* Trigger VFX/SFX through BattleUIController/VFXService
+* Check win/lose
+* If skill does not grant extra turn, continue current turn rules as designed
+
+Important:
+Skill use should not break board resolving.
+Do not allow skill use while board is resolving or during enemy turn.
+
+11. Update BattleUIController.
+
+Skill buttons must show real equipped skill data:
+
+* icon from iconAssetId using AssetManifest
+* skill name
+* mana cost
+* cooldown remaining
+* disabled state if not enough mana
+* disabled state if cooldown > 0
+* disabled state during enemy turn/board resolving
+
+Button clicks:
+
+* Skill1 -> BattleService.UseEquippedSkill(Skill1)
+* Skill2 -> BattleService.UseEquippedSkill(Skill2)
+* Ultimate -> BattleService.UseEquippedSkill(Ultimate)
+
+12. Create prototype SkillDefinition assets.
+
+Create editor menu:
+Tools/Isekai 12 Realms/Create Prototype Skills
+
+It must create these SkillDefinition assets if missing:
+
+Flame Squire:
+
+1. skill_flame_spark_slash
+
+* displayName: Spark Slash
+* classId: flame_squire
+* slotType: Skill1
+* activationType: Active
+* targetType: Enemy
+* iconAssetId: skill_flame_spark_slash
+* maxLevel: 5
+* Level 1: manaCost 30, cooldown 1, upgradeGoldCost 0
+* Effects: Damage baseValue 20, scalesWithLevel true
+
+2. skill_flame_shuffle_bell
+
+* displayName: Shuffle Bell
+* classId: flame_squire
+* slotType: Skill2
+* activationType: Active
+* targetType: Board
+* iconAssetId: skill_storm_tile_swap
+* maxLevel: 5
+* Level 1: manaCost 20, cooldown 3
+* Effects: ShuffleBoard
+
+3. skill_flame_realm_burst
+
+* displayName: Realm Burst
+* classId: flame_squire
+* slotType: Ultimate
+* activationType: Active
+* targetType: Enemy
+* iconAssetId: skill_flame_burst
+* maxLevel: 5
+* Level 1: manaCost 100, cooldown 0
+* Effects:
+
+  * Damage baseValue 50, scalesWithLevel true
+  * DestroyArea areaSize 3
+
+Tide Acolyte:
+4. skill_tide_aqua_heal
+
+* Skill1
+* manaCost 25
+* cooldown 1
+* Effect: Heal baseValue 28
+
+5. skill_tide_bubble_guard
+
+* Skill2
+* manaCost 30
+* cooldown 2
+* Effect: Shield baseValue 35
+
+6. skill_tide_moon_tide
+
+* Ultimate
+* manaCost 100
+* Effect:
+
+  * Heal baseValue 70
+  * Shield baseValue 40
+  * CleanseDebuff if supported, otherwise add message only
+
+Storm Scout:
+7. skill_storm_quick_jab
+
+* Skill1
+* manaCost 25
+* cooldown 1
+* Effect: Damage baseValue 16, ExtraTurn chance can be ignored for MVP
+
+8. skill_storm_static_step
+
+* Skill2
+* manaCost 35
+* cooldown 3
+* Effect: DestroyRandomTiles tileCount 5
+
+9. skill_storm_thunder_chain
+
+* Ultimate
+* manaCost 100
+* Effect:
+
+  * Damage baseValue 35
+  * DestroyRandomTiles tileCount 8
+  * ExtraTurn
+
+13. Skill scaling.
+
+For effects with scalesWithLevel:
+
+* finalValue = baseValue + (skillLevel - 1) * 8 for Damage
+* finalValue = baseValue + (skillLevel - 1) * 6 for Heal
+* finalValue = baseValue + (skillLevel - 1) * 6 for Shield
+
+Mana cost may come from SkillLevelData.
+If level data missing for current level, fallback to baseManaCost.
+
+14. Skill upgrade costs.
+
+Prototype:
+Level 1 -> 2:
+
+* 100 gold
+* item_skill_scroll x1
+
+Level 2 -> 3:
+
+* 250 gold
+* item_skill_scroll x2
+
+Level 3 -> 4:
+
+* 500 gold
+* item_skill_scroll x3
+
+Level 4 -> 5:
+
+* 900 gold
+* item_skill_scroll x5
+
+15. Update SkillsUI.
+
+SkillsUI must:
+
+* Show current selected class skills
+* Show skill cards:
+
+  * icon
+  * name
+  * current level / max level
+  * description
+  * mana cost
+  * cooldown
+  * upgrade cost
+  * required item
+  * Upgrade button
+  * Equip button if not equipped
+* Show equipped labels:
+
+  * Skill 1
+  * Skill 2
+  * Ultimate
+
+Tabs:
+
+* Flame
+* Tide
+* Storm
+
+For MVP:
+
+* Player can only upgrade/equip skills matching selectedClassId
+* Other class tabs can show locked toast:
+  "Class switching will be added later."
+
+16. Update CharacterCreationUI.
+
+When selecting class:
+
+* selectedClassId updates
+* Start Journey creates save with matching default skills:
+
+  * Flame -> flame skills
+  * Tide -> tide skills
+  * Storm -> storm skills
+
+17. Update HeroUI.
+
+HeroUI must show:
+
+* selected class
+* equipped skill names
+* button to open SkillsUI
+
+18. Add Skill content validation.
+
+Update Tools/Isekai 12 Realms/Validate Content.
+
+Validate:
+
+* Every skill has id
+* No duplicate skill id
+* Every skill has displayName
+* Every skill has classId
+* maxLevel >= 1
+* active skills have mana cost >= 0
+* every effect has valid effectType
+* every skill level is between 1 and maxLevel
+* default class skills exist
+
+19. Add Skill Editor tab to Content Editor.
+
+In IsekaiContentEditorWindow, add tab:
+
+* Skills
+
+Skill tab must allow:
+
+* View all SkillDefinition assets
+* Filter by classId
+* Create new skill
+* Duplicate selected skill
+* Edit id, displayName, description, classId, iconAssetId
+* Edit slotType, targetType, activationType, maxLevel, baseManaCost, baseCooldown
+* Edit level data list
+* Edit effects list
+* Save selected skill
+* Ping asset
+
+20. Preserve existing battle feel.
+
+Skill usage should still trigger:
+
+* animation
+* VFX
+* SFX hook
+* floating text
+* HP/mana bar update
+* victory/defeat check
+
+If VFX asset is missing, use fallback visual effects.
+
+21. Acceptance criteria:
+
+* Run Tools/Isekai 12 Realms/Create Prototype Skills
+* Run Tools/Isekai 12 Realms/Validate Content
+* Open GameScene and press Play
+* Start Game with existing save
+* If old save exists, default Flame skills are migrated
+* Open Hero -> Skills
+* Skill list appears
+* Upgrade button works when enough gold/item exists
+* Not enough gold/item shows toast
+* Equipping a skill updates save
+* Enter Battle
+* Skill buttons show real skill names/costs
+* Skill 1 uses SkillDefinition damage
+* Skill 2 uses SkillDefinition shuffle/destroy effect
+* Ultimate uses SkillDefinition effects
+* Mana is consumed
+* Cooldown is applied
+* Skill button disabled when not enough mana
+* Victory/reward/save still works
+* Close and reopen Play Mode
+* Skill levels and equipped skills persist
+* No console errors
+* No missing script errors
+
+### Prompt 12 <-->
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish with animation/VFX/SFX hooks
+* Local save and progression
+* Inventory basics
+* Basic equipment data
+* Data-driven Realm/Stage/Enemy/DropTable
+* Content Editor tools
+* Placeholder PNG asset pipeline and AssetManifest
+* Data-driven SkillDefinition and skill upgrade flow
+
+Next task: implement a complete equipment system with stat calculation, equip/unequip, upgrade, sell, lock, craft basics, and make equipment stats affect battle.
+
+Do not implement Firebase yet.
+Do not implement IAP yet.
+Do not implement Addressables yet.
+Do not rewrite battle logic.
+Do not break save/progression/stage/skill flow.
+
+Goal:
+Equipment must become a real progression system:
+
+* Player can get equipment from drops
+* Equipment appears in Inventory
+* Player can equip/unequip items
+* Equipment changes player stats
+* Stats affect battle
+* Equipment can be upgraded with Gold and Materials
+* Equipment data persists in local save
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Equipment
+   Assets/_Game/ScriptableObjects/Equipment
+   Assets/_Game/ScriptableObjects/Crafting
+
+2. Create EquipmentDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string id
+* string displayName
+* string description
+* string iconAssetId
+* EquipmentSlot slot
+* EquipmentRarity rarity
+* int baseHp
+* int baseAtk
+* int baseMag
+* int baseDef
+* int baseSpd
+* int baseLuck
+* int maxLevel
+* List<EquipmentUpgradeCostData> upgradeCosts
+
+3. Create EquipmentUpgradeCostData.cs.
+
+Fields:
+
+* int targetLevel
+* int goldCost
+* string materialItemId
+* int materialAmount
+
+4. Update EquipmentInstanceData if needed.
+
+It must include:
+
+* string instanceId
+* string equipmentId
+* string displayName
+* EquipmentSlot slot
+* EquipmentRarity rarity
+* int level
+* int hpBonus
+* int atkBonus
+* int magBonus
+* int defBonus
+* int spdBonus
+* int luckBonus
+* bool locked
+* long acquiredAt
+
+If older save equipment does not have missing fields, migrate safely with defaults.
+
+5. Create EquipmentService.cs.
+
+Responsibilities:
+
+* GetAllEquipment()
+* GetEquipmentByInstanceId(string instanceId)
+* GetEquipped(EquipmentSlot slot)
+* Equip(string instanceId)
+* Unequip(EquipmentSlot slot)
+* LockEquipment(string instanceId, bool locked)
+* SellEquipment(string instanceId)
+* CanUpgrade(string instanceId)
+* UpgradeEquipment(string instanceId)
+* CalculateEquipmentStats()
+* CreateEquipmentInstance(string equipmentId)
+* Save after equip/unequip/upgrade/sell/lock
+
+Rules:
+
+* Cannot sell locked equipment
+* Cannot sell equipped equipment
+* Equipping a new item in the same slot automatically unequips the old one
+* Equipment instance stats are based on EquipmentDefinition + level scaling
+* If EquipmentDefinition is missing, use safe fallback and log warning
+
+6. Create PlayerStatsData.cs.
+
+Fields:
+
+* int maxHp
+* int atk
+* int mag
+* int def
+* int spd
+* int luck
+* int foodBonus
+* int manaGainBonus
+* float dropRateBonus
+* float expBonus
+* float goldBonus
+* float healBonus
+* float critRate
+
+7. Update PlayerProgressionService.
+
+It must calculate total stats using:
+
+* base stats from level/class
+* equipment stats
+* future buff hooks
+
+Suggested base stats:
+Level 1:
+
+* maxHp = 100
+* atk = 10
+* mag = 8
+* def = 5
+* spd = 5
+* luck = 1
+
+Per level:
+
+* maxHp +18
+* atk +2
+* mag +2
+* def +1
+* spd +1 every 2 levels
+* luck +1 every 5 levels
+
+8. Equipment stat scaling.
+
+For each equipment instance:
+
+* level 1 uses base stats
+* each upgrade level adds:
+
+  * hp: +8% of baseHp, rounded up
+  * atk: +10% of baseAtk, rounded up
+  * mag: +10% of baseMag, rounded up
+  * def: +10% of baseDef, rounded up
+  * spd: +5% of baseSpd, rounded up
+  * luck: +5% of baseLuck, rounded up
+
+Minimum gain:
+
+* If base stat > 0, each upgrade should add at least +1 every 2 levels.
+
+9. Equipment upgrade rule.
+
+Can upgrade if:
+
+* equipment level < maxLevel
+* player has enough gold
+* player has required material if any
+
+On upgrade:
+
+* consume gold
+* consume material
+* level += 1
+* recalculate stats
+* save
+* show toast:
+  "Equipment upgraded!"
+
+10. Equipment sell rule.
+
+Sell value:
+
+* Common: 20 + level * 5
+* Uncommon: 50 + level * 10
+* Rare: 120 + level * 20
+* Epic: 300 + level * 40
+* Legendary: 800 + level * 80
+
+On sell:
+
+* remove equipment instance
+* add gold
+* save
+* show toast:
+  "Equipment sold"
+
+11. Create prototype EquipmentDefinition assets.
+
+Editor menu:
+Tools/Isekai 12 Realms/Create Prototype Equipment
+
+Create if missing:
+
+Weapons:
+
+* equip_weapon_wooden_sword
+
+  * Wooden Sword
+  * Common
+  * Slot Weapon
+  * baseAtk 5
+  * maxLevel 5
+
+* equip_weapon_flame_sword
+
+  * Flame Sword
+  * Rare
+  * Slot Weapon
+  * baseAtk 14
+  * baseMag 4
+  * maxLevel 12
+
+* equip_weapon_tide_wand
+
+  * Tide Wand
+  * Rare
+  * Slot Weapon
+  * baseMag 16
+  * maxLevel 12
+
+* equip_weapon_storm_dagger
+
+  * Storm Dagger
+  * Rare
+  * Slot Weapon
+  * baseAtk 10
+  * baseSpd 5
+  * maxLevel 12
+
+Armor:
+
+* equip_armor_traveler_coat
+
+  * Traveler Coat
+  * Common
+  * Slot Armor
+  * baseHp 20
+  * baseDef 3
+  * maxLevel 5
+
+* equip_armor_leaf_vest
+
+  * Leaf Vest
+  * Uncommon
+  * Slot Armor
+  * baseHp 35
+  * baseDef 5
+  * maxLevel 8
+
+* equip_armor_crystal_mail
+
+  * Crystal Mail
+  * Rare
+  * Slot Armor
+  * baseHp 60
+  * baseDef 10
+  * maxLevel 12
+
+Head:
+
+* equip_head_leaf_hood
+
+  * Leaf Hood
+  * Common
+  * Slot Head
+  * baseHp 10
+  * baseMag 2
+  * maxLevel 5
+
+Boots:
+
+* equip_boots_traveler
+
+  * Traveler Boots
+  * Common
+  * Slot Boots
+  * baseSpd 2
+  * maxLevel 5
+
+Ring:
+
+* equip_ring_lucky
+
+  * Lucky Ring
+  * Uncommon
+  * Slot Ring
+  * baseLuck 3
+  * baseSpd 1
+  * maxLevel 8
+
+Charm:
+
+* equip_charm_realm
+
+  * Realm Charm
+  * Rare
+  * Slot Charm
+  * baseHp 25
+  * baseMag 5
+  * baseLuck 2
+  * maxLevel 12
+
+12. Upgrade cost prototype.
+
+For Common:
+
+* Level 2: 50 gold, mat_slime_jelly x1
+* Level 3: 100 gold, mat_slime_jelly x2
+* Level 4: 160 gold, mat_slime_jelly x3
+* Level 5: 250 gold, mat_slime_jelly x5
+
+For Uncommon:
+
+* Level 2: 100 gold, mat_slime_jelly x2
+* Level 3: 180 gold, mat_slime_jelly x3
+* Level 4: 280 gold, mat_slime_jelly x4
+* Level 5+: scale by +120 gold and +1 material each level
+
+For Rare:
+
+* Level 2: 180 gold, mat_slime_jelly x3
+* Level 3: 300 gold, mat_slime_jelly x5
+* Level 4+: scale by +180 gold and +2 material each level
+
+13. Extend GameContentDatabase.
+
+Add:
+
+* List<EquipmentDefinition> equipmentDefinitions
+
+Methods:
+
+* GetEquipmentDefinitionById(string id)
+* GetEquipmentBySlot(EquipmentSlot slot)
+
+Update Rebuild Content Database:
+
+* Find all EquipmentDefinition assets
+* Add to database
+* Avoid duplicates
+
+14. Update drop table handling.
+
+When DropEntry.isEquipment = true:
+
+* use EquipmentService.CreateEquipmentInstance(equipmentId)
+* add the equipment instance to inventory
+* show dropped equipment in Victory popup
+
+If equipment definition is missing:
+
+* do not crash
+* log warning
+* show fallback item name
+
+15. Update InventoryUI.
+
+InventoryUI must:
+
+* Show both item stacks and equipment instances
+* Tabs:
+
+  * All
+  * Equipment
+  * Material
+  * Consumable
+  * Quest
+* Equipment cards must show:
+
+  * icon
+  * displayName
+  * rarity
+  * level
+  * slot
+  * equipped marker if equipped
+  * locked marker if locked
+* Selecting equipment shows detail panel:
+
+  * name
+  * rarity
+  * slot
+  * level / maxLevel
+  * stat bonuses
+  * buttons:
+
+    * Equip or Unequip
+    * Upgrade
+    * Lock/Unlock
+    * Sell
+* Selecting item stack shows:
+
+  * name
+  * amount
+  * type
+  * description placeholder
+
+16. Update EquipmentUI.
+
+EquipmentUI must:
+
+* Show six slots:
+
+  * Weapon
+  * Armor
+  * Head
+  * Boots
+  * Ring
+  * Charm
+* Each slot shows equipped item or Empty
+* Selecting slot shows equipped item detail
+* Add button:
+
+  * Change
+* Change opens equipment list filtered by slot
+* Equip selected item updates loadout and stats
+* Back returns HeroUI
+
+17. Update HeroUI.
+
+HeroUI must display real calculated total stats:
+
+* Level
+* EXP current / required
+* HP
+* ATK
+* MAG
+* DEF
+* SPD
+* LUCK
+* Equipped Skill 1
+* Equipped Skill 2
+* Ultimate
+
+Add buttons:
+
+* Equipment
+* Skills
+* Inventory
+
+18. Make stats affect battle.
+
+When starting battle:
+
+* Player maxHp comes from calculated stats
+* Player attack comes from calculated ATK
+* Player magic comes from calculated MAG
+* Player defense comes from calculated DEF
+* Player speed comes from calculated SPD
+* Player luck comes from calculated LUCK
+* Food starts at 20 + foodBonus if available
+
+Update token effects:
+
+* Sword damage:
+  base = 5 per tile + player ATK * 0.25 per matched tile group
+* Heart heal:
+  base = 4 per tile + player MAG * 0.20 per matched tile group
+* Shield:
+  base = 3 per tile + player DEF * 0.15 per matched tile group
+* Star:
+  damage = 2 per tile + player MAG * 0.10
+* Mana gain:
+  base token mana + manaGainBonus
+
+Update enemy damage taken:
+
+* finalDamage = max(1, rawDamage - enemyDefense * 0.5)
+
+Update player damage taken:
+
+* finalDamage = max(1, enemyAttack - playerDEF * 0.4)
+* Shield absorbs before HP
+
+19. Make LUCK affect drops.
+
+When rolling drop table:
+
+* effectiveChance = baseChance * (1 + luck * 0.005 + dropRateBonus)
+* clamp to max 0.95
+* Do not apply luck to guaranteed drops if chance >= 1.0
+
+20. Make ATK/MAG affect skills.
+
+Update SkillEffectResolver:
+
+* Damage effects:
+  finalDamage = skillBaseValue + playerATK * 0.5 + playerMAG * 0.25
+* Heal effects:
+  finalHeal = skillBaseValue + playerMAG * 0.6
+* Shield effects:
+  finalShield = skillBaseValue + playerDEF * 0.4 + playerMAG * 0.2
+
+Then apply skill level scaling on top.
+
+21. Add equipment comparison.
+
+When selecting an equipment item, show comparison against currently equipped item in same slot:
+
+* HP +10 or -5
+* ATK +3
+* DEF -1
+
+Use green text for positive, red/orange for negative if available.
+Fallback simple text is okay.
+
+22. Add Equipment Editor tab to Content Editor.
+
+In IsekaiContentEditorWindow, add tab:
+
+* Equipment
+
+Must allow:
+
+* View all EquipmentDefinition assets
+* Filter by slot
+* Filter by rarity
+* Create new equipment
+* Duplicate selected equipment
+* Edit fields:
+
+  * id
+  * displayName
+  * description
+  * iconAssetId
+  * slot
+  * rarity
+  * baseHp
+  * baseAtk
+  * baseMag
+  * baseDef
+  * baseSpd
+  * baseLuck
+  * maxLevel
+  * upgradeCosts
+* Save selected equipment
+* Ping asset
+
+23. Update validation.
+
+Content Validator must check:
+
+* Every equipment has id
+* No duplicate equipment id
+* displayName not empty
+* maxLevel >= 1
+* rarity valid
+* slot valid
+* upgradeCosts targetLevel between 2 and maxLevel
+* drop table equipmentId exists in equipment database
+* equipped save references do not crash if item missing
+
+24. Add test/debug helpers.
+
+In Settings popup or dev panel, add debug-only buttons:
+
+* Add 500 Gold
+* Add 5 Skill Scrolls
+* Add 10 Slime Jelly
+* Add Test Wooden Sword
+* Add Test Traveler Coat
+
+These buttons should be easy to remove later.
+They must be clearly labelled "DEBUG".
+
+25. Preserve existing systems.
+
+Do not break:
+
+* local save/load
+* stage completion
+* battle rewards
+* skill upgrade
+* battle result popup
+* world map unlock
+* content editor
+* asset manifest
+
+26. Acceptance criteria:
+
+* Run Tools/Isekai 12 Realms/Create Prototype Equipment
+* Run Tools/Isekai 12 Realms/Rebuild Content Database
+* Run Tools/Isekai 12 Realms/Validate Content
+* Open GameScene and press Play
+* Start Game
+* Use debug button to add equipment/material/gold
+* Open Inventory
+* Equipment appears
+* Select Wooden Sword
+* Equip it
+* HeroUI ATK increases
+* Enter Battle
+* Sword matches deal more damage than before
+* Upgrade Wooden Sword
+* Gold/material are consumed
+* Weapon level increases
+* ATK increases again
+* Save persists after stopping and restarting Play Mode
+* Equipment dropped from battle appears in Inventory
+* Locked equipment cannot be sold
+* Equipped equipment cannot be sold
+* Drop table equipment reward creates equipment instance
+* Skill damage uses player stats
+* No console errors
+* No missing script errors
+
+### Prompt 13
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish with animation/VFX/SFX hooks
+* Local save and progression
+* Inventory/equipment system
+* Equipment stats affecting battle
+* Data-driven SkillDefinition and skill upgrades
+* Data-driven Realm/Stage/Enemy/DropTable
+* Content Editor tools
+* Placeholder PNG asset pipeline and AssetManifest
+
+Next task: implement Quest System and Tutorial Flow.
+
+Do not implement Firebase yet.
+Do not implement IAP yet.
+Do not implement Addressables yet.
+Do not rewrite battle, equipment, skill, save, or stage systems.
+Do not break existing progression.
+
+Goal:
+Create a data-driven quest and tutorial system that guides new players through the first gameplay loop:
+Title → Character Creation → Main Town → World Map → Stage 1-1 → Battle → Victory Reward → Inventory → Equip Item → Upgrade Skill.
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Quests
+   Assets/_Game/Scripts/Tutorial
+   Assets/_Game/ScriptableObjects/Quests
+   Assets/_Game/ScriptableObjects/Tutorial
+
+2. Create QuestDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string id
+* string displayName
+* string description
+* QuestType questType
+* List<QuestObjectiveData> objectives
+* List<QuestRewardData> rewards
+* List<string> requiredQuestIds
+* bool autoStart
+* bool autoClaim
+* int order
+* string iconAssetId
+
+Create enum QuestType:
+
+* Main
+* Side
+* Daily
+* Achievement
+* Tutorial
+
+3. Create QuestObjectiveData.cs.
+
+Fields:
+
+* QuestObjectiveType objectiveType
+* string targetId
+* int requiredAmount
+* string description
+
+Create enum QuestObjectiveType:
+
+* CompleteStage
+* DefeatEnemy
+* CollectItem
+* OwnEquipment
+* EquipEquipment
+* UpgradeEquipment
+* UpgradeSkill
+* ReachLevel
+* EarnGold
+* SpendGold
+* OpenScreen
+* MatchTokenCount
+* UseSkill
+* WinBattle
+* TalkToNpc
+
+4. Create QuestRewardData.cs.
+
+Fields:
+
+* QuestRewardType rewardType
+* string itemId
+* string equipmentId
+* int amount
+
+Create enum QuestRewardType:
+
+* Gold
+* SoulGem
+* Item
+* Equipment
+* EXP
+
+5. Create PlayerQuestData.cs.
+
+Fields:
+
+* string questId
+* QuestStatus status
+* List<QuestObjectiveProgressData> objectiveProgress
+* long startedAt
+* long completedAt
+* long claimedAt
+
+Create QuestStatus enum:
+
+* Locked
+* Available
+* Active
+* Completed
+* Claimed
+
+Create QuestObjectiveProgressData:
+
+* int objectiveIndex
+* int currentAmount
+* bool completed
+
+6. Update PlayerSaveData.
+
+Add:
+
+* List<PlayerQuestData> quests
+* List<string> completedTutorialStepIds
+* bool tutorialEnabled
+* string activeTutorialId
+* string activeTutorialStepId
+
+Migration rule:
+If old save has no quests:
+
+* initialize quest list safely
+* do not reset existing progress
+* add available autoStart quests
+
+7. Create QuestService.cs.
+
+Responsibilities:
+
+* Initialize quests from save and QuestDatabase
+* GetQuestStatus(string questId)
+* StartQuest(string questId)
+* TrackProgress(QuestObjectiveType type, string targetId, int amount)
+* CompleteQuest(string questId)
+* CanClaimQuest(string questId)
+* ClaimQuest(string questId)
+* GetActiveQuests()
+* GetAvailableQuests()
+* GetCompletedUnclaimedQuests()
+* UnlockNextQuests()
+* Save after quest progress, complete, claim
+
+Rules:
+
+* autoStart quests start automatically if requirements are met
+* autoClaim quests claim automatically after completion
+* completed quests unlock quests that depend on them
+* claiming rewards must use PlayerProgressionService and EquipmentService
+* no duplicate reward grants
+
+8. Create QuestDatabase.cs or extend GameContentDatabase.
+
+Preferred:
+Extend GameContentDatabase with:
+
+* List<QuestDefinition> quests
+
+Methods:
+
+* GetQuestById(string id)
+* GetQuestsByType(QuestType type)
+* GetAutoStartQuests()
+
+Update Rebuild Content Database to include QuestDefinition assets.
+
+9. Hook quest progress events.
+
+Trigger QuestService.TrackProgress from existing systems:
+
+When screen opens:
+
+* OpenScreen with targetId:
+
+  * screen_main_town
+  * screen_world_map
+  * screen_battle
+  * screen_inventory
+  * screen_hero
+  * screen_skills
+  * screen_equipment
+  * screen_shop
+
+When battle ends with victory:
+
+* WinBattle targetId = selected stage id
+* CompleteStage targetId = selected stage id
+* DefeatEnemy targetId = enemy id
+
+When item obtained:
+
+* CollectItem targetId = itemId
+
+When equipment obtained:
+
+* OwnEquipment targetId = equipmentId
+
+When equipment equipped:
+
+* EquipEquipment targetId = equipmentId and slot id if useful
+
+When equipment upgraded:
+
+* UpgradeEquipment targetId = equipmentId
+
+When skill upgraded:
+
+* UpgradeSkill targetId = skillId
+
+When skill used:
+
+* UseSkill targetId = skillId
+
+When token matched:
+
+* MatchTokenCount targetId = TileType name lowercase, e.g. sword, heart, mana
+
+When player level changes:
+
+* ReachLevel targetId empty, amount = level
+
+When gold gained:
+
+* EarnGold amount
+
+When gold spent:
+
+* SpendGold amount
+
+10. Create prototype quest assets.
+
+Editor menu:
+Tools/Isekai 12 Realms/Create Prototype Quests
+
+Create these quests if missing:
+
+quest_tutorial_001_welcome
+
+* Type: Tutorial
+* Display: Welcome to Asteria
+* Objective: OpenScreen screen_main_town x1
+* Reward: Gold 20
+* autoStart true
+
+quest_tutorial_002_open_world_map
+
+* Type: Tutorial
+* Display: Find Meadow Gate
+* Required: quest_tutorial_001_welcome
+* Objective: OpenScreen screen_world_map x1
+* Reward: Gold 20
+* autoStart true
+
+quest_tutorial_003_clear_first_stage
+
+* Type: Tutorial
+* Display: Win Your First Battle
+* Required: quest_tutorial_002_open_world_map
+* Objective: CompleteStage stage_01_01 x1
+* Reward: EXP 30, Gold 30
+* autoStart true
+
+quest_tutorial_004_open_inventory
+
+* Type: Tutorial
+* Display: Check Your Bag
+* Required: quest_tutorial_003_clear_first_stage
+* Objective: OpenScreen screen_inventory x1
+* Reward: item_potion_small x1
+* autoStart true
+
+quest_tutorial_005_equip_weapon
+
+* Type: Tutorial
+* Display: Equip Your First Gear
+* Required: quest_tutorial_004_open_inventory
+* Objective: EquipEquipment any x1
+* Reward: Gold 50
+* autoStart true
+
+quest_tutorial_006_open_skills
+
+* Type: Tutorial
+* Display: Learn Your Skills
+* Required: quest_tutorial_005_equip_weapon
+* Objective: OpenScreen screen_skills x1
+* Reward: item_skill_scroll x1
+* autoStart true
+
+quest_main_001_meadow_gate
+
+* Type: Main
+* Display: Meadow Gate Begins
+* Objective: CompleteStage stage_01_03 x1
+* Reward: Gold 150, EXP 100, SoulGem 5
+* autoStart true
+
+quest_main_002_ember_village
+
+* Type: Main
+* Display: Ember Village Path
+* Required: quest_main_001_meadow_gate
+* Objective: CompleteStage stage_02_03 x1
+* Reward: Gold 250, EXP 180, SoulGem 10
+* autoStart true
+
+quest_daily_win_3_battles
+
+* Type: Daily
+* Display: Daily Training
+* Objective: WinBattle any x3
+* Reward: Gold 100, item_potion_small x1
+* autoStart true
+
+quest_achievement_first_skill
+
+* Type: Achievement
+* Display: First Spell Upgrade
+* Objective: UpgradeSkill any x1
+* Reward: SoulGem 5
+* autoStart true
+
+11. Update QuestUI.
+
+QuestUI must show tabs:
+
+* Main
+* Tutorial
+* Daily
+* Achievement
+* Completed
+
+Each quest card shows:
+
+* quest name
+* description
+* status
+* objective progress
+* reward list
+* Claim button if completed
+* Go button if quest has suggested screen
+
+Quest status visual:
+
+* Locked: grey
+* Active: normal
+* Completed: highlighted
+* Claimed: dim with check mark
+
+12. Add Quest Tracker to MainTownUI.
+
+Show a small quest tracker panel:
+
+* current active tutorial/main quest
+* objective text
+* progress count
+* "Go" button
+
+Tracker priority:
+
+1. Active Tutorial quest
+
+2. Active Main quest
+
+3. Daily quest
+
+4. Add Quest Tracker to WorldMapUI and BattleUI optionally.
+
+WorldMapUI:
+
+* show selected quest target if stage is required
+
+BattleUI:
+
+* show current battle-related quest objective if applicable
+
+14. Create TutorialDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string id
+* string displayName
+* List<TutorialStepData> steps
+* bool skippable
+* bool autoStart
+
+Create TutorialStepData:
+
+* string stepId
+* TutorialTriggerType triggerType
+* string targetScreen
+* string targetUiElementName
+* string message
+* TutorialHighlightType highlightType
+* bool pauseGameplay
+* bool waitForClickTarget
+* string nextStepId
+
+Create enum TutorialTriggerType:
+
+* OnScreenOpened
+* OnBattleStarted
+* OnTileSelected
+* OnTileMatched
+* OnQuestCompleted
+* Manual
+
+Create enum TutorialHighlightType:
+
+* None
+* Circle
+* Rectangle
+* Arrow
+* HandPointer
+
+15. Create TutorialService.cs.
+
+Responsibilities:
+
+* Initialize tutorial state from save
+* StartTutorial(string tutorialId)
+* CompleteStep(string stepId)
+* SkipTutorial(string tutorialId)
+* IsStepCompleted(string stepId)
+* HandleScreenOpened(string screenId)
+* HandleBattleStarted()
+* HandleTileMatched(TileType tileType)
+* Save tutorial progress
+
+Rules:
+
+* Tutorial can be skipped if skippable
+* Completed steps never repeat
+* Tutorial should not permanently block gameplay if UI target is missing
+* If target UI element is missing, log warning and continue safely
+
+16. Create TutorialOverlayUI.
+
+Under PopupLayer or dedicated TutorialLayer:
+
+* full-screen transparent blocker optional
+* dim background
+* highlight frame
+* arrow/hand pointer placeholder
+* message panel
+* Next button
+* Skip button
+
+Use TextMeshPro.
+Use UI Images.
+Do not depend on production art.
+
+17. Create first tutorial flow.
+
+Editor menu:
+Tools/Isekai 12 Realms/Create Prototype Tutorials
+
+Create tutorial:
+tutorial_first_session
+
+Steps:
+
+1. tut_welcome
+
+* Trigger: OnScreenOpened screen_main_town
+* Message: "Welcome, reborn hero! This is your town."
+* Highlight: None
+* Next
+
+2. tut_open_world_map
+
+* Target UI: bottom button Adventure
+* Message: "Tap Adventure to find your first stage."
+* Highlight: Rectangle
+* Wait for click target
+
+3. tut_select_stage
+
+* Target UI: Stage 1-1 card or Enter Battle button
+* Message: "Choose Stage 1-1 to start your first battle."
+* Wait for click target
+
+4. tut_battle_tokens
+
+* Trigger: OnBattleStarted
+* Message: "Match 3 tokens to act. Sword attacks, Heart heals, Mana charges skills."
+* Highlight board
+
+5. tut_match_sword
+
+* Message: "Try matching Sword tokens to damage the enemy."
+* Wait for tile match sword if possible
+* If no sword match is available, allow Next
+
+6. tut_use_skill
+
+* Target UI: Skill 1 button
+* Message: "When you have enough mana, use your skill."
+* If not enough mana, allow Skip/Next
+
+7. tut_victory_reward
+
+* Trigger: OnQuestCompleted quest_tutorial_003_clear_first_stage
+* Message: "Great! Battles give EXP, Gold, and items."
+
+8. tut_open_inventory
+
+* Target UI: Bag button
+* Message: "Open your Bag to check rewards."
+* Wait for click target
+
+9. tut_equip_item
+
+* Target UI: Inventory equipment card if available
+* Message: "Equip gear to increase your stats."
+* Allow Next if no equipment exists
+
+18. Update UI element naming.
+
+Important UI buttons must have stable names for tutorial targeting:
+
+* Button_StartGame
+* Button_Adventure
+* Button_Hero
+* Button_Bag
+* Button_Quest
+* Button_Shop
+* Button_EnterBattle
+* Button_Skill1
+* Button_Skill2
+* Button_Ultimate
+* Button_InventoryEquip
+* Button_SkillUpgrade
+
+19. Add tutorial-safe fallbacks.
+
+If a targeted UI element is missing:
+
+* show message without highlight
+* log warning
+* allow Next
+* never softlock
+
+20. Add daily quest reset prototype.
+
+Daily quests:
+
+* Store lastDailyResetDate in PlayerSaveData or QuestSaveData
+* On game start, if date changed:
+
+  * reset daily quest progress
+  * make daily quests active again
+* Use local device date for MVP
+* Do not use server time yet
+
+21. Add quest notification badges.
+
+Show small badge on:
+
+* Quest bottom nav button if claimable quests exist
+* MainTown Quest Tracker if quest completed
+* QuestUI tab if claimable quests exist
+
+22. Add content editor support.
+
+In IsekaiContentEditorWindow, add tab:
+
+* Quests
+* Tutorials
+
+Quest tab:
+
+* View all QuestDefinition assets
+* Filter by QuestType
+* Create new quest
+* Duplicate selected quest
+* Edit id, displayName, description, type, objectives, rewards, requirements, autoStart, autoClaim, order, iconAssetId
+* Save and ping asset
+
+Tutorial tab:
+
+* View all TutorialDefinition assets
+* Create new tutorial
+* Duplicate selected tutorial
+* Edit id, displayName, skippable, autoStart, steps
+* Save and ping asset
+
+23. Update validation.
+
+Content Validator must check:
+
+* Every quest has id
+* No duplicate quest id
+* Every quest has displayName
+* Every quest has at least one objective
+* Required quest ids exist
+* Quest reward item/equipment ids are valid if database exists
+* Quest objective stage/enemy/skill ids exist if targetId is not any
+* Every tutorial has id
+* No duplicate tutorial id
+* Tutorial step ids are unique within tutorial
+* Tutorial target screen names are known if provided
+* No tutorial chain creates obvious infinite loop
+
+24. Preserve existing systems.
+
+Do not break:
+
+* battle
+* stage progression
+* save/load
+* inventory/equipment
+* skill upgrades
+* content editor
+* asset manifest
+* local rewards
+
+25. Acceptance criteria:
+
+* Run Tools/Isekai 12 Realms/Create Prototype Quests
+* Run Tools/Isekai 12 Realms/Create Prototype Tutorials
+* Run Tools/Isekai 12 Realms/Rebuild Content Database
+* Run Tools/Isekai 12 Realms/Validate Content
+* Open GameScene and press Play
+* Start new game
+* Main Town shows tutorial message
+* Quest Tracker shows active tutorial quest
+* Adventure button is highlighted by tutorial
+* Opening World Map progresses tutorial quest
+* Completing Stage 1-1 completes tutorial quest
+* Victory reward is granted only once
+* QuestUI shows completed quest with Claim button if not auto-claimed
+* Claiming quest grants reward and saves
+* Daily quest appears
+* Achievement quest appears
+* Stop and restart Play Mode
+* Quest progress persists
+* Daily quest does not reset until date changes
+* Tutorial completed steps do not repeat
+* Missing tutorial target does not softlock
+* No console errors
+* No missing script errors
+

@@ -11,17 +11,27 @@ namespace Isekai12Realms.Character
     public class PlayerStats
     {
         public int hp;
+        public int maxHp;
         public int mana;
         public int atk;
         public int mag;
         public int def;
         public int spd;
+        public int luck;
+        public int foodBonus;
+        public int manaGainBonus;
+        public float dropRateBonus;
+        public float expBonus;
+        public float goldBonus;
+        public float healBonus;
+        public float critRate;
     }
 
     public class PlayerProgressionService : MonoBehaviour
     {
         private ISaveService saveService;
         private ToastService toastService;
+        private EquipmentService equipmentService;
 
         public PlayerSaveData CurrentSave => saveService?.CurrentSave;
         public bool LastAddExpLeveledUp { get; private set; }
@@ -31,6 +41,7 @@ namespace Isekai12Realms.Character
         {
             saveService = save;
             toastService = toast;
+            equipmentService = GetComponent<EquipmentService>();
             saveService.LoadOrCreateSave();
             Changed?.Invoke();
         }
@@ -106,6 +117,7 @@ namespace Isekai12Realms.Character
 
         public void AddEquipment(EquipmentInstanceData equipment)
         {
+            if (equipment == null) return;
             CurrentSave.inventory.equipments.Add(equipment);
             Toast($"Equipment gained: {equipment.displayName}");
             SaveAndNotify();
@@ -113,46 +125,56 @@ namespace Isekai12Realms.Character
 
         public bool Equip(string instanceId)
         {
-            EquipmentInstanceData equipment = CurrentSave.inventory.equipments.Find(e => e.instanceId == instanceId);
-            if (equipment == null)
+            EquipmentService service = GetEquipmentService();
+            if (service != null)
             {
-                Toast("Not enough item");
-                return false;
+                bool equipped = service.Equip(instanceId);
+                Changed?.Invoke();
+                return equipped;
             }
-
-            SetEquippedInstance(equipment.slot, equipment.instanceId);
-            Toast($"Equipment equipped: {equipment.displayName}");
-            SaveAndNotify();
-            return true;
+            return false;
         }
 
         public void Unequip(EquipmentSlot slot)
         {
-            SetEquippedInstance(slot, string.Empty);
-            SaveAndNotify();
+            EquipmentService service = GetEquipmentService();
+            if (service != null) service.Unequip(slot);
+            Changed?.Invoke();
         }
 
         public PlayerStats CalculateTotalStats()
         {
             PlayerStats stats = new PlayerStats
             {
-                hp = CurrentSave.maxHp,
+                maxHp = 100 + (CurrentSave.level - 1) * 18,
                 mana = CurrentSave.maxMana,
-                atk = 10,
-                mag = 8,
-                def = 5,
-                spd = 5
+                atk = 10 + (CurrentSave.level - 1) * 2,
+                mag = 8 + (CurrentSave.level - 1) * 2,
+                def = 5 + (CurrentSave.level - 1),
+                spd = 5 + (CurrentSave.level - 1) / 2,
+                luck = 1 + (CurrentSave.level - 1) / 5
             };
 
-            foreach (EquipmentInstanceData equipment in CurrentSave.inventory.equipments)
+            EquipmentService service = GetEquipmentService();
+            PlayerStatsData equipmentStats = service != null ? service.CalculateEquipmentStats() : null;
+            if (equipmentStats != null)
             {
-                if (!IsEquipped(equipment.instanceId)) continue;
-                stats.hp += equipment.hpBonus;
-                stats.atk += equipment.atkBonus;
-                stats.mag += equipment.magBonus;
-                stats.def += equipment.defBonus;
-                stats.spd += equipment.spdBonus;
+                stats.maxHp += equipmentStats.maxHp;
+                stats.atk += equipmentStats.atk;
+                stats.mag += equipmentStats.mag;
+                stats.def += equipmentStats.def;
+                stats.spd += equipmentStats.spd;
+                stats.luck += equipmentStats.luck;
+                stats.foodBonus += equipmentStats.foodBonus;
+                stats.manaGainBonus += equipmentStats.manaGainBonus;
+                stats.dropRateBonus += equipmentStats.dropRateBonus;
+                stats.expBonus += equipmentStats.expBonus;
+                stats.goldBonus += equipmentStats.goldBonus;
+                stats.healBonus += equipmentStats.healBonus;
+                stats.critRate += equipmentStats.critRate;
             }
+
+            stats.hp = stats.maxHp;
 
             return stats;
         }
@@ -187,6 +209,12 @@ namespace Isekai12Realms.Character
         {
             EquipmentLoadoutData loadout = CurrentSave.equipment;
             return loadout.weaponInstanceId == instanceId || loadout.armorInstanceId == instanceId || loadout.headInstanceId == instanceId || loadout.bootsInstanceId == instanceId || loadout.ringInstanceId == instanceId || loadout.charmInstanceId == instanceId;
+        }
+
+        private EquipmentService GetEquipmentService()
+        {
+            if (equipmentService == null) equipmentService = GetComponent<EquipmentService>();
+            return equipmentService;
         }
 
         private void SetEquippedInstance(EquipmentSlot slot, string instanceId)

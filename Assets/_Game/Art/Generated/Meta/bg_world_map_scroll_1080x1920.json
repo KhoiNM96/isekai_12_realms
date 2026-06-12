@@ -1,0 +1,14 @@
+﻿{
+    "id":  "bg_world_map_scroll",
+    "file":  "bg_world_map_scroll_1080x1920.png",
+    "size":  [
+                 1080,
+                 1920
+             ],
+    "category":  "background",
+    "usage":  "bg_world_map_scroll placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  false,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for bg_world_map_scroll, no copied art, no watermark"
+}

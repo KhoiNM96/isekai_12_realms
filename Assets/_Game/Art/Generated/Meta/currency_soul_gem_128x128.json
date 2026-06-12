@@ -1,0 +1,14 @@
+﻿{
+    "id":  "currency_soul_gem",
+    "file":  "currency_soul_gem_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "currency",
+    "usage":  "currency_soul_gem placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for currency_soul_gem, no copied art, no watermark"
+}

@@ -1,0 +1,14 @@
+﻿{
+    "id":  "char_hero_flame_hurt",
+    "file":  "char_hero_flame_hurt_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "character",
+    "usage":  "char_hero_flame_hurt placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for char_hero_flame_hurt, no copied art, no watermark"
+}

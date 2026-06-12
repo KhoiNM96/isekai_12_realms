@@ -16,6 +16,8 @@ namespace Isekai12Realms.Equipment
         public int magBonus;
         public int defBonus;
         public int spdBonus;
+        public int luckBonus;
         public bool locked;
+        public long acquiredAt;
     }
 }

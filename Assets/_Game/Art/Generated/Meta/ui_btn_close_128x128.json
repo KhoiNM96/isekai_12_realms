@@ -1,0 +1,14 @@
+﻿{
+    "id":  "ui_btn_close",
+    "file":  "ui_btn_close_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "ui",
+    "usage":  "ui_btn_close placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for ui_btn_close, no copied art, no watermark"
+}

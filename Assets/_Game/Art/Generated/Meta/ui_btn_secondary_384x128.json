@@ -1,0 +1,14 @@
+﻿{
+    "id":  "ui_btn_secondary",
+    "file":  "ui_btn_secondary_384x128.png",
+    "size":  [
+                 384,
+                 128
+             ],
+    "category":  "ui",
+    "usage":  "ui_btn_secondary placeholder",
+    "style":  "bright chibi fantasy placeholder 2D",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "original procedural placeholder for ui_btn_secondary, no copied art, no watermark"
+}
