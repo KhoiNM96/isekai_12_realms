@@ -4943,3 +4943,594 @@ Do not break:
 * No console errors
 * No missing script errors
 
+### Prompt 14
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish with animation/VFX/SFX hooks
+* Local save and progression
+* Inventory/equipment system
+* Equipment stats affecting battle
+* Data-driven SkillDefinition and skill upgrades
+* Data-driven Realm/Stage/Enemy/DropTable
+* Quest System and Tutorial Flow
+* Content Editor tools
+* Placeholder PNG asset pipeline and AssetManifest
+
+Next task: implement the offline shop system, soft currency economy shop, and IAP placeholder structure.
+
+Do not implement real Unity IAP purchase yet.
+Do not implement Firebase yet.
+Do not implement Addressables yet.
+Do not add real payment processing.
+Do not sell direct equipment or power items through IAP.
+
+Goal:
+Create a complete shop system that works offline:
+
+* Daily Shop
+* Gold Shop
+* Gem Shop
+* Cosmetic placeholder shop
+* IAP placeholder tab showing Soul Gem packs only
+* Purchase confirmation popup
+* Local save after purchase
+* Shop refresh logic
+* Economy validation
+
+IAP tab must only prepare data and UI for later Unity IAP integration.
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Shop
+   Assets/_Game/Scripts/Economy
+   Assets/_Game/ScriptableObjects/Shop
+   Assets/_Game/ScriptableObjects/Economy
+
+2. Create CurrencyType enum:
+
+* Gold
+* SoulGem
+* RealmToken
+* Material
+
+3. Create ShopDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string id
+* string displayName
+* ShopType shopType
+* List<ShopItemDefinition> items
+* bool refreshDaily
+* int refreshHourLocal
+* string iconAssetId
+
+Create ShopType enum:
+
+* Daily
+* GoldShop
+* GemShop
+* Cosmetic
+* IAPPlaceholder
+
+4. Create ShopItemDefinition.cs.
+
+Fields:
+
+* string id
+* string displayName
+* string description
+* string iconAssetId
+* ShopItemType itemType
+* string itemId
+* string equipmentId
+* string cosmeticId
+* int amount
+* CurrencyType priceCurrency
+* int priceAmount
+* int purchaseLimitPerDay
+* int purchaseLimitLifetime
+* bool enabled
+
+Create ShopItemType enum:
+
+* Item
+* Equipment
+* Gold
+* SoulGem
+* Cosmetic
+* InventorySlot
+* Placeholder
+
+Important:
+
+* ShopItemType Equipment is allowed only for debug/prototype soft shop if explicitly marked, but normal shop should not sell strong equipment directly.
+* IAPPlaceholder must never grant items directly.
+* IAPPlaceholder must only represent Soul Gem packs.
+
+5. Create IAPProductDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string productId
+* string displayName
+* string description
+* string platformProductId
+* int soulGemAmount
+* int bonusSoulGemAmount
+* string priceTextPlaceholder
+* bool enabled
+
+Prototype products:
+
+* gems_tiny
+
+  * $0.99
+  * 120 Soul Gems
+  * 0 bonus
+
+* gems_small
+
+  * $2.99
+  * 400 Soul Gems
+  * 40 bonus
+
+* gems_medium
+
+  * $4.99
+  * 750 Soul Gems
+  * 180 bonus
+
+* gems_large
+
+  * $9.99
+  * 1650 Soul Gems
+  * 500 bonus
+
+* gems_mega
+
+  * $19.99
+  * 3600 Soul Gems
+  * 1800 bonus
+
+6. Create PurchaseRecord.cs.
+
+Fields:
+
+* string transactionId
+* string productId
+* string source
+* int amount
+* long purchasedAt
+* bool granted
+
+For placeholder purchases:
+
+* source = "debug_iap_placeholder"
+* transactionId = "debug_" + timestamp + productId
+
+7. Update PlayerSaveData.
+
+Add:
+
+* List<PurchaseRecord> purchaseRecords
+* List<ShopPurchaseLimitData> shopPurchaseLimits
+* int inventoryExtraSlots
+* string lastDailyShopRefreshDate
+
+Create ShopPurchaseLimitData:
+
+* string shopItemId
+* int dailyCount
+* int lifetimeCount
+* string dateKey
+
+Migration:
+
+* If missing, initialize empty lists safely
+* Do not reset existing inventory/equipment/quest/skill progress
+
+8. Create ShopService.cs.
+
+Responsibilities:
+
+* Load shop definitions from GameContentDatabase
+* GetShopItems(ShopType type)
+* CanPurchase(ShopItemDefinition item)
+* Purchase(ShopItemDefinition item)
+* CheckDailyRefresh()
+* ResetDailyLimitsIfNeeded()
+* GetPurchaseLimitData(string shopItemId)
+* Save after purchase
+
+Purchase rules:
+
+* Check item enabled
+* Check player has enough currency
+* Check daily limit
+* Check lifetime limit
+* Deduct currency
+* Grant reward
+* Increase purchase count
+* Save immediately
+* Show toast
+
+Supported grants:
+
+* Item stack
+* Gold
+* SoulGem
+* InventorySlot increase
+* Cosmetic placeholder unlock only if cosmetic system exists, otherwise save placeholder log/message
+
+9. Create IAPPlaceholderService.cs.
+
+Responsibilities:
+
+* Load IAPProductDefinition list
+* GetProducts()
+* SimulatePurchase(string productId) only in Editor or Development Build
+* GrantSoulGemFromProduct(productId, transactionId)
+* Prevent duplicate grant by transactionId
+* Save immediately
+
+Important:
+
+* No real money purchase yet
+* No Unity IAP package setup yet
+* All simulate purchase buttons must be labelled:
+  "DEBUG SIMULATE PURCHASE"
+* In non-development builds, simulate button should be hidden or disabled
+
+10. Extend GameContentDatabase.
+
+Add:
+
+* List<ShopDefinition> shops
+* List<IAPProductDefinition> iapProducts
+
+Methods:
+
+* GetShopByType(ShopType type)
+* GetShopItemById(string id)
+* GetIAPProductById(string productId)
+
+Update Rebuild Content Database:
+
+* Include ShopDefinition assets
+* Include IAPProductDefinition assets
+
+11. Create prototype shop content.
+
+Editor menu:
+Tools/Isekai 12 Realms/Create Prototype Shop Content
+
+Create ShopDefinition assets:
+
+shop_daily
+
+* type Daily
+* refreshDaily true
+* refreshHourLocal 4
+
+Items:
+
+* daily_potion_small
+
+  * Small Potion x1
+  * price: Gold 50
+  * limit/day 3
+
+* daily_food_basket
+
+  * Food Basket x1
+  * price: Gold 80
+  * limit/day 2
+
+* daily_skill_scroll
+
+  * Skill Scroll x1
+  * price: Gold 250
+  * limit/day 1
+
+shop_gold
+
+* type GoldShop
+
+Items:
+
+* gold_potion_small
+
+  * Small Potion x1
+  * price: Gold 70
+  * no daily limit
+
+* gold_shuffle_bell
+
+  * Shuffle Bell x1
+  * price: Gold 120
+  * no daily limit
+
+shop_gem
+
+* type GemShop
+
+Items:
+
+* gem_gold_pack_small
+
+  * grant Gold 1000
+  * price: SoulGem 50
+  * limit/day 3
+
+* gem_inventory_slots_10
+
+  * grant InventorySlot +10
+  * price: SoulGem 100
+  * lifetime limit 5
+
+* gem_lucky_cookie
+
+  * Lucky Cookie x1
+  * price: SoulGem 30
+  * limit/day 5
+
+shop_cosmetic
+
+* type Cosmetic
+
+Items:
+
+* cosmetic_board_skin_meadow
+
+  * Cosmetic placeholder
+  * price: SoulGem 120
+  * lifetime limit 1
+
+* cosmetic_hero_aura_cyan
+
+  * Cosmetic placeholder
+  * price: SoulGem 150
+  * lifetime limit 1
+
+shop_iap_placeholder
+
+* type IAPPlaceholder
+* no normal ShopItemDefinition needed if using IAPProductDefinition list
+
+Create IAPProductDefinition assets for all gem packs.
+
+12. Update ShopUI.
+
+ShopUI must have tabs:
+
+* Daily
+* Gold Shop
+* Gem Shop
+* Cosmetic
+* IAP
+
+Each tab must display item cards.
+
+Shop item card shows:
+
+* icon
+* displayName
+* description
+* amount
+* price icon and price amount
+* daily/lifetime limit
+* sold out state
+* Buy button
+
+For insufficient currency:
+
+* Buy button disabled or shows toast:
+  "Not enough Gold" or "Not enough Soul Gems"
+
+13. Purchase confirmation popup.
+
+Create popup:
+ShopPurchaseConfirmPopup
+
+It must show:
+
+* item name
+* description
+* price
+* amount
+* warning if using SoulGem
+* Confirm button
+* Cancel button
+
+On Confirm:
+
+* call ShopService.Purchase(item)
+* close popup
+* refresh ShopUI
+* refresh HUD
+
+14. IAP placeholder tab UI.
+
+IAP tab must display:
+
+* Text:
+  "Soul Gem Packs"
+  "IAP is not connected yet. This screen is a placeholder for Unity IAP."
+  "IAP will only sell Soul Gem currency."
+
+Product cards:
+
+* Tiny Gem Pack
+* Small Gem Pack
+* Medium Gem Pack
+* Large Gem Pack
+* Mega Gem Pack
+
+Each card shows:
+
+* product name
+* Soul Gem amount
+* bonus amount
+* placeholder price text
+* button:
+  "DEBUG SIMULATE PURCHASE"
+
+In Editor/Development Build:
+
+* button grants Soul Gems through IAPPlaceholderService
+
+In normal build:
+
+* hide or disable debug button
+* show:
+  "Coming Soon"
+
+15. HUD refresh.
+
+After any shop purchase:
+
+* MainTownUI HUD updates Gold/SoulGem
+* ShopUI currency display updates
+* InventoryUI updates item count
+* HeroUI updates stats if inventory slot/equipment affected
+* Quest progress updates for SpendGold if Gold spent
+
+16. Inventory slot purchase.
+
+If buying InventorySlot:
+
+* increase inventory.capacity or inventoryExtraSlots
+* InventoryUI capacity display updates
+* Save immediately
+
+17. Shop daily refresh.
+
+On game start:
+
+* ShopService.CheckDailyRefresh()
+* If local date changed:
+
+  * reset daily shop purchase counts
+  * update lastDailyShopRefreshDate
+  * save
+
+Use local device date for MVP.
+Do not use server time yet.
+
+18. Add economy validation.
+
+Create EconomyValidator.cs or extend content validator.
+
+Validation checks:
+
+* Every shop has id
+* No duplicate shop id
+* Every shop item has id
+* No duplicate shop item id
+* Every enabled shop item has valid price
+* GoldShop items use Gold price
+* GemShop/Cosmetic items use SoulGem price
+* IAP products grant SoulGem only
+* IAP product IDs are unique
+* No IAP product grants equipment or items directly
+* Daily limits are not negative
+* Lifetime limits are not negative
+* Inventory slot purchases have positive amount
+* Referenced itemId/equipmentId exists when applicable
+
+19. Add Shop Editor tab to Content Editor.
+
+In IsekaiContentEditorWindow, add tab:
+
+* Shops
+* IAP Products
+
+Shop tab:
+
+* View all ShopDefinition assets
+* Filter by ShopType
+* Create new shop
+* Duplicate selected shop
+* Edit shop fields
+* Edit item list
+* Add/remove shop item
+* Save selected shop
+* Ping asset
+
+IAP Products tab:
+
+* View all IAPProductDefinition assets
+* Create new product
+* Edit productId, displayName, platformProductId, soulGemAmount, bonusSoulGemAmount, priceTextPlaceholder, enabled
+* Save selected product
+* Ping asset
+
+20. Add debug helper.
+
+In Settings debug panel:
+
+* Add 500 SoulGem
+* Reset Daily Shop
+* Clear Purchase Records
+
+These buttons must be labelled DEBUG.
+
+21. Update quests.
+
+Hook quest progress:
+
+* SpendGold when spending Gold
+* EarnGold when buying gold pack
+* CollectItem when shop grants item
+* OwnEquipment when shop grants equipment if ever used
+* OpenScreen screen_shop when ShopUI opens
+
+22. Preserve existing systems.
+
+Do not break:
+
+* battle
+* save/load
+* inventory
+* equipment
+* skills
+* quests/tutorials
+* stage progression
+* content editor
+* asset manifest
+
+23. Acceptance criteria:
+
+* Run Tools/Isekai 12 Realms/Create Prototype Shop Content
+* Run Tools/Isekai 12 Realms/Rebuild Content Database
+* Run Tools/Isekai 12 Realms/Validate Content
+* Open GameScene and press Play
+* Start Game
+* Open Shop
+* Daily tab shows items
+* Gold Shop shows items
+* Gem Shop shows items
+* Cosmetic tab shows placeholder items
+* IAP tab shows Soul Gem packs only
+* Buying Small Potion with Gold deducts Gold and adds item
+* Buying Gold pack with SoulGem deducts SoulGem and adds Gold
+* Buying Inventory Slot increases inventory capacity
+* Insufficient currency shows toast and does not grant item
+* Daily limit works
+* Reset daily debug works
+* DEBUG SIMULATE PURCHASE grants SoulGem only once per transaction
+* Purchase records persist after restarting Play Mode
+* IAP placeholder does not sell equipment or direct power items
+* Quest progress for SpendGold/OpenShop works
+* No console errors
+* No missing script errors
+
+### Prompt 15
+
