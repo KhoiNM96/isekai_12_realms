@@ -1,0 +1,11 @@
+{
+  "id": "ui_btn_secondary",
+  "file": "ui_btn_secondary_384x128.png",
+  "size": [384, 128],
+  "category": "ui",
+  "usage": "Secondary Button",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Gold color button frame"
+}

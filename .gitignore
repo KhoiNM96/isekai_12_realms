@@ -43,8 +43,8 @@ Error/
 *.keystore
 
 # Firebase / local cache / sync outputs
-Assets/_Game/Data/Json/cloud_saves/
-Assets/_Game/Data/Json/remote_content/
-Assets/_Game/Data/Json/remote_config/
+# Assets/_Game/Data/Json/cloud_saves/
+# Assets/_Game/Data/Json/remote_content/
+# Assets/_Game/Data/Json/remote_config/
 
 # Local replaceable art placeholders

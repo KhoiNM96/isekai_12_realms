@@ -1,0 +1,11 @@
+{
+  "id": "icon_token_shield",
+  "file": "icon_token_shield_128x128.png",
+  "size": [128, 128],
+  "category": "tokens",
+  "usage": "Shield Token",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Small metal shield icon"
+}

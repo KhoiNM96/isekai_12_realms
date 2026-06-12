@@ -1,0 +1,11 @@
+{
+  "id": "char_hero_flame_idle",
+  "file": "char_hero_flame_idle_512x512.png",
+  "size": [512, 512],
+  "category": "characters",
+  "usage": "Flame Hero Idle",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Chibi flame squire idle body"
+}

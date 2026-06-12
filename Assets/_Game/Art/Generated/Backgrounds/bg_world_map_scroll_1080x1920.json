@@ -1,0 +1,11 @@
+{
+  "id": "bg_world_map_scroll",
+  "file": "bg_world_map_scroll_1080x1920.png",
+  "size": [1080, 1920],
+  "category": "backgrounds",
+  "usage": "World map scroll background",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "Old scroll parchment map background"
+}

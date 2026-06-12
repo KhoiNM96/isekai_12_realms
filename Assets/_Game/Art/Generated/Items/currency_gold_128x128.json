@@ -1,0 +1,11 @@
+{
+  "id": "currency_gold",
+  "file": "currency_gold_128x128.png",
+  "size": [128, 128],
+  "category": "items",
+  "usage": "Gold Currency Icon",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Glowing heap of gold coins"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "ui_panel_popup",
+  "file": "ui_panel_popup_768x512.png",
+  "size": [768, 512],
+  "category": "ui",
+  "usage": "Popup Panel",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Decorative UI popup background"
+}

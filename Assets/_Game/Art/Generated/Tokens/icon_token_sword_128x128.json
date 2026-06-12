@@ -1,0 +1,11 @@
+{
+  "id": "icon_token_sword",
+  "file": "icon_token_sword_128x128.png",
+  "size": [128, 128],
+  "category": "tokens",
+  "usage": "Sword Token",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Small glowing sword icon"
+}

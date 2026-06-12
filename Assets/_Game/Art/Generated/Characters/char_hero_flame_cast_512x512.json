@@ -1,0 +1,11 @@
+{
+  "id": "char_hero_flame_cast",
+  "file": "char_hero_flame_cast_512x512.png",
+  "size": [512, 512],
+  "category": "characters",
+  "usage": "Flame Hero Cast",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Chibi flame squire casting spell"
+}

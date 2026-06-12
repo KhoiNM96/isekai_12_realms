@@ -1,0 +1,11 @@
+{
+  "id": "currency_soul_gem",
+  "file": "currency_soul_gem_128x128.png",
+  "size": [128, 128],
+  "category": "items",
+  "usage": "Soul Gem Icon",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Shard of glowing purple gemstone"
+}

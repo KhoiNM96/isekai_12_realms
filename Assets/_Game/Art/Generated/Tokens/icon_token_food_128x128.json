@@ -1,0 +1,11 @@
+{
+  "id": "icon_token_food",
+  "file": "icon_token_food_128x128.png",
+  "size": [128, 128],
+  "category": "tokens",
+  "usage": "Food Token",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Small red apple or food icon"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "icon_token_mana",
+  "file": "icon_token_mana_128x128.png",
+  "size": [128, 128],
+  "category": "tokens",
+  "usage": "Mana Token",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Small blue mana orb icon"
+}

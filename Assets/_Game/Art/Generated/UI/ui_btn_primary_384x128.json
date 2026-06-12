@@ -1,0 +1,11 @@
+{
+  "id": "ui_btn_primary",
+  "file": "ui_btn_primary_384x128.png",
+  "size": [384, 128],
+  "category": "ui",
+  "usage": "Primary Button",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Cyan color button frame"
+}

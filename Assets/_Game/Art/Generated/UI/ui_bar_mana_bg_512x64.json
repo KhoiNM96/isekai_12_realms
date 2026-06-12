@@ -1,0 +1,11 @@
+{
+  "id": "ui_bar_mana_bg",
+  "file": "ui_bar_mana_bg_512x64.png",
+  "size": [512, 64],
+  "category": "ui",
+  "usage": "Mana Bar Background",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Dark blue container for Mana"
+}

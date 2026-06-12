@@ -1,0 +1,11 @@
+{
+  "id": "bg_battle_meadow",
+  "file": "bg_battle_meadow_1080x960.png",
+  "size": [1080, 960],
+  "category": "backgrounds",
+  "usage": "Battle meadow background",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "Lush green grass meadow for battles"
+}

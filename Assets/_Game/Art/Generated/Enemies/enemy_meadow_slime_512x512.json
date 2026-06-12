@@ -1,0 +1,11 @@
+{
+  "id": "enemy_meadow_slime",
+  "file": "enemy_meadow_slime_512x512.png",
+  "size": [512, 512],
+  "category": "enemies",
+  "usage": "Meadow Slime",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Cute bouncing green slime"
+}

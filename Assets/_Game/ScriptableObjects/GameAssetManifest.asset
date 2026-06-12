@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9cbcbe654f2ddd4fafdd1c943cf73fa, type: 3}
+  m_Name: GameAssetManifest
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Data.GameAssetManifest
+  entries:
+  - id: bg_title_sky_realm
+    fileName: bg_title_sky_realm_1080x1920.png
+    relativePath: Assets/_Game/Art/Generated/Backgrounds/bg_title_sky_realm_1080x1920.png
+    size: {x: 1080, y: 1920}
+    sprite: {fileID: 21300000, guid: 18a22639a7ab6104191b76a8205bd43d, type: 3}
+    category: 0
+    transparent: 0
+    priority: 1
+  - id: bg_town_meadow
+    fileName: bg_town_meadow_1080x1920.png
+    relativePath: Assets/_Game/Art/Generated/Backgrounds/bg_town_meadow_1080x1920.png
+    size: {x: 1080, y: 1920}
+    sprite: {fileID: 21300000, guid: 4afb8e883de12754290e2c880224b557, type: 3}
+    category: 0
+    transparent: 0
+    priority: 1
+  - id: bg_world_map_scroll
+    fileName: bg_world_map_scroll_1080x1920.png
+    relativePath: Assets/_Game/Art/Generated/Backgrounds/bg_world_map_scroll_1080x1920.png
+    size: {x: 1080, y: 1920}
+    sprite: {fileID: 21300000, guid: 557982688e8f9d94eb74c2580d849705, type: 3}
+    category: 0
+    transparent: 0
+    priority: 1
+  - id: bg_battle_meadow
+    fileName: bg_battle_meadow_1080x960.png
+    relativePath: Assets/_Game/Art/Generated/Backgrounds/bg_battle_meadow_1080x960.png
+    size: {x: 1080, y: 960}
+    sprite: {fileID: 21300000, guid: 84488de4598f8bc48b0b2c051b0f51a9, type: 3}
+    category: 0
+    transparent: 0
+    priority: 1
+  - id: char_hero_flame_idle
+    fileName: char_hero_flame_idle_512x512.png
+    relativePath: Assets/_Game/Art/Generated/Characters/char_hero_flame_idle_512x512.png
+    size: {x: 512, y: 512}
+    sprite: {fileID: 21300000, guid: 1e6faa3a57f3d804984cdf53dfed3c7b, type: 3}
+    category: 1
+    transparent: 1
+    priority: 1
+  - id: char_hero_flame_attack
+    fileName: char_hero_flame_attack_512x512.png
+    relativePath: Assets/_Game/Art/Generated/Characters/char_hero_flame_attack_512x512.png
+    size: {x: 512, y: 512}
+    sprite: {fileID: 21300000, guid: 6c433b402b087734395838045cb38646, type: 3}
+    category: 1
+    transparent: 1
+    priority: 1
+  - id: char_hero_flame_cast
+    fileName: char_hero_flame_cast_512x512.png
+    relativePath: Assets/_Game/Art/Generated/Characters/char_hero_flame_cast_512x512.png
+    size: {x: 512, y: 512}
+    sprite: {fileID: 21300000, guid: 073af1d6c15b0bc40a288a6a618c37f2, type: 3}
+    category: 1
+    transparent: 1
+    priority: 1
+  - id: char_hero_flame_hurt
+    fileName: char_hero_flame_hurt_512x512.png
+    relativePath: Assets/_Game/Art/Generated/Characters/char_hero_flame_hurt_512x512.png
+    size: {x: 512, y: 512}
+    sprite: {fileID: 21300000, guid: 605a8b7e818fdd44c9b7231c68d1431d, type: 3}
+    category: 1
+    transparent: 1
+    priority: 1
+  - id: enemy_meadow_slime
+    fileName: enemy_meadow_slime_512x512.png
+    relativePath: Assets/_Game/Art/Generated/Enemies/enemy_meadow_slime_512x512.png
+    size: {x: 512, y: 512}
+    sprite: {fileID: 21300000, guid: efdbd962a1d536945a95c1f976162dd3, type: 3}
+    category: 3
+    transparent: 1
+    priority: 1
+  - id: boss_slime_king
+    fileName: boss_slime_king_768x768.png
+    relativePath: Assets/_Game/Art/Generated/Enemies/boss_slime_king_768x768.png
+    size: {x: 768, y: 768}
+    sprite: {fileID: 21300000, guid: 195adce7a1e44164fa84dd77687664ff, type: 3}
+    category: 3
+    transparent: 1
+    priority: 1
+  - id: icon_token_sword
+    fileName: icon_token_sword_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_sword_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 33b5c0541456bf742aa94b6eab6c9387, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_heart
+    fileName: icon_token_heart_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_heart_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: cd2613808c6226847b3008a38034b031, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_coin
+    fileName: icon_token_coin_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_coin_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: d9339a12f511eee4e86a63e48466281e, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_food
+    fileName: icon_token_food_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_food_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 0ebd91da347c79c4f83c9f0f7a42e5a7, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_book
+    fileName: icon_token_book_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_book_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 3de529698f21a5040b3311d0386dabb9, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_mana
+    fileName: icon_token_mana_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_mana_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: f98f12868613f8542bf698b0010c42df, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_shield
+    fileName: icon_token_shield_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_shield_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: f3072dee92e8393498f89a678774f7df, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: icon_token_star
+    fileName: icon_token_star_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_star_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 3dc208c8ad2325e4c8f5ffc13b9601f7, type: 3}
+    category: 4
+    transparent: 1
+    priority: 1
+  - id: ui_panel_main
+    fileName: ui_panel_main_768x512.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_panel_main_768x512.png
+    size: {x: 768, y: 512}
+    sprite: {fileID: 21300000, guid: c8b344701a9bdce4f98a7981eaaaadfc, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_panel_popup
+    fileName: ui_panel_popup_768x512.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_panel_popup_768x512.png
+    size: {x: 768, y: 512}
+    sprite: {fileID: 21300000, guid: e961732059ff9424592c0a1a81765754, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_btn_primary
+    fileName: ui_btn_primary_384x128.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_btn_primary_384x128.png
+    size: {x: 384, y: 128}
+    sprite: {fileID: 21300000, guid: 020c044493d77c44d87a1efc5ec406d8, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_btn_secondary
+    fileName: ui_btn_secondary_384x128.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_btn_secondary_384x128.png
+    size: {x: 384, y: 128}
+    sprite: {fileID: 21300000, guid: 20b536a76c95ca8419c57789771eee8b, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_btn_close
+    fileName: ui_btn_close_128x128.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_btn_close_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 1b85ab25bdf836846bb48a30874787c3, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_bar_hp_bg
+    fileName: ui_bar_hp_bg_512x64.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_bar_hp_bg_512x64.png
+    size: {x: 512, y: 64}
+    sprite: {fileID: 21300000, guid: 6b1920d01986b1b4789cefee1382e72b, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_bar_hp_fill
+    fileName: ui_bar_hp_fill_512x64.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_bar_hp_fill_512x64.png
+    size: {x: 512, y: 64}
+    sprite: {fileID: 21300000, guid: ad8a0d26c63bb1f4cb2c370161d88d5f, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_bar_mana_bg
+    fileName: ui_bar_mana_bg_512x64.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_bar_mana_bg_512x64.png
+    size: {x: 512, y: 64}
+    sprite: {fileID: 21300000, guid: e5899966a2c337d489187c21f558aeb1, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: ui_bar_mana_fill
+    fileName: ui_bar_mana_fill_512x64.png
+    relativePath: Assets/_Game/Art/Generated/UI/ui_bar_mana_fill_512x64.png
+    size: {x: 512, y: 64}
+    sprite: {fileID: 21300000, guid: 09daee05c64f8db4bb21916aa5843d20, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1
+  - id: currency_gold
+    fileName: currency_gold_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/currency_gold_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 2746f6056e7e9ad48a81304dbb133b09, type: 3}
+    category: 7
+    transparent: 1
+    priority: 1
+  - id: currency_soul_gem
+    fileName: currency_soul_gem_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/currency_soul_gem_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 74d359ca1b8c031408631f5b180ec679, type: 3}
+    category: 7
+    transparent: 1
+    priority: 1
+  - id: missing_sprite
+    fileName: missing_sprite_128x128.png
+    relativePath: Assets/_Game/Art/Generated/UI/missing_sprite_128x128.png
+    size: {x: 128, y: 128}
+    sprite: {fileID: 21300000, guid: 0a59ad2727ae07b428184fc4161e597f, type: 3}
+    category: 8
+    transparent: 1
+    priority: 1

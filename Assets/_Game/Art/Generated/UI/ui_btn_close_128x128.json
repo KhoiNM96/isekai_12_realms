@@ -1,0 +1,11 @@
+{
+  "id": "ui_btn_close",
+  "file": "ui_btn_close_128x128.png",
+  "size": [128, 128],
+  "category": "ui",
+  "usage": "Close Button",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Red cross close button"
+}

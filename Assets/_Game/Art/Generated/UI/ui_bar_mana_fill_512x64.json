@@ -1,0 +1,11 @@
+{
+  "id": "ui_bar_mana_fill",
+  "file": "ui_bar_mana_fill_512x64.png",
+  "size": [512, 64],
+  "category": "ui",
+  "usage": "Mana Bar Fill",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Bright blue fill for Mana"
+}

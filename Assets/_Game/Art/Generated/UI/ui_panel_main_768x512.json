@@ -1,0 +1,11 @@
+{
+  "id": "ui_panel_main",
+  "file": "ui_panel_main_768x512.png",
+  "size": [768, 512],
+  "category": "ui",
+  "usage": "Main Panel",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Decorative UI panel cream base"
+}

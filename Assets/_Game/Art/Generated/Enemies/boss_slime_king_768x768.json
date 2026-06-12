@@ -1,0 +1,11 @@
+{
+  "id": "boss_slime_king",
+  "file": "boss_slime_king_768x768.png",
+  "size": [768, 768],
+  "category": "enemies",
+  "usage": "Slime King Boss",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Giant slime with crown"
+}

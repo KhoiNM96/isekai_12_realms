@@ -1,0 +1,11 @@
+{
+  "id": "missing_sprite",
+  "file": "missing_sprite_128x128.png",
+  "size": [128, 128],
+  "category": "ui",
+  "usage": "Missing Sprite Fallback",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Magenta-black checkerboard placeholder"
+}

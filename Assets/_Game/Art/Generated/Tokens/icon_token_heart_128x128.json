@@ -1,0 +1,11 @@
+{
+  "id": "icon_token_heart",
+  "file": "icon_token_heart_128x128.png",
+  "size": [128, 128],
+  "category": "tokens",
+  "usage": "Heart Token",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Small crystal heart icon"
+}

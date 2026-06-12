@@ -1,0 +1,11 @@
+{
+  "id": "icon_token_book",
+  "file": "icon_token_book_128x128.png",
+  "size": [128, 128],
+  "category": "tokens",
+  "usage": "Book Token",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "Small spellbook icon"
+}

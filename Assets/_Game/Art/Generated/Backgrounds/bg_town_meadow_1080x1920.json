@@ -1,0 +1,11 @@
+{
+  "id": "bg_town_meadow",
+  "file": "bg_town_meadow_1080x1920.png",
+  "size": [1080, 1920],
+  "category": "backgrounds",
+  "usage": "Town meadow background",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "Floating meadow town background"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "bg_title_sky_realm",
+  "file": "bg_title_sky_realm_1080x1920.png",
+  "size": [1080, 1920],
+  "category": "backgrounds",
+  "usage": "Title sky realm background",
+  "style": "chibi fantasy pixel-inspired 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "Beautiful sky gradient background"
+}
