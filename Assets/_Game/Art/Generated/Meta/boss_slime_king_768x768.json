@@ -1,14 +1,14 @@
-﻿{
+{
     "id":  "boss_slime_king",
     "file":  "boss_slime_king_768x768.png",
     "size":  [
                  768,
                  768
              ],
-    "category":  "enemy",
-    "usage":  "boss_slime_king placeholder",
-    "style":  "bright chibi fantasy placeholder 2D",
+    "category":  "Enemy",
+    "usage":  "boss_slime_king battle sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
     "transparent":  true,
     "replaceable":  true,
-    "prompt":  "original procedural placeholder for boss_slime_king, no copied art, no watermark"
+    "prompt":  "Original cute non-threatening fantasy enemy boss_slime_king, transparent background, no text, no gore."
 }

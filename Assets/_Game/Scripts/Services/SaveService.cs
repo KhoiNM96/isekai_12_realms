@@ -278,6 +278,14 @@ namespace Isekai12Realms.Services
                 if (equipment.level <= 0) equipment.level = 1;
                 if (equipment.acquiredAt <= 0) equipment.acquiredAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             }
+            foreach (PurchaseRecord record in data.purchaseRecords)
+            {
+                if (record == null) continue;
+                if (string.IsNullOrEmpty(record.platformProductId)) record.platformProductId = record.productId;
+                if (record.totalGranted <= 0) record.totalGranted = record.amount + record.bonusAmount;
+                if (record.totalGranted <= 0) record.totalGranted = record.amount;
+                if (record.grantedAt <= 0 && record.granted) record.grantedAt = record.purchasedAt;
+            }
         }
 
         private void EnsureSkillDefaults(PlayerSaveData data)

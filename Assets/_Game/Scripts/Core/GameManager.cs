@@ -1,4 +1,5 @@
 using UnityEngine;
+using Isekai12Realms.Build;
 using Isekai12Realms.Services;
 using Isekai12Realms.UI;
 
@@ -40,6 +41,9 @@ namespace Isekai12Realms.Core
             // 1. Game State Machine
             _stateMachine = new GameStateMachine();
             ServiceLocator.Register<IGameStateMachine>(_stateMachine);
+
+            BuildConfigService buildConfigService = BuildConfigService.GetOrCreate();
+            buildConfigService.ApplyStartupSettings();
 
             // 2. Save Service
             _saveService = new SaveService();

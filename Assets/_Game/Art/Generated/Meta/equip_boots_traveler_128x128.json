@@ -1,0 +1,14 @@
+{
+    "id":  "equip_boots_traveler",
+    "file":  "equip_boots_traveler_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Equipment",
+    "usage":  "equip_boots_traveler equipment icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy equipment icon equip_boots_traveler, transparent background, no text."
+}

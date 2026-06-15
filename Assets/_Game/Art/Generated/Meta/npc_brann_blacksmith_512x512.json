@@ -1,0 +1,14 @@
+{
+    "id":  "npc_brann_blacksmith",
+    "file":  "npc_brann_blacksmith_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "NPC",
+    "usage":  "npc_brann_blacksmith full body NPC",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original npc_brann_blacksmith, cute chibi fantasy NPC, transparent background, no text."
+}

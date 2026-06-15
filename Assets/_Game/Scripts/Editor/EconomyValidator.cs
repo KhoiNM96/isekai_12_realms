@@ -44,7 +44,9 @@ namespace Isekai12Realms.Editor
                 if (product == null) continue;
                 if (string.IsNullOrEmpty(product.productId)) errors.Add("IAP product missing productId.");
                 else if (!productIds.Add(product.productId)) errors.Add("Duplicate IAP product id: " + product.productId);
-                if (product.enabled && product.soulGemAmount + product.bonusSoulGemAmount <= 0) errors.Add("IAP product grants no Soul Gems: " + product.productId);
+                if (product.enabled && product.soulGemAmount <= 0) errors.Add("Enabled IAP product must grant Soul Gems: " + product.productId);
+                if (product.bonusSoulGemAmount < 0) errors.Add("IAP product bonus < 0: " + product.productId);
+                if (string.IsNullOrEmpty(product.platformProductId)) product.platformProductId = product.productId;
             }
         }
     }

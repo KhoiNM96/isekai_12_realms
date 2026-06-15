@@ -1,0 +1,14 @@
+{
+    "id":  "mat_ember_dust",
+    "file":  "mat_ember_dust_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Item",
+    "usage":  "mat_ember_dust item icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy item or currency icon mat_ember_dust, transparent background, no text."
+}

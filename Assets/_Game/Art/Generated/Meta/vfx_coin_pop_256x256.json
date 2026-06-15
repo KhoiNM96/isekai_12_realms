@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_coin_pop",
+    "file":  "vfx_coin_pop_256x256.png",
+    "size":  [
+                 256,
+                 256
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_coin_pop battle vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy battle VFX sprite vfx_coin_pop, transparent background, no text."
+}

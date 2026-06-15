@@ -1,0 +1,14 @@
+{
+    "id":  "map_stage_boss",
+    "file":  "map_stage_boss_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Map",
+    "usage":  "map_stage_boss stage state icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy stage state icon map_stage_boss, transparent background, no text."
+}

@@ -1,6 +1,8 @@
 using Isekai12Realms.Data;
+using Isekai12Realms.Addressables;
 using Isekai12Realms.UI;
 using System.Collections;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +23,7 @@ namespace Isekai12Realms.Board
         private Coroutine motionRoutine;
         private Coroutine visualRoutine;
         private BoardController owner;
+        private int visualVersion;
 
         public TileData Data { get; private set; }
         public Vector2Int BoardPosition => Data != null ? Data.position : new Vector2Int(-1, -1);
@@ -84,7 +87,7 @@ namespace Isekai12Realms.Board
             }
 
             string assetId = GetAssetId(Data.type);
-            Sprite tokenSprite = AssetSpriteBinder.HasAsset(assetId) ? AssetSpriteBinder.GetSprite(assetId) : null;
+            Sprite tokenSprite = AssetSpriteBinder.GetSprite(assetId);
             baseColor = tokenSprite != null ? Color.white : GetColor(Data.type);
             background.sprite = tokenSprite;
             background.preserveAspect = tokenSprite != null;
@@ -95,6 +98,26 @@ namespace Isekai12Realms.Board
                 label.color = Color.white;
             }
             UpdateDebugLabel();
+            _ = LoadTokenSpriteAsync(assetId, Data);
+        }
+
+        private async Task LoadTokenSpriteAsync(string assetId, TileData boundData)
+        {
+            int version = ++visualVersion;
+            IAssetLoadService service = AssetSpriteBinder.AssetLoadService;
+            if (service == null || string.IsNullOrEmpty(assetId)) return;
+            Sprite sprite = await service.LoadSpriteAsync(assetId);
+            if (version != visualVersion || this == null || !isActiveAndEnabled || Data != boundData || background == null || sprite == null) return;
+            background.sprite = sprite;
+            background.preserveAspect = true;
+            background.color = Color.white;
+            baseColor = Color.white;
+            if (label != null) label.text = string.Empty;
+        }
+
+        private void OnDisable()
+        {
+            visualVersion++;
         }
 
         public void SetBoardPosition(Vector2Int position)

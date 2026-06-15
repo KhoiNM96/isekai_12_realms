@@ -1,0 +1,96 @@
+{
+    "schemaVersion": 1,
+    "saveVersion": 92,
+    "playerId": "6c483c27-6447-42fe-b3b3-99e3be8e9a2d",
+    "localGuestId": "guest_567e73b0",
+    "playerName": "Guest Hero",
+    "level": 2,
+    "exp": 72,
+    "gold": 30,
+    "soulGem": 0,
+    "maxHp": 118,
+    "hp": 118,
+    "maxMana": 102,
+    "mana": 102,
+    "selectedClassId": "flame_squire",
+    "currentRealmId": "realm_01_meadow",
+    "currentStageId": "stage_01_01",
+    "completedStageIds": [
+        "stage_01_01"
+    ],
+    "stageProgress": [
+        {
+            "stageId": "stage_01_01",
+            "clearCount": 1,
+            "firstClearedAt": 0,
+            "lastClearedAt": 1781170218
+        }
+    ],
+    "inventory": {
+        "items": [
+            {
+                "itemId": "mat_slime_jelly",
+                "amount": 2
+            },
+            {
+                "itemId": "item_potion_small",
+                "amount": 1
+            }
+        ],
+        "equipments": [],
+        "capacity": 80
+    },
+    "equipment": {
+        "weaponInstanceId": "",
+        "armorInstanceId": "",
+        "headInstanceId": "",
+        "bootsInstanceId": "",
+        "ringInstanceId": "",
+        "charmInstanceId": ""
+    },
+    "skills": [
+        {
+            "skillId": "skill_flame_spark_slash",
+            "level": 1,
+            "unlocked": true,
+            "cooldownRemaining": 0
+        },
+        {
+            "skillId": "skill_flame_shuffle_bell",
+            "level": 1,
+            "unlocked": true,
+            "cooldownRemaining": 0
+        },
+        {
+            "skillId": "skill_flame_realm_burst",
+            "level": 1,
+            "unlocked": true,
+            "cooldownRemaining": 0
+        }
+    ],
+    "equippedSkill1Id": "skill_flame_spark_slash",
+    "equippedSkill2Id": "skill_flame_shuffle_bell",
+    "equippedUltimateId": "skill_flame_realm_burst",
+    "quests": [],
+    "completedTutorialStepIds": [],
+    "tutorialEnabled": true,
+    "activeTutorialId": "",
+    "activeTutorialStepId": "",
+    "lastDailyResetDate": "2026-06-15",
+    "purchaseRecords": [],
+    "shopPurchaseLimits": [],
+    "inventoryExtraSlots": 0,
+    "lastDailyShopRefreshDate": "2026-06-15",
+    "firebaseUid": "",
+    "authProvider": "LocalOnly",
+    "cloudSaveId": "default",
+    "lastCloudUploadAt": 0,
+    "lastCloudDownloadAt": 0,
+    "lastSyncedDeviceId": "",
+    "cloudSyncEnabled": true,
+    "deviceId": "device_73f1f6d8ba5c4744b925a3451e04bf2f",
+    "totalPlaySeconds": 0,
+    "createdAt": 1781167154,
+    "updatedAt": 1781509703,
+    "checksum": "hash_6c483c27-6447-42fe-b3b3-99e3be8e9a2d_92_30"
+}

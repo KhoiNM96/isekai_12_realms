@@ -1,14 +1,14 @@
-﻿{
+{
     "id":  "enemy_meadow_slime",
     "file":  "enemy_meadow_slime_512x512.png",
     "size":  [
                  512,
                  512
              ],
-    "category":  "enemy",
-    "usage":  "enemy_meadow_slime placeholder",
-    "style":  "bright chibi fantasy placeholder 2D",
+    "category":  "Enemy",
+    "usage":  "enemy_meadow_slime battle sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
     "transparent":  true,
     "replaceable":  true,
-    "prompt":  "original procedural placeholder for enemy_meadow_slime, no copied art, no watermark"
+    "prompt":  "Original cute non-threatening fantasy enemy enemy_meadow_slime, transparent background, no text, no gore."
 }

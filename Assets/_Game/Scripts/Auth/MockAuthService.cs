@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Isekai12Realms.Data;
 using Isekai12Realms.Services;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 namespace Isekai12Realms.Auth
 {
     public class MockAuthService : IAuthService
@@ -38,3 +39,4 @@ namespace Isekai12Realms.Auth
         }
     }
 }
+#endif

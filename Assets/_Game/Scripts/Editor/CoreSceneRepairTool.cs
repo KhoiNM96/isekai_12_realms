@@ -1,5 +1,7 @@
 using System.IO;
+using Isekai12Realms.Build;
 using Isekai12Realms.Core;
+using Isekai12Realms.Editor.BuildTools;
 using Isekai12Realms.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -12,11 +14,17 @@ namespace Isekai12Realms.Editor
     public static class CoreSceneRepairTool
     {
         private const string GameScenePath = "Assets/_Game/Scenes/GameScene.unity";
+        private const string BootScenePath = "Assets/_Game/Scenes/BootScene.unity";
 
         [MenuItem("Tools/Isekai 12 Realms/Repair Core Scenes")]
         public static void RepairCoreScenes()
         {
             EnsureSceneFolder();
+            Scene bootScene = OpenOrCreateBootScene();
+            EnsureBootLoader();
+            EditorSceneManager.MarkSceneDirty(bootScene);
+            EditorSceneManager.SaveScene(bootScene, BootScenePath);
+
             Scene scene = OpenOrCreateGameScene();
 
             EnsureMainCamera();
@@ -30,12 +38,16 @@ namespace Isekai12Realms.Editor
                 bootstrapper = gameManager.gameObject.AddComponent<GameSceneBootstrapper>();
             }
 
-            bootstrapper.RepairSceneUi();
+            if (NeedsUiRepair())
+            {
+                bootstrapper.RepairSceneUi();
+            }
             EditorUtility.SetDirty(bootstrapper);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, GameScenePath);
             AssetDatabase.Refresh();
+            AndroidBuildSettingsApplier.EnsureScenesInBuild();
 
             Debug.Log($"[Game] Core scene repaired and saved: {GameScenePath}");
         }
@@ -60,6 +72,33 @@ namespace Isekai12Realms.Editor
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             EditorSceneManager.SaveScene(scene, GameScenePath);
             return scene;
+        }
+
+        private static Scene OpenOrCreateBootScene()
+        {
+            if (File.Exists(BootScenePath))
+            {
+                return EditorSceneManager.OpenScene(BootScenePath, OpenSceneMode.Single);
+            }
+
+            Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            EditorSceneManager.SaveScene(scene, BootScenePath);
+            return scene;
+        }
+
+        private static void EnsureBootLoader()
+        {
+            BootLoader loader = UnityEngine.Object.FindObjectOfType<BootLoader>();
+            if (loader == null)
+            {
+                GameObject boot = new GameObject("BootLoader");
+                loader = boot.AddComponent<BootLoader>();
+            }
+            BuildConfig config = AndroidBuildSettingsApplier.EnsureBuildConfig();
+            SerializedObject serialized = new SerializedObject(loader);
+            serialized.FindProperty("buildConfig").objectReferenceValue = config;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(loader);
         }
 
         private static void EnsureMainCamera()
@@ -89,6 +128,39 @@ namespace Isekai12Realms.Editor
 
             GameObject gameManagerObject = new GameObject("GameManager");
             return gameManagerObject.AddComponent<GameManager>();
+        }
+
+        private static bool NeedsUiRepair()
+        {
+            GameObject root = GameObject.Find("RootCanvas");
+            if (root == null) return true;
+            Transform safe = root.transform.Find("SafeAreaRoot");
+            if (safe == null) return true;
+            foreach (string layer in new[] { "BackgroundLayer", "MainLayer", "HudLayer", "NavigationLayer", "PopupLayer", "ToastLayer", "LoadingLayer" })
+            {
+                if (safe.Find(layer) == null) return true;
+            }
+
+            Transform popupLayer = safe.Find("PopupLayer");
+            if (popupLayer == null) return true;
+
+            Transform blocker = popupLayer.Find("ModalBlocker");
+            if (blocker == null) return true;
+            if (blocker.gameObject.activeSelf) return true;
+
+            Transform settings = popupLayer.Find("SettingsPopup");
+            if (settings == null) return true;
+            if (settings.gameObject.activeSelf) return true;
+            if (settings.Find("ModalPanel/ScrollView/Viewport/Content") == null) return true;
+
+            for (int i = 0; i < popupLayer.childCount; i++)
+            {
+                Transform child = popupLayer.GetChild(i);
+                if (child == null || child.name == "ModalBlocker") continue;
+                if (child.gameObject.activeSelf) return true;
+            }
+
+            return false;
         }
     }
 }

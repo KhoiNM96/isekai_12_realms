@@ -34,11 +34,11 @@ namespace Isekai12Realms.Editor
                 Cosmetic("cosmetic_hero_aura_cyan", "Cyan Hero Aura", "Cosmetic placeholder hero aura.", "cosmetic_hero_aura_cyan", 150));
             ShopDefinition iap = Shop("shop_iap_placeholder", "IAP Placeholder", ShopType.IAPPlaceholder, false, 4);
 
-            IAPProductDefinition tiny = Product("gems_tiny", "Tiny Gem Pack", "120 Soul Gems", "com.isekai12realms.gems_tiny", 120, 0, "$0.99");
-            IAPProductDefinition small = Product("gems_small", "Small Gem Pack", "400 Soul Gems + 40 bonus", "com.isekai12realms.gems_small", 400, 40, "$2.99");
-            IAPProductDefinition medium = Product("gems_medium", "Medium Gem Pack", "750 Soul Gems + 180 bonus", "com.isekai12realms.gems_medium", 750, 180, "$4.99");
-            IAPProductDefinition large = Product("gems_large", "Large Gem Pack", "1650 Soul Gems + 500 bonus", "com.isekai12realms.gems_large", 1650, 500, "$9.99");
-            IAPProductDefinition mega = Product("gems_mega", "Mega Gem Pack", "3600 Soul Gems + 1800 bonus", "com.isekai12realms.gems_mega", 3600, 1800, "$19.99");
+            IAPProductDefinition tiny = Product("gems_tiny", "Tiny Gem Pack", "120 Soul Gems", "gems_tiny", 120, 0, "$0.99");
+            IAPProductDefinition small = Product("gems_small", "Small Gem Pack", "400 Soul Gems + 40 bonus", "gems_small", 400, 40, "$2.99");
+            IAPProductDefinition medium = Product("gems_medium", "Medium Gem Pack", "750 Soul Gems + 180 bonus", "gems_medium", 750, 180, "$4.99");
+            IAPProductDefinition large = Product("gems_large", "Large Gem Pack", "1650 Soul Gems + 500 bonus", "gems_large", 1650, 500, "$9.99");
+            IAPProductDefinition mega = Product("gems_mega", "Mega Gem Pack", "3600 Soul Gems + 1800 bonus", "gems_mega", 3600, 1800, "$19.99");
 
             GameContentDatabase db = LoadOrCreate<GameContentDatabase>(DatabasePath);
             db.shops = new List<ShopDefinition> { daily, gold, gem, cosmetic, iap };

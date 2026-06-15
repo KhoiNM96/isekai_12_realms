@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Isekai12Realms.Crafting;
+using Isekai12Realms.ContentPacks;
 using Isekai12Realms.Data;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Enemies;
@@ -319,6 +320,7 @@ namespace Isekai12Realms.Editor.ContentTools
             if (GUILayout.Button("Duplicate Selected Product")) DuplicateAsset(selectedIapProduct, EconomyPath, copy => { if (database.iapProducts == null) database.iapProducts = new List<IAPProductDefinition>(); copy.productId = UniqueId(selectedIapProduct.productId + "_copy", database.iapProducts.Select(p => p != null ? p.productId : string.Empty)); copy.displayName = selectedIapProduct.displayName + " Copy"; selectedIapProduct = copy; AddMissing(database.iapProducts, copy); });
             DrawScriptableInspector(selectedIapProduct);
             DrawValidationBox(ValidateIapProduct(selectedIapProduct));
+            if (GUILayout.Button("Validate IAP Products")) validationReport = RunValidation(true);
             DrawSavePing(selectedIapProduct);
         }
 
@@ -743,7 +745,7 @@ namespace Isekai12Realms.Editor.ContentTools
         }
 
         private void AddStageToRealm(StageDefinition stage) { RealmDefinition realm = database.GetRealmById(stage.realmId); if (realm == null) return; if (realm.stages == null) realm.stages = new List<StageDefinition>(); if (!realm.stages.Contains(stage)) { realm.stages.Add(stage); SaveAsset(realm); } }
-        private void RefreshDatabase() { database = AssetDatabase.LoadAssetAtPath<GameContentDatabase>(DatabasePath) ?? RebuildDatabase(); if (database.skills == null) database.skills = new List<SkillDefinition>(); if (database.equipmentDefinitions == null) database.equipmentDefinitions = new List<EquipmentDefinition>(); if (database.shops == null) database.shops = new List<ShopDefinition>(); if (database.iapProducts == null) database.iapProducts = new List<IAPProductDefinition>(); }
+        private void RefreshDatabase() { database = AssetDatabase.LoadAssetAtPath<GameContentDatabase>(DatabasePath) ?? RebuildDatabase(); if (database.skills == null) database.skills = new List<SkillDefinition>(); if (database.equipmentDefinitions == null) database.equipmentDefinitions = new List<EquipmentDefinition>(); if (database.shops == null) database.shops = new List<ShopDefinition>(); if (database.iapProducts == null) database.iapProducts = new List<IAPProductDefinition>(); if (database.contentPacks == null) database.contentPacks = new List<ContentPackDefinition>(); }
         private static void EnsureFolders() { foreach (string p in new[] { Root, RealmPath, StagePath, EnemyPath, DropPath, SkillPath, EquipmentPath, ShopPath, EconomyPath }) if (!Directory.Exists(p)) Directory.CreateDirectory(p); }
 
         private static GameContentDatabase RebuildDatabase()
@@ -761,6 +763,7 @@ namespace Isekai12Realms.Editor.ContentTools
             db.tutorials = FindAssets<TutorialDefinition>().ToList();
             db.shops = FindAssets<ShopDefinition>().ToList();
             db.iapProducts = FindAssets<IAPProductDefinition>().ToList();
+            db.contentPacks = FindAssets<ContentPackDefinition>().ToList();
             EditorUtility.SetDirty(db); AssetDatabase.SaveAssets(); AssetDatabase.Refresh(); return db;
         }
 

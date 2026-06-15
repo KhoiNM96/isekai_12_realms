@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_mana_glow",
+    "file":  "vfx_mana_glow_256x256.png",
+    "size":  [
+                 256,
+                 256
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_mana_glow battle vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy battle VFX sprite vfx_mana_glow, transparent background, no text."
+}

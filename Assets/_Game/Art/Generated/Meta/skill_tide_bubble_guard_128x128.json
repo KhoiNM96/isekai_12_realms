@@ -1,0 +1,14 @@
+{
+    "id":  "skill_tide_bubble_guard",
+    "file":  "skill_tide_bubble_guard_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Skill",
+    "usage":  "skill_tide_bubble_guard skill icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy skill icon skill_tide_bubble_guard, transparent background, no text."
+}

@@ -1,0 +1,14 @@
+{
+    "id":  "equip_armor_leaf_vest",
+    "file":  "equip_armor_leaf_vest_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Equipment",
+    "usage":  "equip_armor_leaf_vest equipment icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy equipment icon equip_armor_leaf_vest, transparent background, no text."
+}

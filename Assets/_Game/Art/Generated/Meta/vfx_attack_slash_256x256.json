@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_attack_slash",
+    "file":  "vfx_attack_slash_256x256.png",
+    "size":  [
+                 256,
+                 256
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_attack_slash battle vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy battle VFX sprite vfx_attack_slash, transparent background, no text."
+}

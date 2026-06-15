@@ -1,0 +1,14 @@
+{
+    "id":  "mat_crystal_shard",
+    "file":  "mat_crystal_shard_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Item",
+    "usage":  "mat_crystal_shard item icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy item or currency icon mat_crystal_shard, transparent background, no text."
+}

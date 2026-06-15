@@ -45,6 +45,7 @@ namespace Isekai12Realms.Shop
 
         public bool GrantSoulGemFromProduct(string productId, string transactionId)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             EnsureSaveState();
             IAPProductDefinition product = Database?.GetIAPProductById(productId);
             if (Save == null || product == null || !product.enabled)
@@ -60,11 +61,16 @@ namespace Isekai12Realms.Shop
 
             int total = Mathf.Max(0, product.soulGemAmount) + Mathf.Max(0, product.bonusSoulGemAmount);
             Save.soulGem += total;
-            Save.purchaseRecords.Add(new PurchaseRecord { transactionId = transactionId, productId = product.productId, source = "debug_iap_placeholder", amount = total, purchasedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds(), granted = true });
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            Save.purchaseRecords.Add(new PurchaseRecord { transactionId = transactionId, productId = product.productId, platformProductId = string.IsNullOrEmpty(product.platformProductId) ? product.productId : product.platformProductId, source = "debug_iap_placeholder", amount = product.soulGemAmount, bonusAmount = product.bonusSoulGemAmount, totalGranted = total, platform = Application.platform.ToString(), purchasedAt = now, grantedAt = now, granted = true, cloudSynced = false });
             saveService.SaveNow();
             toastService?.ShowToast("Soul Gems +" + total);
             Changed?.Invoke();
             return true;
+#else
+            toastService?.ShowToast("Coming Soon");
+            return false;
+#endif
         }
 
         public bool CanSimulatePurchases()
@@ -78,12 +84,16 @@ namespace Isekai12Realms.Shop
 
         public void ClearPurchaseRecords()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             EnsureSaveState();
             if (Save == null) return;
             Save.purchaseRecords.Clear();
             saveService.SaveNow();
             toastService?.ShowToast("Purchase records cleared.");
             Changed?.Invoke();
+#else
+            toastService?.ShowToast("Coming Soon");
+#endif
         }
 
         private void EnsureSaveState()

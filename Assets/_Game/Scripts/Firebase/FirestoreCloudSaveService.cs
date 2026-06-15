@@ -46,10 +46,18 @@ namespace Isekai12Realms.FirebaseIntegration
         public async Task<CloudSaveMeta> GetCloudMetaAsync(string uid)
         {
 #if USE_FIREBASE
-            DocumentSnapshot snapshot = await firestore.Document($"users/{uid}/saves/default").GetSnapshotAsync();
-            if (!snapshot.Exists) return null;
-            CloudSaveDocument doc = snapshot.ConvertTo<CloudSaveDocument>();
-            return doc?.meta;
+            try
+            {
+                DocumentSnapshot snapshot = await firestore.Document($"users/{uid}/saves/default").GetSnapshotAsync();
+                if (!snapshot.Exists) return null;
+                CloudSaveDocument doc = snapshot.ConvertTo<CloudSaveDocument>();
+                return doc?.meta;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Firestore] GetCloudMeta failed: " + e.Message);
+                return null;
+            }
 #else
             await Task.CompletedTask;
             return null;
@@ -59,8 +67,16 @@ namespace Isekai12Realms.FirebaseIntegration
         public async Task<CloudSaveDocument> DownloadSaveAsync(string uid)
         {
 #if USE_FIREBASE
-            DocumentSnapshot snapshot = await firestore.Document($"users/{uid}/saves/default").GetSnapshotAsync();
-            return snapshot.Exists ? snapshot.ConvertTo<CloudSaveDocument>() : null;
+            try
+            {
+                DocumentSnapshot snapshot = await firestore.Document($"users/{uid}/saves/default").GetSnapshotAsync();
+                return snapshot.Exists ? snapshot.ConvertTo<CloudSaveDocument>() : null;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Firestore] Download failed: " + e.Message);
+                return null;
+            }
 #else
             await Task.CompletedTask;
             return null;
@@ -71,15 +87,23 @@ namespace Isekai12Realms.FirebaseIntegration
         {
 #if USE_FIREBASE
             Status = CloudSaveStatus.Syncing;
-            string json = JsonUtility.ToJson(save, true);
-            CloudSaveDocument doc = new CloudSaveDocument { meta = CloudSaveFactory.CreateMeta(uid, save), saveJson = json, checksum = SaveChecksumUtility.ComputeChecksum(json), purchaseRecords = save.purchaseRecords ?? new List<PurchaseRecord>(), uploadedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() };
-            await firestore.Document($"users/{uid}/saves/default").SetAsync(doc);
-            await firestore.Document($"users/{uid}/profile/main").SetAsync(doc.meta);
-            await MergePurchaseRecordsAsync(uid, save.purchaseRecords);
-            save.lastCloudUploadAt = doc.uploadedAt;
-            save.firebaseUid = uid;
-            saveService.SaveNow();
-            Status = CloudSaveStatus.Synced;
+            try
+            {
+                string json = JsonUtility.ToJson(save, true);
+                CloudSaveDocument doc = new CloudSaveDocument { meta = CloudSaveFactory.CreateMeta(uid, save), saveJson = json, checksum = SaveChecksumUtility.ComputeChecksum(json), purchaseRecords = save.purchaseRecords ?? new List<PurchaseRecord>(), uploadedAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds() };
+                await firestore.Document($"users/{uid}/saves/default").SetAsync(doc);
+                await firestore.Document($"users/{uid}/profile/main").SetAsync(doc.meta);
+                await MergePurchaseRecordsAsync(uid, save.purchaseRecords);
+                save.lastCloudUploadAt = doc.uploadedAt;
+                save.firebaseUid = uid;
+                saveService.SaveNow();
+                Status = CloudSaveStatus.Synced;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Firestore] Upload failed: " + e.Message);
+                Status = CloudSaveStatus.Error;
+            }
 #else
             await Task.CompletedTask;
 #endif

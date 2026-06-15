@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_skill_tide_wave",
+    "file":  "vfx_skill_tide_wave_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_skill_tide_wave skill vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy skill VFX sprite vfx_skill_tide_wave, transparent background, no text."
+}

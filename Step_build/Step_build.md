@@ -6090,7 +6090,7 @@ Do not break:
 * Purchase records merge by transactionId
 * Game remains playable if internet is disconnected
 
-### Prompt 16 <-->
+### Prompt 16
 
 Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, docs/firebase_setup.md if it exists, and inspect the current Unity project.
 
@@ -6592,4 +6592,1860 @@ Do not break:
 * Game remains playable if store is unavailable
 
 
+### Prompt 17
 
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, docs/firebase_setup.md, docs/iap_setup.md if they exist, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish
+* Local save and progression
+* Inventory/equipment system
+* Skill system
+* Quest/tutorial system
+* Offline shop
+* Firebase Auth / Cloud Save abstraction
+* Unity IAP abstraction
+* AssetManifest and placeholder PNG pipeline
+* Content Editor tools
+* Data-driven Realm/Stage/Enemy/DropTable/Skill/Equipment/Shop/Quest data
+
+Next task: implement Addressables-ready content loading and remote content update pipeline.
+
+Do not require Addressables package to compile.
+Do not break offline gameplay.
+Do not make core game depend on network.
+Do not rewrite existing content systems.
+Do not remove AssetManifest.
+
+Goal:
+Create a safe content loading layer so the game can:
+
+* load core assets locally
+* optionally load remote assets later through Addressables
+* keep playing offline if remote content is unavailable
+* update art/content packs in the future
+* download optional realm/cosmetic packs
+* fall back to local placeholder assets when missing
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Addressables
+   Assets/_Game/Scripts/RemoteConfig
+   Assets/_Game/Scripts/ContentPacks
+   Assets/_Game/ScriptableObjects/ContentPacks
+   Assets/_Game/Addressables/
+   Assets/_Game/Addressables/Local/
+   Assets/_Game/Addressables/Remote/
+
+2. Add preprocessor-safe architecture.
+
+Use scripting define:
+USE_ADDRESSABLES
+
+If USE_ADDRESSABLES is not defined:
+
+* compile MockAssetLoadService only
+* no Addressables API references should compile
+* game must still work using AssetManifest and direct Sprite references
+
+If USE_ADDRESSABLES is defined:
+
+* compile AddressableAssetLoadService
+* load sprites/assets by address key
+* support local and remote catalogs later
+
+3. Create IAssetLoadService interface.
+
+Methods:
+
+* bool IsAvailable { get; }
+* Task<Sprite> LoadSpriteAsync(string assetId)
+* Task<T> LoadAssetAsync<T>(string assetId) where T : UnityEngine.Object
+* void ReleaseAsset(string assetId)
+* bool HasCachedAsset(string assetId)
+* Task PreloadAssetsAsync(List<string> assetIds)
+* Task ClearOptionalCacheAsync()
+
+Rules:
+
+* Always fallback to GameAssetManifest.GetSprite(assetId)
+* Never throw fatal exception when asset missing
+* Return missingSprite if asset cannot be loaded
+
+4. Create MockAssetLoadService.
+
+Behavior:
+
+* Uses GameAssetManifest only
+* Ignores remote loading
+* Logs once:
+  "[Assets] Addressables disabled. Using AssetManifest local loading."
+* Must not spam console
+
+5. Create AddressableAssetLoadService behind USE_ADDRESSABLES.
+
+Behavior:
+
+* Try load Sprite by address key = assetId
+* If load fails, fallback to GameAssetManifest
+* Cache loaded assets in memory dictionary
+* Release assets safely
+* Do not crash if catalog unavailable
+* Support preload list
+
+6. Update AssetSpriteBinder.
+
+AssetSpriteBinder must:
+
+* use IAssetLoadService instead of directly using AssetManifest when available
+* still support immediate fallback sprite
+* support async load
+* avoid race conditions when object is disabled/destroyed
+* expose:
+
+  * string assetId
+  * Image targetImage
+  * bool preserveAspect
+  * bool useNativeSize
+
+7. Update TileView and key UI views.
+
+TileView must:
+
+* request token sprite through IAssetLoadService
+* fallback to colored square and TMP label
+
+BattleCharacterView must:
+
+* load player/enemy sprite through IAssetLoadService
+* fallback to placeholder sprite
+
+Main screens must use IAssetLoadService for:
+
+* title background
+* town background
+* world map background
+* battle background
+* character sprites
+* enemy sprites
+* currency icons
+* button/panel sprites
+
+8. Create ContentPackDefinition.cs as ScriptableObject.
+
+Fields:
+
+* string id
+* string displayName
+* string description
+* ContentPackType packType
+* int version
+* bool required
+* bool includedInBuild
+* bool downloadable
+* long estimatedSizeBytes
+* List<string> assetIds
+* List<string> realmIds
+* List<string> stageIds
+* List<string> cosmeticIds
+
+Create ContentPackType enum:
+
+* Core
+* Realm
+* Cosmetic
+* Event
+* Audio
+* UI
+* Debug
+
+9. Create ContentPackService.cs.
+
+Responsibilities:
+
+* GetAllPacks()
+* GetRequiredPacks()
+* GetDownloadablePacks()
+* IsPackAvailable(string packId)
+* DownloadPackAsync(string packId)
+* PreloadPackAsync(string packId)
+* ClearOptionalPacksAsync()
+* GetPackDownloadStatus(string packId)
+
+If Addressables disabled:
+
+* Core packs are available
+* Downloadable packs show "Addressables not configured"
+* No crash
+
+10. Create ContentPackDownloadStatus enum:
+
+* Unknown
+* AvailableLocal
+* NotDownloaded
+* Downloading
+* Downloaded
+* Failed
+* AddressablesDisabled
+
+11. Create prototype content packs.
+
+Editor menu:
+Tools/Isekai 12 Realms/Create Prototype Content Packs
+
+Create:
+content_pack_core
+
+* type Core
+* required true
+* includedInBuild true
+* downloadable false
+* assetIds:
+
+  * all Priority 1 assets
+* realmIds:
+
+  * realm_01_meadow
+
+content_pack_realm_02_ember
+
+* type Realm
+* required false
+* includedInBuild true for MVP
+* downloadable true later
+* realmIds:
+
+  * realm_02_ember
+
+content_pack_realm_03_tide
+
+* type Realm
+* required false
+* includedInBuild true for MVP
+* downloadable true later
+* realmIds:
+
+  * realm_03_tide
+
+content_pack_cosmetic_meadow
+
+* type Cosmetic
+* required false
+* includedInBuild false
+* downloadable true
+* cosmeticIds:
+
+  * cosmetic_board_skin_meadow
+  * cosmetic_hero_aura_cyan
+
+12. Extend GameContentDatabase.
+
+Add:
+
+* List<ContentPackDefinition> contentPacks
+
+Methods:
+
+* GetContentPackById(string id)
+* GetContentPacksByType(ContentPackType type)
+* GetPackForRealm(string realmId)
+
+Update Rebuild Content Database:
+
+* include ContentPackDefinition assets
+
+13. Create DownloadContentUI.
+
+Add screen or popup:
+ContentDownloadPopup
+
+Display:
+
+* pack name
+* description
+* estimated size
+* status
+* progress bar
+* buttons:
+
+  * Download
+  * Cancel
+  * Clear Cache
+  * Close
+
+If Addressables disabled:
+
+* show text:
+  "Remote content is not configured yet. This pack is included locally or unavailable."
+
+14. Update WorldMapUI.
+
+When selecting a realm:
+
+* If realm is part of a content pack that is not available:
+
+  * show ContentDownloadPopup
+  * do not enter stage until available
+* If pack is available:
+
+  * show stages as usual
+
+For MVP:
+
+* realm_01, realm_02, realm_03 should be available locally
+* remote behavior can be simulated
+
+15. Create RemoteConfig abstraction.
+
+Use scripting define:
+USE_FIREBASE_REMOTE_CONFIG
+
+If not defined:
+
+* compile MockRemoteConfigService
+* use local defaults
+
+Create IRemoteConfigService interface:
+
+* bool IsAvailable { get; }
+* Task InitializeAsync()
+* Task FetchAndActivateAsync()
+* string GetString(string key, string defaultValue)
+* int GetInt(string key, int defaultValue)
+* float GetFloat(string key, float defaultValue)
+* bool GetBool(string key, bool defaultValue)
+
+16. Create GameConfigData.cs.
+
+Fields:
+
+* bool cloudSyncEnabledDefault
+* bool iapEnabled
+* bool remoteContentEnabled
+* bool tutorialEnabledDefault
+* int dailyShopRefreshHour
+* int maxLevelCap
+* float goldRewardMultiplier
+* float expRewardMultiplier
+* string currentContentVersion
+* string minimumAppVersion
+* string maintenanceMessage
+
+17. Create GameConfigService.cs.
+
+Responsibilities:
+
+* Load local defaults
+* Optionally override from RemoteConfig
+* Provide config values to other systems
+* Never block game start if remote config fails
+
+Default values:
+
+* cloudSyncEnabledDefault = true
+* iapEnabled = true
+* remoteContentEnabled = false
+* tutorialEnabledDefault = true
+* dailyShopRefreshHour = 4
+* maxLevelCap = 60
+* goldRewardMultiplier = 1.0
+* expRewardMultiplier = 1.0
+* currentContentVersion = "0.1.0"
+* minimumAppVersion = "0.1.0"
+* maintenanceMessage = ""
+
+18. Apply GameConfigService to systems.
+
+Use config for:
+
+* Daily shop refresh hour
+* IAP tab enabled/disabled
+* Remote content enabled/disabled
+* Tutorial default enabled
+* Gold reward multiplier
+* EXP reward multiplier
+* Level cap
+
+If config unavailable:
+
+* use default local values
+
+19. Create docs/addressables_setup.md.
+
+Include:
+
+* install Addressables package
+* define USE_ADDRESSABLES
+* create local and remote groups
+* mark asset addresses using assetId
+* build Addressables content
+* configure remote load path later
+* game fallback behavior
+* do not put core assets only in remote group
+* Core content must always be included locally
+
+20. Create docs/remote_config_setup.md.
+
+Include:
+
+* optional Firebase Remote Config setup
+* define USE_FIREBASE_REMOTE_CONFIG
+* recommended keys:
+
+  * iap_enabled
+  * remote_content_enabled
+  * daily_shop_refresh_hour
+  * max_level_cap
+  * gold_reward_multiplier
+  * exp_reward_multiplier
+  * current_content_version
+  * minimum_app_version
+  * maintenance_message
+
+21. Add editor menus.
+
+Tools/Isekai 12 Realms/Addressables/Create Setup Guide
+
+* creates docs/addressables_setup.md
+
+Tools/Isekai 12 Realms/Remote Config/Create Setup Guide
+
+* creates docs/remote_config_setup.md
+
+Tools/Isekai 12 Realms/Content Packs/Create Prototype Content Packs
+
+* creates prototype packs
+
+Tools/Isekai 12 Realms/Content Packs/Validate Content Packs
+
+* validates content pack definitions
+
+22. Add content pack validation.
+
+Check:
+
+* every pack has id
+* no duplicate pack id
+* displayName not empty
+* required core pack exists
+* required packs are includedInBuild
+* downloadable packs are not required unless includedInBuild
+* every assetId exists in AssetManifest or is intended for Addressables
+* every realmId exists
+* every stageId exists
+* estimatedSizeBytes >= 0
+
+23. Add Remote Config validation.
+
+Check:
+
+* default GameConfigData exists
+* dailyShopRefreshHour between 0 and 23
+* maxLevelCap >= 1
+* goldRewardMultiplier >= 0
+* expRewardMultiplier >= 0
+* currentContentVersion not empty
+
+24. Add Settings UI section.
+
+Settings popup:
+Add section:
+Content
+
+* Current Content Version
+* Remote Content Enabled/Disabled
+* Button: Manage Downloads
+* Button: Clear Optional Cache
+
+If Addressables disabled:
+
+* show:
+  "Remote downloads are not configured."
+
+25. Preserve existing systems.
+
+Do not break:
+
+* battle
+* save/load
+* rewards
+* stage unlock
+* inventory/equipment
+* skills
+* quests/tutorials
+* shop
+* IAP
+* Firebase mock/cloud save
+* asset manifest
+* content editor
+
+26. Acceptance criteria without Addressables package:
+
+* Project compiles without Addressables package
+* Game runs normally
+* AssetSpriteBinder loads sprites from GameAssetManifest
+* Battle tokens still show icons
+* WorldMap works
+* ContentDownloadPopup shows safe message when remote content unavailable
+* Settings shows remote content disabled/unconfigured
+* No console errors
+* No missing script errors
+
+27. Acceptance criteria with Addressables later:
+
+* Add Addressables package
+* Define USE_ADDRESSABLES
+* Mark assets with address keys matching assetId
+* AssetSpriteBinder loads sprites through Addressables
+* Missing address falls back to AssetManifest
+* ContentPackService can preload a pack
+* WorldMap can block/download optional realm pack
+* Game remains playable offline with core content
+
+
+### Prompt 18
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, docs/firebase_setup.md, docs/iap_setup.md, docs/addressables_setup.md, docs/remote_config_setup.md if they exist, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish
+* Local save and progression
+* Inventory/equipment system
+* Skill system
+* Quest/tutorial system
+* Offline shop
+* Firebase Auth / Cloud Save abstraction
+* Unity IAP abstraction
+* Addressables-ready abstraction
+* AssetManifest and placeholder PNG pipeline
+* Content Editor tools
+* Data-driven content
+
+Next task: prepare Android build pipeline, mobile optimization, QA tools, and release hardening.
+
+Do not rewrite gameplay systems.
+Do not implement new major features.
+Do not break local offline gameplay.
+Do not require Firebase/IAP/Addressables packages to compile.
+Focus on build readiness, QA, performance, and release safety.
+
+Goal:
+The project should be ready to build Android APK/AAB for internal testing.
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Build
+   Assets/_Game/Scripts/QA
+   Assets/_Game/Scripts/Diagnostics
+   Assets/_Game/Scripts/Performance
+   Assets/_Game/Editor/BuildTools
+   docs/release/
+
+2. Create BuildConfig.cs as ScriptableObject.
+
+Path:
+Assets/_Game/ScriptableObjects/Economy/BuildConfig.asset
+
+Fields:
+
+* string appVersion = "0.1.0"
+* int bundleVersionCode = 1
+* string environment = "development"
+* bool developmentBuild
+* bool enableDebugPanel
+* bool enableMockIAP
+* bool enableVerboseLogs
+* bool enableCloudSave
+* bool enableRemoteContent
+* bool enableAnalytics
+* int targetFrameRate = 60
+* int fallbackFrameRate = 30
+
+3. Create BuildConfigService.cs.
+
+Responsibilities:
+
+* Load BuildConfig.asset
+* Provide global build flags
+* Apply target frame rate on startup
+* Control debug panels
+* Control verbose logs
+* Control mock IAP visibility
+* Never crash if BuildConfig is missing
+
+4. Update boot flow.
+
+On BootScene start:
+
+* load BuildConfig
+* apply target frame rate
+* log app version/environment
+* continue to GameScene
+
+Log:
+"[Build] Version {appVersion} ({bundleVersionCode}) env={environment}"
+
+5. Create AndroidBuildSettingsApplier.cs editor tool.
+
+Menu:
+Tools/Isekai 12 Realms/Build/Apply Android Build Settings
+
+It must configure:
+
+* Platform: Android
+* Orientation: Portrait only
+* Scripting Backend: IL2CPP
+* Target Architecture: ARM64
+* Minimum API Level: Android 6.0 or project default if not available
+* Target API Level: Automatic Highest Installed
+* Managed Stripping Level: Low or Medium
+* Internet permission allowed
+* Product Name: Isekai 12 Realms
+* Bundle Version from BuildConfig
+* Bundle Version Code from BuildConfig
+
+Do not hardcode company name unless missing.
+If package name is missing, suggest:
+com.yourstudio.isekai12realms
+
+6. Create BuildPipelineWindow.cs.
+
+Menu:
+Tools/Isekai 12 Realms/Build/Build Window
+
+Window sections:
+
+* Current BuildConfig
+* Android settings status
+* Scenes in Build
+* Validation
+* Build APK Development
+* Build AAB Release Candidate
+* Open Build Folder
+
+Build output:
+Builds/Android/
+
+APK:
+Builds/Android/Isekai12Realms_dev_v{version}_{code}.apk
+
+AAB:
+Builds/Android/Isekai12Realms_rc_v{version}_{code}.aab
+
+7. Build validation before build.
+
+Create BuildValidator.cs.
+
+Checks:
+
+* BootScene exists
+* GameScene exists
+* BootScene and GameScene are in Build Settings
+* GameScene has RootCanvas
+* GameScene has GameManager
+* EventSystem exists
+* GameAssetManifest exists
+* GameContentDatabase exists
+* BuildConfig exists
+* No duplicate content IDs
+* Prototype content exists
+* Prototype skills exist
+* Prototype equipment exists
+* Prototype shop exists
+* Local save service exists
+* Mock services compile when Firebase/IAP/Addressables are disabled
+* Product name is not empty
+* Package name is not empty
+* Orientation is portrait
+* ARM64 enabled for release
+* Version code > 0
+
+Report:
+
+* Errors
+* Warnings
+* Summary
+
+Build must stop if critical errors exist.
+
+8. Create QA checklist document.
+
+Create:
+docs/release/android_qa_checklist.md
+
+Include sections:
+
+* Fresh install test
+* Returning player test
+* Battle test
+* Reward/save test
+* Inventory/equipment test
+* Skill upgrade test
+* Quest/tutorial test
+* Shop soft currency test
+* IAP mock test
+* Cloud save mock test
+* Offline mode test
+* App pause/resume test
+* Low memory test
+* Different aspect ratio test
+* No internet test
+* Performance test
+* Build validation checklist
+
+9. Create Release Notes template.
+
+Create:
+docs/release/release_notes_template.md
+
+Include:
+
+* Version
+* Build code
+* Date
+* Features
+* Known issues
+* Test notes
+* Device coverage
+* Firebase/IAP status
+* Addressables status
+
+10. Create Privacy/Data Safety draft.
+
+Create:
+docs/release/privacy_data_safety_draft.md
+
+Mention:
+
+* Game can be played offline
+* Local save stored on device
+* Optional cloud save if player signs in
+* Firebase Auth may create anonymous user ID
+* Google Sign-In optional if configured
+* IAP purchase records stored for purchase recovery
+* No chat
+* No real-time multiplayer
+* No user-generated public content
+* No precise location collection
+* No contacts collection
+* No microphone/camera usage
+* No direct ad SDK unless added later
+
+Keep this as draft, not legal advice.
+
+11. Create QA debug panel.
+
+Create QADebugPanelUI.
+
+Accessible only if:
+
+* BuildConfig.enableDebugPanel = true
+  or
+* UNITY_EDITOR
+
+Panel sections:
+
+* Save
+
+  * Print Save Info
+  * Export Save JSON
+  * Delete Local Save
+  * Add Gold
+  * Add Soul Gem
+* Battle
+
+  * Start Stage 1-1
+  * Win Current Battle
+  * Lose Current Battle
+* Inventory
+
+  * Add Test Equipment
+  * Add Materials
+* Quest
+
+  * Complete Active Tutorial Quest
+  * Reset Tutorial
+* Shop
+
+  * Reset Daily Shop
+  * Simulate IAP
+* Cloud
+
+  * Print Cloud Status
+  * Force Conflict Test
+
+All buttons must be clearly labelled DEBUG.
+Hide this panel in release builds unless BuildConfig explicitly enables it.
+
+12. Create DiagnosticsService.cs.
+
+Responsibilities:
+
+* Log important app events
+* Store recent logs in memory ring buffer
+* Export diagnostic report to:
+  Application.persistentDataPath/diagnostics_report.txt
+
+Report includes:
+
+* app version
+* device model
+* OS
+* screen size
+* save info
+* cloud status
+* content database summary
+* last 200 logs
+
+Do not collect personal sensitive data.
+
+13. Add crash-safe error popup.
+
+Create ErrorPopup.
+
+Use for:
+
+* Save load failed
+* Cloud sync failed
+* IAP unavailable
+* Content database missing
+* Build config missing
+
+Popup shows:
+
+* user-friendly message
+* technical short code
+* buttons:
+
+  * OK
+  * Copy Debug Info if available
+
+Do not expose giant stack traces in normal UI.
+
+14. Add performance settings.
+
+Create PerformanceService.cs.
+
+Responsibilities:
+
+* Set Application.targetFrameRate
+* Detect low-end device roughly by systemMemorySize
+* If low-end:
+
+  * set target frame rate to fallbackFrameRate
+  * reduce VFX intensity flag
+  * reduce floating text spam
+* Provide:
+
+  * bool ReduceEffects
+  * int TargetFrameRate
+
+15. Optimize battle VFX spam.
+
+If PerformanceService.ReduceEffects is true:
+
+* limit floating texts per second
+* reduce full-screen flash alpha
+* skip minor tile VFX for cascades after combo > 3
+* keep gameplay readable
+
+16. Add sprite import validator.
+
+Editor menu:
+Tools/Isekai 12 Realms/Assets/Validate Sprite Import Settings
+
+Checks generated PNGs:
+
+* Texture Type Sprite
+* MipMaps off for UI/icons
+* Alpha transparency enabled for transparent assets
+* Max size reasonable
+* Compression not too aggressive for UI
+
+Add safe fix button:
+Tools/Isekai 12 Realms/Assets/Fix Generated Sprite Import Settings
+
+17. Add save migration validator.
+
+Create SaveMigrationTester.cs editor tool.
+
+Menu:
+Tools/Isekai 12 Realms/QA/Test Save Migration
+
+It must:
+
+* create a simulated old save missing newer fields
+* load it through SaveService
+* verify migration adds missing fields:
+
+  * skills
+  * quests
+  * equipment
+  * purchases
+  * cloud fields
+  * shop limits
+* ensure no exception
+* log result
+
+18. Add automated playmode smoke tests if possible.
+
+If Unity Test Framework is available, create tests:
+
+* SaveService creates save
+* Player gains gold/exp
+* Equipment equip increases ATK
+* Skill upgrade consumes gold/item
+* Stage 1-1 unlocks Stage 1-2 after clear
+* Shop purchase deducts currency and grants item
+
+If test framework is unavailable, create manual QA runner:
+Tools/Isekai 12 Realms/QA/Run Manual Smoke Checks
+
+It logs pass/fail checks without requiring playmode tests.
+
+19. Add scene repair validation.
+
+Update:
+Tools/Isekai 12 Realms/Repair Core Scenes
+
+It must not destroy existing configured UI if already valid.
+It should only add missing critical objects:
+
+* RootCanvas
+* SafeAreaRoot
+* layers
+* EventSystem
+* GameManager
+* UI managers
+
+20. Add Android device test guide.
+
+Create:
+docs/release/android_device_test_guide.md
+
+Include test matrix:
+
+* 720x1280
+* 1080x1920
+* 1080x2400
+* low RAM device
+* Android 8/10/12/14 if available
+* offline mode
+* airplane mode
+* app pause/resume
+* rotate device should remain portrait
+* back button behavior
+
+21. Implement Android back button behavior.
+
+Create AndroidBackButtonService.cs.
+
+Rules:
+
+* If popup open: close top popup
+* Else if current screen is not MainTown/Title: go back/home
+* Else if MainTown: show quit confirmation popup
+* Else if Title: quit app or ignore in Editor
+
+Do not instantly quit during battle.
+During battle:
+
+* show pause/confirm popup:
+  "Leave battle?"
+
+22. Add Pause popup.
+
+During battle:
+
+* Android back or pause button opens BattlePausePopup
+* Buttons:
+
+  * Resume
+  * Leave Battle
+  * Settings
+
+Leave battle:
+
+* returns to WorldMap
+* does not grant reward
+* save only non-battle changes
+
+23. Add app pause/resume handling.
+
+Create AppLifecycleService.cs.
+
+On application pause:
+
+* Save local immediately
+* Queue cloud sync if enabled and available
+* Pause audio if needed
+
+On resume:
+
+* Refresh shop daily reset
+* Refresh UI currency/HUD
+* Do not reset battle unless necessary
+
+24. Add release safety switches.
+
+In BuildConfig:
+
+* bool allowDebugCheatsInBuild
+* bool allowMockPurchasesInBuild
+
+Default:
+
+* false
+
+All debug cheat buttons must check these flags.
+
+25. Update docs.
+
+Create:
+docs/release/build_steps_android.md
+
+Include:
+
+1. Generate placeholder PNGs
+
+2. Rebuild Asset Manifest
+
+3. Create prototype content
+
+4. Rebuild Content Database
+
+5. Validate content
+
+6. Apply Android Build Settings
+
+7. Run Build Validator
+
+8. Build APK for dev test
+
+9. Test on device
+
+10. Build AAB for internal testing
+
+11. Preserve existing systems.
+
+Do not break:
+
+* battle
+* save/load
+* stage progression
+* inventory/equipment
+* skills
+* quests/tutorials
+* shop
+* IAP abstraction
+* cloud save abstraction
+* asset manifest
+* content editor
+
+27. Acceptance criteria:
+
+* Run Tools/Isekai 12 Realms/Build/Apply Android Build Settings
+* Run Tools/Isekai 12 Realms/Build/Build Window
+* Build Validator reports no critical errors
+* BootScene and GameScene are in build settings
+* Open GameScene and press Play
+* Game still works
+* Android back button behavior works in Editor simulation if possible
+* Pause/resume saves local data
+* QA debug panel appears only in Editor/development mode
+* Generated docs exist under docs/release/
+* Sprite import validator runs
+* Save migration test runs
+* Manual smoke checks run
+* APK development build can be created
+* AAB release candidate build can be created when Android build support is installed
+* No console errors
+* No missing script errors
+
+### Prompt 19 ART
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* Playable UI shell
+* Match-3 battle
+* Local save/progression
+* Equipment/skills/quests/shop
+* Firebase/IAP/Addressables abstraction
+* Android build pipeline
+* Placeholder PNG asset pipeline
+* GameAssetManifest
+
+Next task: generate production-quality PNG art assets for Priority 1 and apply them safely.
+
+Do not rewrite gameplay.
+Do not rewrite UI logic.
+Do not change save data.
+Do not change battle logic.
+Do not change content database.
+Only create/replace PNG assets and refresh AssetManifest.
+
+Goal:
+Replace placeholder art with original, production-quality, cute chibi isekai fantasy assets.
+
+Important rules:
+
+* All assets must be original.
+* Do not copy any old game asset.
+* Do not copy UI/layout/icon from reference screenshots.
+* Do not include watermark.
+* Do not include text inside PNG, except logo assets.
+* All filename format must be:
+  object_widthxheight.png
+* Use lowercase_snake_case only.
+* Every PNG must have matching JSON metadata.
+* Transparent assets must have transparent background.
+* Full backgrounds must not be transparent.
+* All text labels remain TextMeshPro in Unity.
+
+1. Generate or replace these Priority 1 background assets:
+
+Assets/_Game/Art/Generated/Backgrounds/
+
+* bg_title_sky_realm_1080x1920.png
+  Description:
+  Full mobile portrait fantasy isekai sky background, floating islands, soft clouds, magical portal glow, bright and welcoming, no text.
+
+* bg_town_meadow_1080x1920.png
+  Description:
+  Peaceful isekai meadow town, small cute fantasy houses, magic gate, NPC-friendly plaza, pastel colors, mobile portrait composition, no text.
+
+* bg_world_map_scroll_1080x1920.png
+  Description:
+  Stylized fantasy world map parchment with 12 magical realms represented by empty spaces for UI nodes, no readable text, no labels.
+
+* bg_battle_meadow_1080x960.png
+  Description:
+  Cute meadow battle arena background, grass field, floating crystals, soft sky, enough empty space for battle characters and match-3 board, no text.
+
+2. Generate or replace these Priority 1 character assets:
+
+Assets/_Game/Art/Generated/Characters/
+
+* char_hero_flame_idle_512x512.png
+  Transparent background.
+  Original chibi isekai flame squire hero, friendly expression, short cape, small wooden sword, warm orange magical accent, idle pose, full body.
+
+* char_hero_flame_attack_512x512.png
+  Transparent background.
+  Same original flame squire hero, attack pose with small glowing sword slash, non-violent, no blood.
+
+* char_hero_flame_cast_512x512.png
+  Transparent background.
+  Same original flame squire hero, casting small warm flame magic, cute fantasy effect.
+
+* char_hero_flame_hurt_512x512.png
+  Transparent background.
+  Same original flame squire hero, light hurt/stagger pose, still family-friendly, no injury, no blood.
+
+3. Generate or replace these Priority 1 enemy assets:
+
+Assets/_Game/Art/Generated/Enemies/
+
+* enemy_meadow_slime_512x512.png
+  Transparent background.
+  Cute green meadow slime, friendly fantasy monster, soft outline, readable silhouette, non-scary.
+
+* boss_slime_king_768x768.png
+  Transparent background.
+  Large cute slime king boss with tiny crown and meadow magic aura, playful, non-violent, readable at mobile size.
+
+4. Generate or replace these match-3 token assets:
+
+Assets/_Game/Art/Generated/Tokens/
+
+* icon_token_sword_128x128.png
+  Transparent background.
+  Small glowing wooden training sword icon, clear silhouette.
+
+* icon_token_heart_128x128.png
+  Transparent background.
+  Crystal heart icon, healing symbol, bright and readable.
+
+* icon_token_coin_128x128.png
+  Transparent background.
+  Golden fantasy coin icon, simple and readable.
+
+* icon_token_food_128x128.png
+  Transparent background.
+  Cute magical apple or food basket token, readable at small size.
+
+* icon_token_book_128x128.png
+  Transparent background.
+  Small open spell book icon, readable.
+
+* icon_token_mana_128x128.png
+  Transparent background.
+  Blue mana orb icon, glowing, circular.
+
+* icon_token_shield_128x128.png
+  Transparent background.
+  Small fantasy shield icon, cyan/gold accent.
+
+* icon_token_star_128x128.png
+  Transparent background.
+  Bright isekai star crystal icon, readable and distinct from mana.
+
+5. Generate or replace these UI assets:
+
+Assets/_Game/Art/Generated/UI/
+
+* ui_panel_main_768x512.png
+  Transparent background.
+  Rounded fantasy UI panel, cream/dark blue frame, no text, scalable-looking.
+
+* ui_panel_popup_768x512.png
+  Transparent background.
+  Larger magical popup panel, soft border, no text.
+
+* ui_btn_primary_384x128.png
+  Transparent background.
+  Fantasy rounded button background, cyan/gold, no text.
+
+* ui_btn_secondary_384x128.png
+  Transparent background.
+  Fantasy rounded button background, softer blue/cream, no text.
+
+* ui_btn_close_128x128.png
+  Transparent background.
+  Round close button with simple X icon, no text label.
+
+* ui_bar_hp_bg_512x64.png
+  Transparent background.
+  HP bar frame background, no text.
+
+* ui_bar_hp_fill_512x64.png
+  Transparent background.
+  HP bar fill image, red/orange fantasy style, no text.
+
+* ui_bar_mana_bg_512x64.png
+  Transparent background.
+  Mana bar frame background, no text.
+
+* ui_bar_mana_fill_512x64.png
+  Transparent background.
+  Mana bar fill image, blue magic style, no text.
+
+6. Generate or replace these currency assets:
+
+Assets/_Game/Art/Generated/Items/ or Assets/_Game/Art/Generated/Icons/
+
+* currency_gold_128x128.png
+  Transparent background.
+  Gold coin stack icon, readable at small size.
+
+* currency_soul_gem_128x128.png
+  Transparent background.
+  Premium soul gem crystal, cyan/purple, readable, not too similar to mana orb.
+
+7. Generate or replace these loading/logo assets:
+
+Assets/_Game/Art/Generated/Loading/
+
+* logo_game_main_768x384.png
+  Transparent background.
+  Original game logo text: "ISEKAI 12 REALMS"
+  Cute fantasy logo, readable, no watermark.
+
+* loading_bar_frame_768x96.png
+  Transparent background.
+  Fantasy loading bar frame, no text.
+
+* loading_bar_fill_768x96.png
+  Transparent background.
+  Magical loading bar fill, no text.
+
+* icon_app_1024x1024.png
+  Full icon.
+  App icon with cute isekai portal, small hero silhouette or star crystal, no tiny unreadable text.
+
+8. For every generated PNG, create matching metadata JSON in:
+
+Assets/_Game/Art/Generated/Meta/
+
+Example:
+icon_token_sword_128x128.json
+
+JSON fields:
+{
+"id": "icon_token_sword",
+"file": "icon_token_sword_128x128.png",
+"size": [128, 128],
+"category": "Token",
+"usage": "match-3 sword attack token",
+"style": "cute chibi isekai fantasy, bright, clean, mobile readable",
+"transparent": true,
+"replaceable": true,
+"prompt": "..."
+}
+
+9. After generation:
+
+* Set Texture Type to Sprite
+* Disable mip maps for UI/icons/tokens
+* Enable Alpha Is Transparency for transparent assets
+* Refresh AssetDatabase
+* Rebuild GameAssetManifest
+* Reassign sprites through AssetManifest if needed
+* Do not hard-code sprite references
+
+10. Add editor menu if missing:
+
+Tools/Isekai 12 Realms/Art/Generate Priority 1 Production Art
+
+This menu should trigger the generation workflow if Unity AI image generation is available.
+
+If Unity AI image generation is not available:
+
+* Do not fail.
+* Show clear message:
+  "Unity AI image generation is not configured. Use placeholder PNGs or generate assets externally using the prompts in docs/asset_manifest.md."
+
+11. Add editor menu:
+
+Tools/Isekai 12 Realms/Art/Validate Generated Art
+
+Validation checks:
+
+* filename format object_widthxheight.png
+* PNG size matches filename
+* metadata JSON exists
+* transparent assets have alpha
+* no missing AssetManifest entry
+* every Priority 1 asset exists
+* no duplicate asset id
+
+12. Apply art safely to UI:
+
+* Title uses bg_title_sky_realm and logo_game_main
+* MainTown uses bg_town_meadow
+* WorldMap uses bg_world_map_scroll
+* Battle uses bg_battle_meadow
+* Battle player uses char_hero_flame_idle
+* Battle enemy uses enemy_meadow_slime unless selected enemy has another spriteAssetId
+* Token tiles use token icons
+* Buttons use UI button sprites
+* Panels use UI panel sprites
+* Bars use HP/Mana bar sprites
+
+13. Acceptance criteria:
+
+* Priority 1 PNGs exist with correct names
+* Metadata JSON exists for every PNG
+* GameAssetManifest includes all Priority 1 assets
+* Title screen looks like a game title screen, not debug UI
+* Main Town has visible fantasy background
+* Battle board uses readable token icons
+* Player/enemy sprites are visible
+* UI text remains TextMeshPro
+* No watermark appears in any generated art
+* No copied old game assets appear
+* Existing gameplay still works
+* Battle still works
+* Save/reward/progression still works
+* No console errors
+* No missing script errors
+
+### Prompt 20 ART
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* Playable UI shell
+* Match-3 battle
+* Local save/progression
+* Equipment/skills/quests/shop
+* Firebase/IAP/Addressables abstraction
+* Android build pipeline
+* Priority 1 production art or placeholder art
+* GameAssetManifest
+
+Next task: generate and apply MVP Priority 2 art assets for Realm 01–03.
+
+Do not rewrite gameplay.
+Do not rewrite UI logic.
+Do not change save data.
+Do not change battle logic.
+Do not change content database IDs.
+Only create/replace PNG assets, metadata JSON, rebuild AssetManifest, and bind the correct asset IDs to existing content definitions.
+
+Goal:
+Create production-quality original PNG assets for the first 3 realms:
+
+* Meadow Gate
+* Ember Village
+* Tide Shrine
+
+These assets must make the MVP campaign feel complete.
+
+Important rules:
+
+* All assets must be original.
+* Do not copy old game assets.
+* Do not include watermark.
+* Do not include text inside PNG except logo assets.
+* All filenames must follow:
+  object_widthxheight.png
+* Use lowercase_snake_case.
+* Every PNG must have matching JSON metadata.
+* Transparent assets must have transparent background.
+* Full backgrounds must not be transparent.
+* UI text remains TextMeshPro in Unity.
+
+1. Generate Realm 01–03 battle backgrounds.
+
+Folder:
+Assets/_Game/Art/Generated/Backgrounds/
+
+Create or replace:
+
+* bg_battle_meadow_1080x960.png
+  Cute meadow battle arena, floating grass, blue sky, soft crystals, no text.
+
+* bg_battle_ember_1080x960.png
+  Cozy ember village battle arena, warm orange light, harmless magical sparks, fantasy houses far behind, no lava gore, no text.
+
+* bg_battle_tide_1080x960.png
+  Peaceful tide shrine battle arena, shallow water, blue shrine stones, bubbles, moonlight/cyan magic, no text.
+
+2. Generate Realm 01–03 town/adventure backgrounds.
+
+Folder:
+Assets/_Game/Art/Generated/Backgrounds/
+
+Create:
+
+* bg_adventure_meadow_1080x1920.png
+  Vertical mobile 2D side-scrolling meadow area, platforms, flowers, magic gate, no text.
+
+* bg_adventure_ember_1080x1920.png
+  Vertical mobile 2D cozy ember village area, warm houses, safe fantasy fire lanterns, no text.
+
+* bg_adventure_tide_1080x1920.png
+  Vertical mobile 2D tide shrine area, water platforms, blue shrine arches, bubbles, no text.
+
+3. Generate NPC assets.
+
+Folder:
+Assets/_Game/Art/Generated/NPCs/
+
+Create transparent PNGs:
+
+* npc_mira_mail_cat_512x512.png
+  Cute mail cat companion with small satchel, friendly, chibi fantasy.
+
+* npc_brann_blacksmith_512x512.png
+  Tiny friendly blacksmith dwarf/goblin-like fantasy helper, hammer, apron, non-threatening.
+
+* npc_nami_healer_512x512.png
+  Gentle tide shrine healer, blue robe, healing staff, friendly.
+
+* npc_quest_elder_512x512.png
+  Wise cute quest elder, fantasy robe, kind expression.
+
+* npc_shop_keeper_512x512.png
+  Cheerful shopkeeper, small bag, coins, fantasy merchant.
+
+* npc_skill_librarian_512x512.png
+  Cute librarian mage with floating book.
+
+Create portraits:
+
+* portrait_npc_mira_mail_cat_512x512.png
+* portrait_npc_brann_blacksmith_512x512.png
+* portrait_npc_nami_healer_512x512.png
+* portrait_npc_quest_elder_512x512.png
+* portrait_npc_shop_keeper_512x512.png
+* portrait_npc_skill_librarian_512x512.png
+
+4. Generate enemy assets for Realm 01–03.
+
+Folder:
+Assets/_Game/Art/Generated/Enemies/
+
+Transparent PNGs:
+
+Realm 01:
+
+* enemy_meadow_slime_512x512.png
+* enemy_meadow_mushroom_512x512.png
+* enemy_meadow_leaf_bug_512x512.png
+* boss_slime_king_768x768.png
+
+Realm 02:
+
+* enemy_ember_piglet_512x512.png
+  Cute ember piglet, warm spark aura, non-scary.
+
+* enemy_ember_sprite_512x512.png
+  Small floating fire sprite, playful, no danger.
+
+* enemy_ember_pumpkin_512x512.png
+  Cute ember pumpkin creature, fantasy, friendly-scary but not horror.
+
+* boss_cinder_boar_768x768.png
+  Large cute cinder boar boss, warm glowing mane, non-gory, readable.
+
+Realm 03:
+
+* enemy_tide_bubble_512x512.png
+  Cute bubble spirit, blue, round.
+
+* enemy_tide_crab_512x512.png
+  Small cute tide crab with shell, friendly.
+
+* enemy_tide_jelly_512x512.png
+  Cute jellyfish-like water monster, transparent blue.
+
+* boss_bubble_serpent_768x768.png
+  Cute water serpent boss, elegant, blue bubbles, non-threatening.
+
+5. Generate class hero art for all 3 classes.
+
+Folder:
+Assets/_Game/Art/Generated/Characters/
+
+Transparent PNGs:
+
+Flame:
+
+* char_hero_flame_idle_512x512.png
+* char_hero_flame_attack_512x512.png
+* char_hero_flame_cast_512x512.png
+* char_hero_flame_hurt_512x512.png
+* portrait_hero_flame_512x512.png
+
+Tide:
+
+* char_hero_tide_idle_512x512.png
+* char_hero_tide_attack_512x512.png
+* char_hero_tide_cast_512x512.png
+* char_hero_tide_hurt_512x512.png
+* portrait_hero_tide_512x512.png
+
+Storm:
+
+* char_hero_storm_idle_512x512.png
+* char_hero_storm_attack_512x512.png
+* char_hero_storm_cast_512x512.png
+* char_hero_storm_hurt_512x512.png
+* portrait_hero_storm_512x512.png
+
+All 3 classes must look like the same art direction:
+cute chibi isekai fantasy, clean outline, bright, mobile-readable.
+
+6. Generate skill icons.
+
+Folder:
+Assets/_Game/Art/Generated/Skills/
+
+Transparent PNGs 128x128:
+
+Flame:
+
+* skill_flame_spark_slash_128x128.png
+* skill_flame_ember_combo_128x128.png
+* skill_flame_burst_128x128.png
+* skill_flame_warm_heart_128x128.png
+* skill_flame_shuffle_bell_128x128.png
+* skill_flame_realm_burst_128x128.png
+
+Tide:
+
+* skill_tide_aqua_heal_128x128.png
+* skill_tide_bubble_guard_128x128.png
+* skill_tide_moon_tide_128x128.png
+* skill_tide_gentle_flow_128x128.png
+* skill_tide_cleanse_wave_128x128.png
+* skill_tide_shield_rain_128x128.png
+
+Storm:
+
+* skill_storm_quick_jab_128x128.png
+* skill_storm_static_step_128x128.png
+* skill_storm_thunder_chain_128x128.png
+* skill_storm_lucky_spark_128x128.png
+* skill_storm_tile_swap_128x128.png
+* skill_storm_extra_turn_128x128.png
+
+7. Generate equipment icons for MVP.
+
+Folder:
+Assets/_Game/Art/Generated/Equipment/
+
+Transparent PNGs 128x128:
+
+Weapons:
+
+* equip_weapon_wooden_sword_128x128.png
+* equip_weapon_flame_sword_128x128.png
+* equip_weapon_tide_wand_128x128.png
+* equip_weapon_storm_dagger_128x128.png
+
+Armor:
+
+* equip_armor_traveler_coat_128x128.png
+* equip_armor_leaf_vest_128x128.png
+* equip_armor_crystal_mail_128x128.png
+
+Head:
+
+* equip_head_leaf_hood_128x128.png
+
+Boots:
+
+* equip_boots_traveler_128x128.png
+
+Ring:
+
+* equip_ring_lucky_128x128.png
+
+Charm:
+
+* equip_charm_realm_128x128.png
+
+8. Generate item and material icons for MVP.
+
+Folder:
+Assets/_Game/Art/Generated/Items/
+
+Transparent PNGs 128x128:
+
+Consumables:
+
+* item_potion_small_128x128.png
+* item_potion_medium_128x128.png
+* item_food_basket_128x128.png
+* item_shuffle_bell_128x128.png
+* item_lucky_cookie_128x128.png
+* item_skill_scroll_128x128.png
+
+Materials:
+
+* mat_slime_jelly_128x128.png
+* mat_ember_dust_128x128.png
+* mat_tide_pearl_128x128.png
+* mat_thunder_feather_128x128.png
+* mat_crystal_shard_128x128.png
+
+Currency:
+
+* currency_gold_128x128.png
+* currency_soul_gem_128x128.png
+* currency_realm_token_128x128.png
+
+9. Generate map node assets for Realm 01–03.
+
+Folder:
+Assets/_Game/Art/Generated/Maps/
+
+Transparent PNGs:
+
+* map_node_realm_01_meadow_192x192.png
+* map_node_realm_02_ember_192x192.png
+* map_node_realm_03_tide_192x192.png
+
+Stage states:
+
+* map_stage_locked_128x128.png
+* map_stage_available_128x128.png
+* map_stage_completed_128x128.png
+* map_stage_boss_128x128.png
+* map_stage_chest_128x128.png
+* map_stage_farm_128x128.png
+
+10. Generate basic VFX sprites.
+
+Folder:
+Assets/_Game/Art/Generated/VFX/
+
+Transparent PNGs:
+
+* vfx_match_pop_256x256.png
+* vfx_match_sparkle_256x256.png
+* vfx_combo_burst_256x256.png
+* vfx_attack_slash_256x256.png
+* vfx_heal_heart_256x256.png
+* vfx_shield_bubble_256x256.png
+* vfx_mana_glow_256x256.png
+* vfx_coin_pop_256x256.png
+* vfx_food_pop_256x256.png
+* vfx_exp_book_256x256.png
+* vfx_skill_flame_burst_512x512.png
+* vfx_skill_tide_wave_512x512.png
+* vfx_skill_storm_chain_512x512.png
+
+11. For every generated PNG, create matching JSON metadata.
+
+Folder:
+Assets/_Game/Art/Generated/Meta/
+
+JSON fields:
+
+* id
+* file
+* size
+* category
+* usage
+* style
+* transparent
+* replaceable
+* prompt
+
+12. Set import settings.
+
+For all generated PNG:
+
+* Texture Type: Sprite
+* Sprite Mode: Single
+* MipMaps: Off for UI/icons/tokens
+* Alpha Is Transparency: On for transparent assets
+* Filter Mode:
+
+  * Bilinear for backgrounds/UI soft art
+  * Point or Bilinear for icons depending current project style
+* Compression:
+
+  * None or high quality for UI/icons during development
+
+13. Rebuild GameAssetManifest.
+
+Run or implement:
+Tools/Isekai 12 Realms/Rebuild Asset Manifest
+
+Ensure all generated assets are included.
+
+14. Bind spriteAssetId/iconAssetId to content definitions.
+
+Update existing ScriptableObjects safely:
+
+Enemies:
+
+* enemy_meadow_slime -> spriteAssetId enemy_meadow_slime
+* enemy_meadow_mushroom -> spriteAssetId enemy_meadow_mushroom
+* boss_slime_king -> spriteAssetId boss_slime_king
+* enemy_ember_piglet -> spriteAssetId enemy_ember_piglet
+* enemy_ember_sprite -> spriteAssetId enemy_ember_sprite
+* boss_cinder_boar -> spriteAssetId boss_cinder_boar
+* enemy_tide_bubble -> spriteAssetId enemy_tide_bubble
+* enemy_tide_crab -> spriteAssetId enemy_tide_crab
+* boss_bubble_serpent -> spriteAssetId boss_bubble_serpent
+
+Skills:
+Bind iconAssetId to matching skill icon IDs.
+
+Equipment:
+Bind iconAssetId to matching equipment icon IDs.
+
+Stages:
+
+* Realm 01 stages use bg_battle_meadow
+* Realm 02 stages use bg_battle_ember
+* Realm 03 stages use bg_battle_tide
+
+Realms:
+
+* realm_01_meadow uses map_node_realm_01_meadow
+* realm_02_ember uses map_node_realm_02_ember
+* realm_03_tide uses map_node_realm_03_tide
+
+15. Update UI if needed.
+
+WorldMapUI:
+
+* Use map node sprites for Realm 01–03 if available.
+* Use stage state sprites for locked/available/completed/boss.
+
+BattleUI:
+
+* Load battleBackgroundAssetId from selected StageDefinition.
+* Load enemy sprite from EnemyDefinition.spriteAssetId.
+* Load player class sprite based on selectedClassId:
+
+  * flame_squire -> char_hero_flame_idle
+  * tide_acolyte -> char_hero_tide_idle
+  * storm_scout -> char_hero_storm_idle
+
+HeroUI:
+
+* Show selected class portrait:
+
+  * portrait_hero_flame
+  * portrait_hero_tide
+  * portrait_hero_storm
+
+SkillUI:
+
+* Show real skill icons.
+
+Inventory/EquipmentUI:
+
+* Show equipment and item icons through AssetManifest.
+
+16. Add editor menu:
+
+Tools/Isekai 12 Realms/Art/Generate MVP Priority 2 Art
+
+If Unity AI image generation is available:
+
+* generate the assets above.
+
+If Unity AI image generation is not available:
+
+* create/update a prompt batch file:
+  docs/art/mvp_priority_2_art_prompts.md
+* show message:
+  "Unity AI image generation is not configured. Generate these assets externally and copy PNGs to the specified folders."
+
+17. Add validation menu:
+
+Tools/Isekai 12 Realms/Art/Validate MVP Art
+
+Checks:
+
+* all required Priority 2 PNGs exist
+* all matching JSON metadata exists
+* filename size matches actual PNG size
+* transparent assets have alpha
+* GameAssetManifest entries exist
+* content definitions reference valid asset IDs
+* no missing enemy spriteAssetId for R01–R03
+* no missing skill iconAssetId for prototype skills
+* no missing equipment iconAssetId for prototype equipment
+
+18. Acceptance criteria:
+
+* Run Tools/Isekai 12 Realms/Art/Generate MVP Priority 2 Art or create prompts file
+* Run Tools/Isekai 12 Realms/Rebuild Asset Manifest
+* Run Tools/Isekai 12 Realms/Art/Validate MVP Art
+* Open GameScene and press Play
+* Start Game
+* Choose Flame/Tide/Storm class and see matching hero portrait/sprite
+* Open World Map
+* Realm 01–03 nodes use generated sprites
+* Enter Realm 01 battle and see meadow background/slime sprite
+* Enter Realm 02 battle and see ember background/enemy sprite
+* Enter Realm 03 battle and see tide background/enemy sprite
+* Skill UI shows skill icons
+* Inventory shows item/equipment icons
+* Battle VFX sprites are used if available
+* Missing art falls back safely
+* Existing gameplay still works
+* Save/reward/progression still works
+* No console errors
+* No missing script errors

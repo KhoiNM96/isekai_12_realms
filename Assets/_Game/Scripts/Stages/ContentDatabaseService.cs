@@ -44,16 +44,16 @@ namespace Isekai12Realms.Stages
         {
             GameContentDatabase db = ScriptableObject.CreateInstance<GameContentDatabase>();
             EnemyDefinition slime = ScriptableObject.CreateInstance<EnemyDefinition>();
-            slime.id = "enemy_meadow_slime"; slime.displayName = "Meadow Slime"; slime.level = 1; slime.maxHp = 80; slime.attack = 8; slime.maxMana = 100; slime.difficulty = EnemyAIDifficulty.Easy;
+            slime.id = "enemy_meadow_slime"; slime.displayName = "Meadow Slime"; slime.level = 1; slime.maxHp = 80; slime.attack = 8; slime.maxMana = 100; slime.spriteAssetId = "enemy_meadow_slime"; slime.difficulty = EnemyAIDifficulty.Easy;
             DropTableDefinition drop = ScriptableObject.CreateInstance<DropTableDefinition>();
             drop.id = "drop_stage_01_01";
             drop.drops.Add(new DropEntry { itemId = "mat_slime_jelly", minAmount = 1, maxAmount = 2, chance = 1f });
             drop.drops.Add(new DropEntry { itemId = "item_potion_small", minAmount = 1, maxAmount = 1, chance = 0.25f });
             drop.drops.Add(new DropEntry { equipmentId = "equip_weapon_wooden_sword", minAmount = 1, maxAmount = 1, chance = 0.15f, isEquipment = true });
             StageDefinition stage = ScriptableObject.CreateInstance<StageDefinition>();
-            stage.id = "stage_01_01"; stage.realmId = "realm_01_meadow"; stage.displayName = "First Slime"; stage.stageNumber = 1; stage.recommendedLevel = 1; stage.baseGoldReward = 30; stage.baseExpReward = 50; stage.enemy = slime; stage.dropTable = drop; stage.replayable = true;
+            stage.id = "stage_01_01"; stage.realmId = "realm_01_meadow"; stage.displayName = "First Slime"; stage.stageNumber = 1; stage.recommendedLevel = 1; stage.baseGoldReward = 30; stage.baseExpReward = 50; stage.enemy = slime; stage.dropTable = drop; stage.replayable = true; stage.battleBackgroundAssetId = "bg_battle_meadow";
             RealmDefinition realm = ScriptableObject.CreateInstance<RealmDefinition>();
-            realm.id = "realm_01_meadow"; realm.displayName = "Meadow Gate"; realm.description = "A peaceful floating meadow where the reborn hero begins the journey."; realm.order = 1; realm.stages.Add(stage);
+            realm.id = "realm_01_meadow"; realm.displayName = "Meadow Gate"; realm.description = "A peaceful floating meadow where the reborn hero begins the journey."; realm.order = 1; realm.backgroundAssetId = "map_node_realm_01_meadow"; realm.stages.Add(stage);
             EquipmentDefinition sword = ScriptableObject.CreateInstance<EquipmentDefinition>();
             sword.id = "equip_weapon_wooden_sword"; sword.displayName = "Wooden Sword"; sword.iconAssetId = sword.id; sword.slot = EquipmentSlot.Weapon; sword.rarity = EquipmentRarity.Common; sword.baseAtk = 5; sword.maxLevel = 5;
             db.enemies.Add(slime); db.dropTables.Add(drop); db.stages.Add(stage); db.realms.Add(realm);

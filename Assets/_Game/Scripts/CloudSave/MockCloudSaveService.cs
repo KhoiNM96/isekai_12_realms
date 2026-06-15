@@ -4,6 +4,7 @@ using Isekai12Realms.Data;
 using Isekai12Realms.Shop;
 using UnityEngine;
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 namespace Isekai12Realms.CloudSave
 {
     public class MockCloudSaveService : ICloudSaveService
@@ -36,3 +37,4 @@ namespace Isekai12Realms.CloudSave
         }
     }
 }
+#endif

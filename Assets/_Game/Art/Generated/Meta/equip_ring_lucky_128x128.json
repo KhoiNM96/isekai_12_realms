@@ -1,0 +1,14 @@
+{
+    "id":  "equip_ring_lucky",
+    "file":  "equip_ring_lucky_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Equipment",
+    "usage":  "equip_ring_lucky equipment icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy equipment icon equip_ring_lucky, transparent background, no text."
+}

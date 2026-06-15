@@ -13,7 +13,7 @@ namespace Isekai12Realms.Editor.AssetTools
     public class GameAssetPngGeneratorWindow : EditorWindow
     {
         private const string GeneratedRoot = "Assets/_Game/Art/Generated";
-        private const string ManifestPath = "Assets/_Game/ScriptableObjects/AssetManifest/GameAssetManifest.asset";
+        private const string ManifestPath = "Assets/_Game/ScriptableObjects/GameAssetManifest.asset";
         private const string MetaPath = GeneratedRoot + "/Meta";
 
         private static readonly string[] RequiredFolders =
@@ -66,6 +66,114 @@ namespace Isekai12Realms.Editor.AssetTools
             new AssetSpec("missing_sprite", "missing_sprite_128x128.png", "UI", 128, 128, GameAssetCategory.UI, true, "Missing sprite fallback")
         };
 
+        private static readonly List<AssetSpec> MvpPriority2Assets = new List<AssetSpec>
+        {
+            new AssetSpec("bg_battle_meadow", "bg_battle_meadow_1080x960.png", "Backgrounds", 1080, 960, GameAssetCategory.Background, false, "Realm 01 meadow battle background"),
+            new AssetSpec("bg_battle_ember", "bg_battle_ember_1080x960.png", "Backgrounds", 1080, 960, GameAssetCategory.Background, false, "Realm 02 ember battle background"),
+            new AssetSpec("bg_battle_tide", "bg_battle_tide_1080x960.png", "Backgrounds", 1080, 960, GameAssetCategory.Background, false, "Realm 03 tide battle background"),
+            new AssetSpec("bg_adventure_meadow", "bg_adventure_meadow_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "Realm 01 meadow adventure background"),
+            new AssetSpec("bg_adventure_ember", "bg_adventure_ember_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "Realm 02 ember adventure background"),
+            new AssetSpec("bg_adventure_tide", "bg_adventure_tide_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "Realm 03 tide adventure background"),
+
+            new AssetSpec("npc_mira_mail_cat", "npc_mira_mail_cat_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Mira mail cat NPC"),
+            new AssetSpec("npc_brann_blacksmith", "npc_brann_blacksmith_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Brann blacksmith NPC"),
+            new AssetSpec("npc_nami_healer", "npc_nami_healer_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Nami healer NPC"),
+            new AssetSpec("npc_quest_elder", "npc_quest_elder_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Quest elder NPC"),
+            new AssetSpec("npc_shop_keeper", "npc_shop_keeper_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Shop keeper NPC"),
+            new AssetSpec("npc_skill_librarian", "npc_skill_librarian_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Skill librarian NPC"),
+            new AssetSpec("portrait_npc_mira_mail_cat", "portrait_npc_mira_mail_cat_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Mira mail cat portrait"),
+            new AssetSpec("portrait_npc_brann_blacksmith", "portrait_npc_brann_blacksmith_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Brann blacksmith portrait"),
+            new AssetSpec("portrait_npc_nami_healer", "portrait_npc_nami_healer_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Nami healer portrait"),
+            new AssetSpec("portrait_npc_quest_elder", "portrait_npc_quest_elder_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Quest elder portrait"),
+            new AssetSpec("portrait_npc_shop_keeper", "portrait_npc_shop_keeper_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Shop keeper portrait"),
+            new AssetSpec("portrait_npc_skill_librarian", "portrait_npc_skill_librarian_512x512.png", "NPCs", 512, 512, GameAssetCategory.NPC, true, "Skill librarian portrait"),
+
+            new AssetSpec("enemy_meadow_slime", "enemy_meadow_slime_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Meadow slime enemy"),
+            new AssetSpec("enemy_meadow_mushroom", "enemy_meadow_mushroom_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Meadow mushroom enemy"),
+            new AssetSpec("enemy_meadow_leaf_bug", "enemy_meadow_leaf_bug_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Meadow leaf bug enemy"),
+            new AssetSpec("boss_slime_king", "boss_slime_king_768x768.png", "Enemies", 768, 768, GameAssetCategory.Enemy, true, "Slime king boss"),
+            new AssetSpec("enemy_ember_piglet", "enemy_ember_piglet_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Ember piglet enemy"),
+            new AssetSpec("enemy_ember_sprite", "enemy_ember_sprite_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Ember sprite enemy"),
+            new AssetSpec("enemy_ember_pumpkin", "enemy_ember_pumpkin_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Ember pumpkin enemy"),
+            new AssetSpec("boss_cinder_boar", "boss_cinder_boar_768x768.png", "Enemies", 768, 768, GameAssetCategory.Enemy, true, "Cinder boar boss"),
+            new AssetSpec("enemy_tide_bubble", "enemy_tide_bubble_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Tide bubble enemy"),
+            new AssetSpec("enemy_tide_crab", "enemy_tide_crab_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Tide crab enemy"),
+            new AssetSpec("enemy_tide_jelly", "enemy_tide_jelly_512x512.png", "Enemies", 512, 512, GameAssetCategory.Enemy, true, "Tide jelly enemy"),
+            new AssetSpec("boss_bubble_serpent", "boss_bubble_serpent_768x768.png", "Enemies", 768, 768, GameAssetCategory.Enemy, true, "Bubble serpent boss"),
+
+            new AssetSpec("char_hero_flame_idle", "char_hero_flame_idle_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Flame hero idle"),
+            new AssetSpec("char_hero_flame_attack", "char_hero_flame_attack_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Flame hero attack"),
+            new AssetSpec("char_hero_flame_cast", "char_hero_flame_cast_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Flame hero cast"),
+            new AssetSpec("char_hero_flame_hurt", "char_hero_flame_hurt_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Flame hero hurt"),
+            new AssetSpec("portrait_hero_flame", "portrait_hero_flame_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Flame hero portrait"),
+            new AssetSpec("char_hero_tide_idle", "char_hero_tide_idle_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Tide hero idle"),
+            new AssetSpec("char_hero_tide_attack", "char_hero_tide_attack_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Tide hero attack"),
+            new AssetSpec("char_hero_tide_cast", "char_hero_tide_cast_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Tide hero cast"),
+            new AssetSpec("char_hero_tide_hurt", "char_hero_tide_hurt_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Tide hero hurt"),
+            new AssetSpec("portrait_hero_tide", "portrait_hero_tide_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Tide hero portrait"),
+            new AssetSpec("char_hero_storm_idle", "char_hero_storm_idle_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Storm hero idle"),
+            new AssetSpec("char_hero_storm_attack", "char_hero_storm_attack_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Storm hero attack"),
+            new AssetSpec("char_hero_storm_cast", "char_hero_storm_cast_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Storm hero cast"),
+            new AssetSpec("char_hero_storm_hurt", "char_hero_storm_hurt_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Storm hero hurt"),
+            new AssetSpec("portrait_hero_storm", "portrait_hero_storm_512x512.png", "Characters", 512, 512, GameAssetCategory.Character, true, "Storm hero portrait"),
+        };
+
+        static GameAssetPngGeneratorWindow()
+        {
+            foreach (string id in new[]
+            {
+                "skill_flame_spark_slash", "skill_flame_ember_combo", "skill_flame_burst", "skill_flame_warm_heart", "skill_flame_shuffle_bell", "skill_flame_realm_burst",
+                "skill_tide_aqua_heal", "skill_tide_bubble_guard", "skill_tide_moon_tide", "skill_tide_gentle_flow", "skill_tide_cleanse_wave", "skill_tide_shield_rain",
+                "skill_storm_quick_jab", "skill_storm_static_step", "skill_storm_thunder_chain", "skill_storm_lucky_spark", "skill_storm_tile_swap", "skill_storm_extra_turn"
+            })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_128x128.png", "Skills", 128, 128, GameAssetCategory.Skill, true, id + " skill icon"));
+            }
+
+            foreach (string id in new[]
+            {
+                "equip_weapon_wooden_sword", "equip_weapon_flame_sword", "equip_weapon_tide_wand", "equip_weapon_storm_dagger",
+                "equip_armor_traveler_coat", "equip_armor_leaf_vest", "equip_armor_crystal_mail", "equip_head_leaf_hood", "equip_boots_traveler", "equip_ring_lucky", "equip_charm_realm"
+            })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_128x128.png", "Equipment", 128, 128, GameAssetCategory.Equipment, true, id + " equipment icon"));
+            }
+
+            foreach (string id in new[]
+            {
+                "item_potion_small", "item_potion_medium", "item_food_basket", "item_shuffle_bell", "item_lucky_cookie", "item_skill_scroll",
+                "mat_slime_jelly", "mat_ember_dust", "mat_tide_pearl", "mat_thunder_feather", "mat_crystal_shard"
+            })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_128x128.png", "Items", 128, 128, GameAssetCategory.Item, true, id + " item icon"));
+            }
+
+            foreach (string id in new[] { "currency_gold", "currency_soul_gem", "currency_realm_token" })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_128x128.png", "Items", 128, 128, GameAssetCategory.Currency, true, id + " currency icon"));
+            }
+
+            foreach (string id in new[] { "map_node_realm_01_meadow", "map_node_realm_02_ember", "map_node_realm_03_tide" })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_192x192.png", "Maps", 192, 192, GameAssetCategory.Map, true, id + " realm map node"));
+            }
+
+            foreach (string id in new[] { "map_stage_locked", "map_stage_available", "map_stage_completed", "map_stage_boss", "map_stage_chest", "map_stage_farm" })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_128x128.png", "Maps", 128, 128, GameAssetCategory.Map, true, id + " stage state icon"));
+            }
+
+            foreach (string id in new[] { "vfx_match_pop", "vfx_match_sparkle", "vfx_combo_burst", "vfx_attack_slash", "vfx_heal_heart", "vfx_shield_bubble", "vfx_mana_glow", "vfx_coin_pop", "vfx_food_pop", "vfx_exp_book" })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_256x256.png", "VFX", 256, 256, GameAssetCategory.VFX, true, id + " VFX sprite"));
+            }
+
+            foreach (string id in new[] { "vfx_skill_flame_burst", "vfx_skill_tide_wave", "vfx_skill_storm_chain" })
+            {
+                MvpPriority2Assets.Add(new AssetSpec(id, id + "_512x512.png", "VFX", 512, 512, GameAssetCategory.VFX, true, id + " skill VFX sprite"));
+            }
+        }
+
         [MenuItem("Tools/Isekai 12 Realms/Asset PNG Generator")]
         public static void Open()
         {
@@ -93,6 +201,216 @@ namespace Isekai12Realms.Editor.AssetTools
 
             RebuildAssetManifest();
             Debug.Log($"[Assets] Generated {count} priority 1 placeholder PNGs and metadata files.");
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/Art/Generate Priority 1 Production Art")]
+        public static void GeneratePriority1ProductionArt()
+        {
+            EditorUtility.DisplayDialog(
+                "Priority 1 Production Art",
+                "Unity AI image generation is not configured. Use placeholder PNGs or generate assets externally using the prompts in docs/asset_manifest.md.",
+                "OK");
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/Art/Generate MVP Priority 2 Art")]
+        public static void GenerateMvpPriority2Art()
+        {
+            EnsureFolders();
+            string docsDir = "docs/art";
+            if (!Directory.Exists(docsDir)) Directory.CreateDirectory(docsDir);
+            File.WriteAllText($"{docsDir}/mvp_priority_2_art_prompts.md", BuildMvpPriority2PromptBatch());
+            AssetDatabase.Refresh();
+            EditorUtility.DisplayDialog(
+                "MVP Priority 2 Art",
+                "Unity AI image generation is not configured. Generate these assets externally and copy PNGs to the specified folders.",
+                "OK");
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/Art/Validate MVP Art")]
+        public static void ValidateMvpArt()
+        {
+            EnsureFolders();
+            RebuildAssetManifest();
+
+            List<string> errors = new List<string>();
+            ValidateAssetSpecs(MvpPriority2Assets, errors);
+            ValidateMvpContentBindings(errors);
+
+            if (errors.Count == 0)
+            {
+                Debug.Log("[Assets] MVP art validation passed.");
+                EditorUtility.DisplayDialog("Validate MVP Art", "MVP art validation passed.", "OK");
+            }
+            else
+            {
+                string message = string.Join("\n", errors.Take(20).ToArray());
+                if (errors.Count > 20) message += $"\n...and {errors.Count - 20} more.";
+                Debug.LogError("[Assets] MVP art validation failed:\n" + string.Join("\n", errors.ToArray()));
+                EditorUtility.DisplayDialog("Validate MVP Art", message, "OK");
+            }
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/Art/Validate Generated Art")]
+        public static void ValidateGeneratedArt()
+        {
+            EnsureFolders();
+            RebuildAssetManifest();
+
+            List<string> errors = new List<string>();
+            ValidateAssetSpecs(Priority1Assets.Where(a => a.id != "missing_sprite"), errors);
+
+            if (errors.Count == 0)
+            {
+                Debug.Log("[Assets] Generated art validation passed.");
+                EditorUtility.DisplayDialog("Validate Generated Art", "Generated art validation passed.", "OK");
+            }
+            else
+            {
+                string message = string.Join("\n", errors.Take(20).ToArray());
+                if (errors.Count > 20) message += $"\n...and {errors.Count - 20} more.";
+                Debug.LogError("[Assets] Generated art validation failed:\n" + string.Join("\n", errors.ToArray()));
+                EditorUtility.DisplayDialog("Validate Generated Art", message, "OK");
+            }
+        }
+
+        private static void ValidateAssetSpecs(IEnumerable<AssetSpec> specs, List<string> errors)
+        {
+            GameAssetManifest manifest = AssetDatabase.LoadAssetAtPath<GameAssetManifest>(ManifestPath);
+            Regex nameRegex = new Regex(@"^[a-z0-9_]+_\d+x\d+\.png$");
+            HashSet<string> ids = new HashSet<string>();
+
+            foreach (AssetSpec spec in specs)
+            {
+                if (!File.Exists(spec.Path))
+                {
+                    errors.Add("Missing PNG: " + spec.Path);
+                    continue;
+                }
+
+                if (!nameRegex.IsMatch(spec.fileName))
+                {
+                    errors.Add("Invalid filename format: " + spec.fileName);
+                }
+
+                string metadataPath = $"{MetaPath}/{spec.id}_{spec.width}x{spec.height}.json";
+                if (!File.Exists(metadataPath))
+                {
+                    errors.Add("Missing metadata JSON: " + metadataPath);
+                }
+
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(spec.Path);
+                if (texture == null)
+                {
+                    errors.Add("PNG not imported: " + spec.Path);
+                }
+                else
+                {
+                    if (texture.width != spec.width || texture.height != spec.height)
+                    {
+                        errors.Add($"Size mismatch: {spec.fileName} expected {spec.width}x{spec.height}, got {texture.width}x{texture.height}");
+                    }
+
+                    if (spec.transparent && !TextureHasAlpha(texture))
+                    {
+                        errors.Add("Transparent asset has no alpha pixels: " + spec.fileName);
+                    }
+                }
+
+                if (manifest == null || !manifest.HasAsset(spec.id))
+                {
+                    errors.Add("Missing AssetManifest entry or sprite: " + spec.id);
+                }
+
+                if (!ids.Add(spec.id))
+                {
+                    errors.Add("Duplicate priority asset id: " + spec.id);
+                }
+            }
+
+            if (manifest != null)
+            {
+                HashSet<string> manifestIds = new HashSet<string>();
+                foreach (GameAssetEntry entry in manifest.entries)
+                {
+                    if (entry == null || string.IsNullOrEmpty(entry.id)) continue;
+                    if (!manifestIds.Add(entry.id)) errors.Add("Duplicate AssetManifest id: " + entry.id);
+                }
+            }
+
+        }
+
+        private static void ValidateMvpContentBindings(List<string> errors)
+        {
+            GameAssetManifest manifest = AssetDatabase.LoadAssetAtPath<GameAssetManifest>(ManifestPath);
+            GameContentDatabase database = AssetDatabase.LoadAssetAtPath<GameContentDatabase>("Assets/_Game/ScriptableObjects/GameContentDatabase.asset");
+            if (manifest == null || database == null) return;
+
+            foreach (var enemy in database.enemies ?? new List<Isekai12Realms.Enemies.EnemyDefinition>())
+            {
+                if (enemy == null || !IsMvpEnemy(enemy.id)) continue;
+                if (string.IsNullOrEmpty(enemy.spriteAssetId)) errors.Add("Missing enemy spriteAssetId: " + enemy.id);
+                else if (!manifest.HasAsset(enemy.spriteAssetId)) errors.Add("Enemy references missing sprite asset: " + enemy.id + " -> " + enemy.spriteAssetId);
+            }
+
+            foreach (var stage in database.stages ?? new List<Isekai12Realms.Stages.StageDefinition>())
+            {
+                if (stage == null || !IsMvpRealm(stage.realmId)) continue;
+                if (string.IsNullOrEmpty(stage.battleBackgroundAssetId)) errors.Add("Missing stage battleBackgroundAssetId: " + stage.id);
+                else if (!manifest.HasAsset(stage.battleBackgroundAssetId)) errors.Add("Stage references missing background: " + stage.id + " -> " + stage.battleBackgroundAssetId);
+            }
+
+            foreach (var realm in database.realms ?? new List<Isekai12Realms.Realms.RealmDefinition>())
+            {
+                if (realm == null || !IsMvpRealm(realm.id)) continue;
+                if (string.IsNullOrEmpty(realm.backgroundAssetId)) errors.Add("Missing realm map node asset: " + realm.id);
+                else if (!manifest.HasAsset(realm.backgroundAssetId)) errors.Add("Realm references missing map node: " + realm.id + " -> " + realm.backgroundAssetId);
+            }
+
+            foreach (var skill in database.skills ?? new List<Isekai12Realms.Skills.SkillDefinition>())
+            {
+                if (skill == null) continue;
+                if (string.IsNullOrEmpty(skill.iconAssetId)) errors.Add("Missing skill iconAssetId: " + skill.id);
+                else if (!manifest.HasAsset(skill.iconAssetId)) errors.Add("Skill references missing icon: " + skill.id + " -> " + skill.iconAssetId);
+            }
+
+            foreach (var equipment in database.equipmentDefinitions ?? new List<Isekai12Realms.Equipment.EquipmentDefinition>())
+            {
+                if (equipment == null) continue;
+                if (string.IsNullOrEmpty(equipment.iconAssetId)) errors.Add("Missing equipment iconAssetId: " + equipment.id);
+                else if (!manifest.HasAsset(equipment.iconAssetId)) errors.Add("Equipment references missing icon: " + equipment.id + " -> " + equipment.iconAssetId);
+            }
+        }
+
+        private static bool IsMvpRealm(string id)
+        {
+            return id == "realm_01_meadow" || id == "realm_02_ember" || id == "realm_03_tide";
+        }
+
+        private static bool IsMvpEnemy(string id)
+        {
+            return id == "enemy_meadow_slime" || id == "enemy_meadow_mushroom" || id == "boss_slime_king" ||
+                   id == "enemy_ember_piglet" || id == "enemy_ember_sprite" || id == "boss_cinder_boar" ||
+                   id == "enemy_tide_bubble" || id == "enemy_tide_crab" || id == "boss_bubble_serpent";
+        }
+
+        private static string BuildMvpPriority2PromptBatch()
+        {
+            List<string> lines = new List<string>
+            {
+                "# MVP Priority 2 Art Prompts",
+                string.Empty,
+                "Generate original PNG game assets for Isekai 12 Realms. Do not include watermark or text inside PNGs. Use the exact filenames and transparent/full background settings below.",
+                string.Empty
+            };
+
+            foreach (AssetSpec spec in MvpPriority2Assets)
+            {
+                lines.Add($"## {spec.id}");
+                lines.Add($"Create an original PNG game asset for a mobile portrait isekai RPG match-3 game. Asset ID: {spec.id}. Size: {spec.width}x{spec.height}. Background: {(spec.transparent ? "transparent" : "full scene")}. Style: cute chibi isekai fantasy, bright colors, clean readable shape, soft outline, mobile UI friendly, non-violent, no blood, no gore. Description: {spec.usage}. Do not include watermark, copyrighted characters, historical real persons, or copied game assets. Output filename: {spec.fileName}.");
+                lines.Add(string.Empty);
+            }
+
+            return string.Join("\n", lines.ToArray());
         }
 
         [MenuItem("Tools/Isekai 12 Realms/Rebuild Asset Manifest")]
@@ -169,7 +487,9 @@ namespace Isekai12Realms.Editor.AssetTools
             EditorGUILayout.LabelField("Isekai 12 Realms Asset Pipeline", EditorStyles.boldLabel);
             if (GUILayout.Button("Create / Repair Generated Art Folders", GUILayout.Height(34))) EnsureFolders();
             if (GUILayout.Button("Generate Priority 1 Placeholder PNGs", GUILayout.Height(34))) GeneratePriority1Placeholders();
+            if (GUILayout.Button("Generate MVP Priority 2 Art", GUILayout.Height(34))) GenerateMvpPriority2Art();
             if (GUILayout.Button("Rebuild Asset Manifest", GUILayout.Height(34))) RebuildAssetManifest();
+            if (GUILayout.Button("Validate MVP Art", GUILayout.Height(34))) ValidateMvpArt();
             if (GUILayout.Button("Apply Placeholder Art To Current UI", GUILayout.Height(34))) ApplyPlaceholderArtToCurrentUi();
         }
 
@@ -216,6 +536,36 @@ namespace Isekai12Realms.Editor.AssetTools
             if (path.Contains("/Maps/")) return GameAssetCategory.Map;
             if (path.Contains("/Loading/")) return GameAssetCategory.Loading;
             return GameAssetCategory.Misc;
+        }
+
+        private static bool TextureHasAlpha(Texture2D texture)
+        {
+            try
+            {
+                Color32[] pixels = texture.GetPixels32();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    if (pixels[i].a < 255) return true;
+                }
+            }
+            catch (UnityException)
+            {
+                string path = AssetDatabase.GetAssetPath(texture);
+                TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (importer != null)
+                {
+                    bool wasReadable = importer.isReadable;
+                    importer.isReadable = true;
+                    importer.SaveAndReimport();
+                    Texture2D readable = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                    bool hasAlpha = readable != null && TextureHasAlpha(readable);
+                    importer.isReadable = wasReadable;
+                    importer.SaveAndReimport();
+                    return hasAlpha;
+                }
+            }
+
+            return false;
         }
 
         private static byte[] DrawPlaceholder(AssetSpec spec)

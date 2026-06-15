@@ -1,0 +1,14 @@
+{
+    "id":  "bg_battle_ember",
+    "file":  "bg_battle_ember_1080x960.png",
+    "size":  [
+                 1080,
+                 960
+             ],
+    "category":  "Background",
+    "usage":  "Cozy ember village battle arena, warm orange light, harmless magical sparks, no text.",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  false,
+    "replaceable":  true,
+    "prompt":  "Cozy ember village battle arena, warm orange light, harmless magical sparks, no text."
+}

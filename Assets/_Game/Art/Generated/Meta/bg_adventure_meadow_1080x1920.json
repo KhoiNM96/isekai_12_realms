@@ -1,0 +1,14 @@
+{
+    "id":  "bg_adventure_meadow",
+    "file":  "bg_adventure_meadow_1080x1920.png",
+    "size":  [
+                 1080,
+                 1920
+             ],
+    "category":  "Background",
+    "usage":  "Vertical mobile side-scrolling meadow area, platforms, flowers, magic gate, no text.",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  false,
+    "replaceable":  true,
+    "prompt":  "Vertical mobile side-scrolling meadow area, platforms, flowers, magic gate, no text."
+}

@@ -1,0 +1,14 @@
+{
+    "id":  "bg_adventure_tide",
+    "file":  "bg_adventure_tide_1080x1920.png",
+    "size":  [
+                 1080,
+                 1920
+             ],
+    "category":  "Background",
+    "usage":  "Vertical mobile tide shrine area, water platforms, blue shrine arches, bubbles, no text.",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  false,
+    "replaceable":  true,
+    "prompt":  "Vertical mobile tide shrine area, water platforms, blue shrine arches, bubbles, no text."
+}

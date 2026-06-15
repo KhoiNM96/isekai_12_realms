@@ -1,0 +1,14 @@
+{
+    "id":  "npc_skill_librarian",
+    "file":  "npc_skill_librarian_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "NPC",
+    "usage":  "npc_skill_librarian full body NPC",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original npc_skill_librarian, cute chibi fantasy NPC, transparent background, no text."
+}

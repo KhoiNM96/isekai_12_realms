@@ -197,7 +197,7 @@ namespace Isekai12Realms.Editor
         private static StageDefinition Stage(string id, string realm, string name, int number, int level, EnemyDefinition enemy, DropTableDefinition drop, int gold, int exp, bool boss, params string[] required)
         {
             StageDefinition stage = LoadOrCreate<StageDefinition>($"{StagesPath}/{id}.asset");
-            stage.id = id; stage.realmId = realm; stage.displayName = name; stage.description = name; stage.stageNumber = number; stage.recommendedLevel = level; stage.enemy = enemy; stage.dropTable = drop; stage.baseGoldReward = gold; stage.baseExpReward = exp; stage.requiredCompletedStageIds = new List<string>(required); stage.isBossStage = boss; stage.replayable = true; stage.battleBackgroundAssetId = "bg_battle_meadow";
+            stage.id = id; stage.realmId = realm; stage.displayName = name; stage.description = name; stage.stageNumber = number; stage.recommendedLevel = level; stage.enemy = enemy; stage.dropTable = drop; stage.baseGoldReward = gold; stage.baseExpReward = exp; stage.requiredCompletedStageIds = new List<string>(required); stage.isBossStage = boss; stage.replayable = true; stage.battleBackgroundAssetId = BattleBackgroundForRealm(realm);
             EditorUtility.SetDirty(stage);
             return stage;
         }
@@ -205,9 +205,23 @@ namespace Isekai12Realms.Editor
         private static RealmDefinition Realm(string id, string name, string description, int order, params StageDefinition[] stages)
         {
             RealmDefinition realm = LoadOrCreate<RealmDefinition>($"{RealmsPath}/{id}.asset");
-            realm.id = id; realm.displayName = name; realm.description = description; realm.order = order; realm.backgroundAssetId = order == 1 ? "bg_world_map_scroll" : string.Empty; realm.stages = new List<StageDefinition>(stages);
+            realm.id = id; realm.displayName = name; realm.description = description; realm.order = order; realm.backgroundAssetId = MapNodeForRealm(id); realm.stages = new List<StageDefinition>(stages);
             EditorUtility.SetDirty(realm);
             return realm;
+        }
+
+        private static string BattleBackgroundForRealm(string realmId)
+        {
+            if (realmId == "realm_02_ember") return "bg_battle_ember";
+            if (realmId == "realm_03_tide") return "bg_battle_tide";
+            return "bg_battle_meadow";
+        }
+
+        private static string MapNodeForRealm(string realmId)
+        {
+            if (realmId == "realm_02_ember") return "map_node_realm_02_ember";
+            if (realmId == "realm_03_tide") return "map_node_realm_03_tide";
+            return "map_node_realm_01_meadow";
         }
 
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject

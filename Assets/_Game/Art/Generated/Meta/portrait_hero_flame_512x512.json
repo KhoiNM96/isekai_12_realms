@@ -1,0 +1,14 @@
+{
+    "id":  "portrait_hero_flame",
+    "file":  "portrait_hero_flame_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "Character",
+    "usage":  "flame hero portrait",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original cute chibi isekai flame hero portrait, transparent background, no text."
+}

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Isekai12Realms.Data;
+using Isekai12Realms.RemoteConfig;
 using Isekai12Realms.Services;
 using Isekai12Realms.Stages;
 using UnityEngine;
@@ -11,17 +12,20 @@ namespace Isekai12Realms.Tutorial
         private ISaveService saveService;
         private ContentDatabaseService contentService;
         private TutorialOverlayUI overlay;
+        private GameConfigService gameConfigService;
 
         private PlayerSaveData Save => saveService?.CurrentSave;
         private GameContentDatabase Database => contentService?.Database;
 
-        public void Initialize(ISaveService save, ContentDatabaseService content, TutorialOverlayUI overlayUi)
+        public void Initialize(ISaveService save, ContentDatabaseService content, TutorialOverlayUI overlayUi, GameConfigService config = null)
         {
             saveService = save;
             contentService = content;
             overlay = overlayUi;
+            gameConfigService = config;
             if (Save == null) return;
             if (Save.completedTutorialStepIds == null) Save.completedTutorialStepIds = new List<string>();
+            if (gameConfigService != null && Save.completedTutorialStepIds.Count == 0 && string.IsNullOrEmpty(Save.activeTutorialId)) Save.tutorialEnabled = gameConfigService.TutorialEnabledDefault;
             if (Save.tutorialEnabled && string.IsNullOrEmpty(Save.activeTutorialId))
             {
                 TutorialDefinition first = Database?.tutorials?.Find(t => t != null && t.autoStart);

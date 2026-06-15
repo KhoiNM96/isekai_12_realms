@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_exp_book",
+    "file":  "vfx_exp_book_256x256.png",
+    "size":  [
+                 256,
+                 256
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_exp_book battle vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy battle VFX sprite vfx_exp_book, transparent background, no text."
+}

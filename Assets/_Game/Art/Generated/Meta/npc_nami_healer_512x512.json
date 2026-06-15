@@ -1,0 +1,14 @@
+{
+    "id":  "npc_nami_healer",
+    "file":  "npc_nami_healer_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "NPC",
+    "usage":  "npc_nami_healer full body NPC",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original npc_nami_healer, cute chibi fantasy NPC, transparent background, no text."
+}

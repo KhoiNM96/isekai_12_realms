@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_shield_bubble",
+    "file":  "vfx_shield_bubble_256x256.png",
+    "size":  [
+                 256,
+                 256
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_shield_bubble battle vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy battle VFX sprite vfx_shield_bubble, transparent background, no text."
+}

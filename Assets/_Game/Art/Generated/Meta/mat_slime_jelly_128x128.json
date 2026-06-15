@@ -1,0 +1,14 @@
+{
+    "id":  "mat_slime_jelly",
+    "file":  "mat_slime_jelly_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Item",
+    "usage":  "mat_slime_jelly item icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy item or currency icon mat_slime_jelly, transparent background, no text."
+}

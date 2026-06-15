@@ -1,0 +1,14 @@
+{
+    "id":  "npc_mira_mail_cat",
+    "file":  "npc_mira_mail_cat_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "NPC",
+    "usage":  "npc_mira_mail_cat full body NPC",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original npc_mira_mail_cat, cute chibi fantasy NPC, transparent background, no text."
+}

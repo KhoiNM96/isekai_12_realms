@@ -1,0 +1,14 @@
+{
+    "id":  "vfx_match_sparkle",
+    "file":  "vfx_match_sparkle_256x256.png",
+    "size":  [
+                 256,
+                 256
+             ],
+    "category":  "VFX",
+    "usage":  "vfx_match_sparkle battle vfx sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy battle VFX sprite vfx_match_sparkle, transparent background, no text."
+}

@@ -1,12 +1,15 @@
 using Isekai12Realms.Board;
 using Isekai12Realms.Character;
 using Isekai12Realms.CloudSave;
+using Isekai12Realms.Core;
 using Isekai12Realms.Data;
 using Isekai12Realms.Audio;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Inventory;
 using Isekai12Realms.Quests;
+using Isekai12Realms.Performance;
+using Isekai12Realms.RemoteConfig;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 using Isekai12Realms.Tutorial;
@@ -45,6 +48,7 @@ namespace Isekai12Realms.Battle
         private Image playerManaFill;
         private Image enemySpriteImage;
         private Image playerSpriteImage;
+        private Image battleBackgroundImage;
         private BattleCharacterView enemyView;
         private BattleCharacterView playerView;
         private FloatingTextService floatingText;
@@ -62,6 +66,7 @@ namespace Isekai12Realms.Battle
         private bool rewardGranted;
         private bool enemyTurnRoutineRunning;
         private bool resultPopupOpening;
+        private bool suppressMinorMatchVfx;
         private int previousEnemyHp = -1;
         private int previousPlayerHp = -1;
         private int previousMana = -1;
@@ -133,6 +138,7 @@ namespace Isekai12Realms.Battle
 
         private void Update()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (DebugTogglePressed() && debugPanel != null)
             {
                 debugPanel.SetActive(!debugPanel.activeSelf);
@@ -143,6 +149,7 @@ namespace Isekai12Realms.Battle
                 BattleState state = battleService.State;
                 debugText.text = $"Player HP: {state.hp}/{state.maxHp}\nEnemy HP: {state.enemyHp}/{state.enemyMaxHp}\nMana: {state.mana}/{state.maxMana}\nFood: {state.food}\nTurn: {state.currentTurnOwner}\nTime: {Mathf.CeilToInt(Mathf.Max(0f, state.remainingTurnTime))}s\nResolving: {(boardController != null && boardController.IsResolving)}\nTurn Resolving: {state.isResolvingTurn}\nLast Player Move: {state.lastPlayerMove}\nLast Enemy Move: {state.lastEnemyMove}\nLast Extra: {state.lastMoveGrantedExtraTurn}\nLast Max Match: {state.lastMaxMatchSize}\nStage: {(selectedStage != null ? selectedStage.id : "fallback")}";
             }
+#endif
 
             bool timerPaused = boardController == null || boardController.IsResolving || enemyTurnRoutineRunning || resultPopupOpening;
             bool expired = battleService.TickTurnTimer(Time.deltaTime, timerPaused);
@@ -219,12 +226,16 @@ namespace Isekai12Realms.Battle
 
         public void WinTest()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             GrantVictoryRewards();
+#endif
         }
 
         public void LoseTest()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             StartCoroutine(OpenResultAfterDelay(false, 0, 0, string.Empty, false));
+#endif
         }
 
         private void OnBattleEnded(BattleResultType result)
@@ -267,6 +278,11 @@ namespace Isekai12Realms.Battle
             }
             exp += battleService.State.expReward;
             gold += battleService.State.goldReward;
+            if (ServiceLocator.TryResolve<GameConfigService>(out GameConfigService config))
+            {
+                exp = Mathf.FloorToInt(exp * config.ExpRewardMultiplier);
+                gold = Mathf.FloorToInt(gold * config.GoldRewardMultiplier);
+            }
             string drops = "Drops:";
             bool leveledUp = false;
 
@@ -356,13 +372,14 @@ namespace Isekai12Realms.Battle
             playerView?.SetHp(state.hp, state.maxHp);
             playerView?.SetMana(state.mana, state.maxMana);
             playerView?.SetShield(state.shield);
-            playerView?.SetSprite("char_hero_flame_idle");
+            playerView?.SetSprite(ClassIdleSpriteAssetId(progressionService != null && progressionService.CurrentSave != null ? progressionService.CurrentSave.selectedClassId : string.Empty));
             playerView?.PlayIdle();
             enemyView?.SetName($"{state.enemyName} Lv. {state.enemyLevel}");
             enemyView?.SetLevel(state.enemyLevel);
             enemyView?.SetHp(state.enemyHp, state.enemyMaxHp);
             enemyView?.SetShield(state.enemyShield);
             enemyView?.SetSprite(selectedStage != null && selectedStage.enemy != null && !string.IsNullOrEmpty(selectedStage.enemy.spriteAssetId) ? selectedStage.enemy.spriteAssetId : "enemy_meadow_slime");
+            SetBattleBackground(selectedStage != null && !string.IsNullOrEmpty(selectedStage.battleBackgroundAssetId) ? selectedStage.battleBackgroundAssetId : "bg_battle_meadow");
             enemyView?.PlayIdle();
             boardController?.SetInputLocked(state.currentTurnOwner != BattleTurnOwner.Player || state.inputLocked || state.isResolvingTurn || state.battleResult != BattleResultType.None);
             ShowStateDeltaFeedback(state);
@@ -496,6 +513,7 @@ namespace Isekai12Realms.Battle
             playerManaFill = FindImage("PlayerMana/Fill");
             enemySpriteImage = FindImage("EnemySprite");
             playerSpriteImage = FindImage("PlayerSprite");
+            battleBackgroundImage = GetComponent<Image>();
             Transform debugTransform = transform.Find("BattleDebugPanel");
             debugPanel = debugTransform != null ? debugTransform.gameObject : null;
             debugText = debugTransform != null ? debugTransform.Find("DebugText")?.GetComponent<TextMeshProUGUI>() : null;
@@ -563,6 +581,19 @@ namespace Isekai12Realms.Battle
             image.sprite = sprite;
             image.preserveAspect = true;
             image.color = Color.white;
+        }
+
+        private void SetBattleBackground(string assetId)
+        {
+            if (battleBackgroundImage == null) battleBackgroundImage = GetComponent<Image>();
+            SetSprite(battleBackgroundImage, assetId);
+        }
+
+        private static string ClassIdleSpriteAssetId(string classId)
+        {
+            if (classId == "tide_acolyte") return "char_hero_tide_idle";
+            if (classId == "storm_scout") return "char_hero_storm_idle";
+            return "char_hero_flame_idle";
         }
 
         private IEnumerator EnemyTurnFeedbackRoutine()
@@ -660,8 +691,15 @@ namespace Isekai12Realms.Battle
                     questService?.TrackProgress(QuestObjectiveType.MatchTokenCount, tileTarget, group.count);
                     tutorialService?.HandleTileMatched(group.tileType);
                 }
+                suppressMinorMatchVfx = ShouldSuppressMinorMatchVfx(combo);
                 ShowMatchFeedback(group, battleService.State.currentTurnOwner);
+                suppressMinorMatchVfx = false;
             }
+        }
+
+        private static bool ShouldSuppressMinorMatchVfx(int combo)
+        {
+            return combo > 3 && ServiceLocator.TryResolve<PerformanceService>(out PerformanceService performance) && performance.ReduceEffects;
         }
 
         private void OnBoardFeedback(string text)
@@ -698,16 +736,16 @@ namespace Isekai12Realms.Battle
                     audioService?.PlaySfx("sfx_heal");
                     break;
                 case TileType.Coin:
-                    vfxService?.PlayTileMatchVfx(BoardPosition(), group.tileType);
+                    if (!suppressMinorMatchVfx) vfxService?.PlayTileMatchVfx(BoardPosition(), group.tileType);
                     floatingText?.Show("+" + (3 * count) + " Gold", BoardPosition(), new Color(1f, 0.78f, 0.22f, 1f), 36);
                     audioService?.PlaySfx("sfx_coin");
                     break;
                 case TileType.Food:
-                    vfxService?.PlayTileMatchVfx(BoardPosition(), group.tileType);
+                    if (!suppressMinorMatchVfx) vfxService?.PlayTileMatchVfx(BoardPosition(), group.tileType);
                     floatingText?.Show("+" + (2 * count) + " Food", BoardPosition(), new Color(0.45f, 0.85f, 0.32f, 1f), 36);
                     break;
                 case TileType.Book:
-                    vfxService?.PlayTileMatchVfx(BoardPosition(), group.tileType);
+                    if (!suppressMinorMatchVfx) vfxService?.PlayTileMatchVfx(BoardPosition(), group.tileType);
                     floatingText?.Show("+" + (4 * count) + " EXP", BoardPosition(), new Color(0.72f, 0.5f, 1f, 1f), 36);
                     break;
                 case TileType.Mana:

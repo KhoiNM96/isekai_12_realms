@@ -1,0 +1,14 @@
+{
+    "id":  "enemy_meadow_mushroom",
+    "file":  "enemy_meadow_mushroom_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "Enemy",
+    "usage":  "enemy_meadow_mushroom battle sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original cute non-threatening fantasy enemy enemy_meadow_mushroom, transparent background, no text, no gore."
+}

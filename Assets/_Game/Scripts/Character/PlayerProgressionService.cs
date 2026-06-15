@@ -2,6 +2,7 @@ using System;
 using Isekai12Realms.Data;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
+using Isekai12Realms.RemoteConfig;
 using Isekai12Realms.Services;
 using Isekai12Realms.UI;
 using UnityEngine;
@@ -32,15 +33,17 @@ namespace Isekai12Realms.Character
         private ISaveService saveService;
         private ToastService toastService;
         private EquipmentService equipmentService;
+        private GameConfigService gameConfigService;
 
         public PlayerSaveData CurrentSave => saveService?.CurrentSave;
         public bool LastAddExpLeveledUp { get; private set; }
         public event Action Changed;
 
-        public void Initialize(ISaveService save, ToastService toast)
+        public void Initialize(ISaveService save, ToastService toast, GameConfigService config = null)
         {
             saveService = save;
             toastService = toast;
+            gameConfigService = config;
             equipmentService = GetComponent<EquipmentService>();
             saveService.LoadOrCreateSave();
             Changed?.Invoke();
@@ -58,6 +61,11 @@ namespace Isekai12Realms.Character
             PlayerSaveData save = saveService.CreateNewSave();
             save.selectedClassId = selectedClassId;
             save.playerName = playerName;
+            if (gameConfigService != null)
+            {
+                save.cloudSyncEnabled = gameConfigService.CloudSyncEnabledDefault;
+                save.tutorialEnabled = gameConfigService.TutorialEnabledDefault;
+            }
             SaveAndNotify();
             return save;
         }
@@ -79,7 +87,8 @@ namespace Isekai12Realms.Character
         {
             LastAddExpLeveledUp = false;
             CurrentSave.exp += amount;
-            while (CurrentSave.exp >= GetExpRequired(CurrentSave.level))
+            int maxLevel = gameConfigService != null ? gameConfigService.MaxLevelCap : 60;
+            while (CurrentSave.level < maxLevel && CurrentSave.exp >= GetExpRequired(CurrentSave.level))
             {
                 CurrentSave.exp -= GetExpRequired(CurrentSave.level);
                 CurrentSave.level += 1;
@@ -89,6 +98,11 @@ namespace Isekai12Realms.Character
                 CurrentSave.mana = CurrentSave.maxMana;
                 LastAddExpLeveledUp = true;
                 Toast("Level Up!");
+            }
+
+            if (CurrentSave.level >= maxLevel)
+            {
+                CurrentSave.exp = System.Math.Min(CurrentSave.exp, (long)(GetExpRequired(CurrentSave.level) - 1));
             }
 
             SaveAndNotify();

@@ -1,18 +1,28 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Isekai12Realms.Auth;
 using Isekai12Realms.Battle;
 using Isekai12Realms.Board;
+using Isekai12Realms.Build;
 using Isekai12Realms.Character;
 using Isekai12Realms.CloudSave;
+using Isekai12Realms.Addressables;
+using Isekai12Realms.ContentPacks;
 using Isekai12Realms.Core;
 using Isekai12Realms.Crafting;
 using Isekai12Realms.Data;
+using Isekai12Realms.Diagnostics;
 using Isekai12Realms.Audio;
 using Isekai12Realms.Economy;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
+using Isekai12Realms.IAP;
+using Isekai12Realms.Purchases;
+using Isekai12Realms.Performance;
 using Isekai12Realms.Quests;
+using Isekai12Realms.QA;
+using Isekai12Realms.RemoteConfig;
 using Isekai12Realms.Services;
 using Isekai12Realms.Shop;
 using Isekai12Realms.Skills;
@@ -43,9 +53,18 @@ namespace Isekai12Realms.UI
         private TutorialService tutorialService;
         private TutorialOverlayUI tutorialOverlay;
         private ShopService shopService;
-        private IAPPlaceholderService iapPlaceholderService;
+        private IIAPService iapService;
+        private PurchaseLedgerService purchaseLedgerService;
+        private CurrencyGrantService currencyGrantService;
         private CloudSaveCoordinator cloudSaveCoordinator;
+        private IAssetLoadService assetLoadService;
+        private ContentPackService contentPackService;
+        private GameConfigService gameConfigService;
+        private BuildConfigService buildConfigService;
+        private DiagnosticsService diagnosticsService;
         [SerializeField] private GameAssetManifest assetManifest;
+        [SerializeField] private GameConfigData gameConfigDefaults;
+        [SerializeField] private BuildConfig buildConfig;
         private StageDefinition selectedStage;
         private string selectedRealmId;
         private string selectedCreationClassId = "flame_squire";
@@ -54,12 +73,14 @@ namespace Isekai12Realms.UI
         private string selectedEquipmentInstanceId;
         private ShopType selectedShopType = ShopType.Daily;
         private string selectedShopItemId;
+        private string selectedContentPackId;
         private RectTransform mainLayer;
         private RectTransform navigationLayer;
         private RectTransform popupLayer;
         private RectTransform toastLayer;
         private RectTransform loadingLayer;
         private AudioService audioService;
+        private IPopupService popupService;
 
         private readonly Color panelCream = new Color(1f, 0.95f, 0.84f, 0.94f);
         private readonly Color panelDark = new Color(0.08f, 0.11f, 0.28f, 0.94f);
@@ -87,7 +108,9 @@ namespace Isekai12Realms.UI
             }
 
             RepairSceneUi();
+            popupService?.CloseAll();
             screenManager.ShowScreen(GameUIScreen.Title);
+            EnsureVisibleScreenOrRecover();
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -98,23 +121,40 @@ namespace Isekai12Realms.UI
             }
 
             RepairSceneUi();
+            popupService?.CloseAll();
             screenManager.ShowScreen(GameUIScreen.Title);
+            EnsureVisibleScreenOrRecover();
         }
 
         public void RepairSceneUi()
         {
             EnsureEventSystem();
             Canvas canvas = EnsureRootCanvas();
+            canvas.gameObject.SetActive(true);
             RectTransform safeAreaRoot = EnsureChildRect(canvas.transform, "SafeAreaRoot");
             Stretch(safeAreaRoot);
+            safeAreaRoot.gameObject.SetActive(true);
 
             RectTransform backgroundLayer = EnsureLayer(safeAreaRoot, "BackgroundLayer");
             mainLayer = EnsureLayer(safeAreaRoot, "MainLayer");
-            EnsureLayer(safeAreaRoot, "HudLayer");
+            RectTransform hudLayer = EnsureLayer(safeAreaRoot, "HudLayer");
             navigationLayer = EnsureLayer(safeAreaRoot, "NavigationLayer");
             popupLayer = EnsureLayer(safeAreaRoot, "PopupLayer");
             toastLayer = EnsureLayer(safeAreaRoot, "ToastLayer");
             loadingLayer = EnsureLayer(safeAreaRoot, "LoadingLayer");
+            backgroundLayer.gameObject.SetActive(true);
+            mainLayer.gameObject.SetActive(true);
+            hudLayer.gameObject.SetActive(true);
+            navigationLayer.gameObject.SetActive(true);
+            popupLayer.gameObject.SetActive(true);
+            toastLayer.gameObject.SetActive(true);
+            loadingLayer.gameObject.SetActive(true);
+            EnsureLayerOrder(safeAreaRoot);
+            ResolvePopupService();
+            if (popupService != null)
+            {
+                popupService.SetPopupLayer(popupLayer);
+            }
             tutorialOverlay = GetComponent<TutorialOverlayUI>();
             if (tutorialOverlay == null)
             {
@@ -132,6 +172,7 @@ namespace Isekai12Realms.UI
             screenManager.RegisterNavigationRoot(EnsureBottomNavigation(navigationLayer).gameObject);
             RegisterPopups();
             RegisterProgression();
+            RegisterReleaseHardeningServices();
         }
 
         private void RegisterAssetManifest()
@@ -139,10 +180,17 @@ namespace Isekai12Realms.UI
 #if UNITY_EDITOR
             if (assetManifest == null)
             {
-                assetManifest = UnityEditor.AssetDatabase.LoadAssetAtPath<GameAssetManifest>("Assets/_Game/ScriptableObjects/AssetManifest/GameAssetManifest.asset");
+                assetManifest = UnityEditor.AssetDatabase.LoadAssetAtPath<GameAssetManifest>("Assets/_Game/ScriptableObjects/GameAssetManifest.asset");
             }
 #endif
             AssetSpriteBinder.SetManifest(assetManifest);
+#if USE_ADDRESSABLES
+            assetLoadService = new AddressableAssetLoadService(assetManifest);
+#else
+            assetLoadService = new MockAssetLoadService(assetManifest);
+#endif
+            AssetSpriteBinder.SetAssetLoadService(assetLoadService);
+            ServiceLocator.Register<IAssetLoadService>(assetLoadService);
         }
 
         private void RegisterContentServices()
@@ -153,6 +201,8 @@ namespace Isekai12Realms.UI
                 contentService = gameObject.AddComponent<ContentDatabaseService>();
             }
             contentService.Initialize();
+            contentPackService = new ContentPackService(contentService.Database, assetLoadService);
+            ServiceLocator.Register(contentPackService);
 
             stageProgressionService = GetComponent<StageProgressionService>();
             if (stageProgressionService == null)
@@ -171,7 +221,7 @@ namespace Isekai12Realms.UI
 
             if (ServiceLocator.TryResolve<ISaveService>(out ISaveService saveService))
             {
-                progressionService.Initialize(saveService, screenManager.ToastService);
+                progressionService.Initialize(saveService, screenManager.ToastService, gameConfigService);
                 stageProgressionService.Initialize(saveService, contentService);
                 equipmentService = GetComponent<EquipmentService>();
                 if (equipmentService == null)
@@ -202,33 +252,56 @@ namespace Isekai12Realms.UI
                 {
                     shopService = gameObject.AddComponent<ShopService>();
                 }
-                shopService.Initialize(saveService, contentService, progressionService, equipmentService, questService, screenManager.ToastService);
-                iapPlaceholderService = GetComponent<IAPPlaceholderService>();
-                if (iapPlaceholderService == null)
-                {
-                    iapPlaceholderService = gameObject.AddComponent<IAPPlaceholderService>();
-                }
-                iapPlaceholderService.Initialize(saveService, contentService, screenManager.ToastService);
+                shopService.Initialize(saveService, contentService, progressionService, equipmentService, questService, screenManager.ToastService, gameConfigService);
                 cloudSaveCoordinator = GetComponent<CloudSaveCoordinator>();
                 if (cloudSaveCoordinator == null)
                 {
                     cloudSaveCoordinator = gameObject.AddComponent<CloudSaveCoordinator>();
                 }
                 cloudSaveCoordinator.Initialize(saveService, screenManager.ToastService);
+                purchaseLedgerService = new PurchaseLedgerService(saveService);
+                currencyGrantService = new CurrencyGrantService(saveService, progressionService, purchaseLedgerService, cloudSaveCoordinator, screenManager.ToastService);
+#if USE_UNITY_IAP
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                iapService = new UnityIAPService(contentService, currencyGrantService, purchaseLedgerService, new LocalReceiptValidatorService(), screenManager.ToastService);
+#else
+                iapService = buildConfigService != null && buildConfigService.RequireServerReceiptValidationForProduction
+                    ? new UnityIAPService(contentService, currencyGrantService, purchaseLedgerService, new ServerReceiptValidatorService(string.Empty, saveService.CurrentSave != null ? saveService.CurrentSave.firebaseUid : string.Empty), screenManager.ToastService)
+                    : new UnityIAPService(contentService, currencyGrantService, purchaseLedgerService, new LocalReceiptValidatorService(), screenManager.ToastService);
+#endif
+#else
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                iapService = new MockIAPService(contentService, currencyGrantService, purchaseLedgerService, screenManager.ToastService);
+#else
+                iapService = new UnityIAPService(contentService, currencyGrantService, purchaseLedgerService, new LocalReceiptValidatorService(), screenManager.ToastService);
+#endif
+#endif
+                iapService.OnPurchaseStarted -= OnIapPurchaseStarted;
+                iapService.OnPurchaseStarted += OnIapPurchaseStarted;
+                iapService.OnPurchaseSucceeded -= OnIapPurchaseSucceeded;
+                iapService.OnPurchaseSucceeded += OnIapPurchaseSucceeded;
+                iapService.OnPurchaseFailed -= OnIapPurchaseFailed;
+                iapService.OnPurchaseFailed += OnIapPurchaseFailed;
+                iapService.OnRestoreCompleted -= OnIapRestoreCompleted;
+                iapService.OnRestoreCompleted += OnIapRestoreCompleted;
+                iapService.OnIAPStatusChanged -= OnIapStatusChanged;
+                iapService.OnIAPStatusChanged += OnIapStatusChanged;
+                if (gameConfigService == null || gameConfigService.IapEnabled)
+                {
+                    _ = iapService.InitializeAsync();
+                }
                 tutorialService = GetComponent<TutorialService>();
                 if (tutorialService == null)
                 {
                     tutorialService = gameObject.AddComponent<TutorialService>();
                 }
-                tutorialService.Initialize(saveService, contentService, tutorialOverlay);
+                tutorialService.Initialize(saveService, contentService, tutorialOverlay, gameConfigService);
                 questService.QuestsChanged -= RefreshSaveBackedUi;
                 questService.QuestsChanged += RefreshSaveBackedUi;
                 questService.QuestCompleted -= OnQuestCompleted;
                 questService.QuestCompleted += OnQuestCompleted;
                 shopService.Changed -= RefreshSaveBackedUi;
                 shopService.Changed += RefreshSaveBackedUi;
-                iapPlaceholderService.Changed -= RefreshSaveBackedUi;
-                iapPlaceholderService.Changed += RefreshSaveBackedUi;
                 cloudSaveCoordinator.StatusChanged -= RefreshSaveBackedUi;
                 cloudSaveCoordinator.StatusChanged += RefreshSaveBackedUi;
                 cloudSaveCoordinator.ConflictDetected -= OnCloudConflictDetected;
@@ -268,9 +341,22 @@ namespace Isekai12Realms.UI
         public static void EnsureEventSystem()
         {
             EventSystem existing = UnityEngine.Object.FindObjectOfType<EventSystem>();
+            if (existing == null)
+            {
+                EventSystem[] all = Resources.FindObjectsOfTypeAll<EventSystem>();
+                for (int i = 0; i < all.Length; i++)
+                {
+                    if (all[i] != null && all[i].gameObject.scene.IsValid())
+                    {
+                        existing = all[i];
+                        break;
+                    }
+                }
+            }
             if (existing != null)
             {
                 AddAvailableInputModule(existing.gameObject);
+                existing.gameObject.SetActive(true);
                 return;
             }
 
@@ -299,6 +385,18 @@ namespace Isekai12Realms.UI
         public static Canvas EnsureRootCanvas()
         {
             GameObject canvasObject = GameObject.Find("RootCanvas");
+            if (canvasObject == null)
+            {
+                Canvas[] all = Resources.FindObjectsOfTypeAll<Canvas>();
+                for (int i = 0; i < all.Length; i++)
+                {
+                    if (all[i] != null && all[i].gameObject.scene.IsValid() && all[i].gameObject.name == "RootCanvas")
+                    {
+                        canvasObject = all[i].gameObject;
+                        break;
+                    }
+                }
+            }
             if (canvasObject == null)
             {
                 canvasObject = new GameObject("RootCanvas", typeof(RectTransform));
@@ -415,12 +513,13 @@ namespace Isekai12Realms.UI
             RectTransform root = CreateScreenRoot("CharacterCreationUI", new Color(0.08f, 0.12f, 0.24f, 0.45f));
             Header(root, "Create Your Reborn Hero", () => screenManager.ShowScreen(GameUIScreen.Title));
             Panel(root, "CharacterPreviewPanel", panelCream, Anchor.Center, new Vector2(0f, 120f), new Vector2(760f, 640f));
-            Text(root, "CharacterPreview_Text", "Character Preview Placeholder", 38, textDark, Anchor.Center, new Vector2(0f, 230f), new Vector2(650f, 80f));
+            Text(root, "CharacterPreview_Text", "Character Preview", 38, textDark, Anchor.Center, new Vector2(0f, 230f), new Vector2(650f, 80f));
             Text(root, "HeroName_Text", "Hero Name: Guest Hero", 34, textDark, Anchor.Center, new Vector2(0f, 70f), new Vector2(650f, 70f));
 
             Button(root, "Button_Class_Flame", "Flame Squire", danger, Anchor.Center, new Vector2(-260f, -70f), new Vector2(240f, 88f), () => SelectCreationClass("flame_squire"));
             Button(root, "Button_Class_Tide", "Tide Acolyte", primary, Anchor.Center, new Vector2(0f, -70f), new Vector2(240f, 88f), () => SelectCreationClass("tide_acolyte"));
             Button(root, "Button_Class_Storm", "Storm Scout", secondary, Anchor.Center, new Vector2(260f, -70f), new Vector2(240f, 88f), () => SelectCreationClass("storm_scout"));
+            ImageAsset(root, "Hero_Class_Preview", ClassIdleSpriteAssetId(selectedCreationClassId), Anchor.Center, new Vector2(0f, 210f), new Vector2(300f, 300f));
             Button(root, "Button_StartJourney", "Start Journey", primary, Anchor.BottomCenter, new Vector2(0f, 190f), new Vector2(520f, 112f), StartNewHero);
             Button(root, "Button_Back", "Back", secondary, Anchor.BottomCenter, new Vector2(0f, 70f), new Vector2(520f, 96f), () => screenManager.ShowScreen(GameUIScreen.Title));
             return root.gameObject;
@@ -440,7 +539,7 @@ namespace Isekai12Realms.UI
             Button(root, "Button_Settings", "Settings", primary, Anchor.TopRight, new Vector2(-110f, -70f), new Vector2(170f, 82f), screenManager.OpenSettings);
 
             Panel(root, "TownPanel", panelCream, Anchor.Center, new Vector2(0f, 60f), new Vector2(900f, 980f));
-            Text(root, "Town_Title", "Main Town Placeholder", 48, textDark, Anchor.Center, new Vector2(0f, 200f), new Vector2(760f, 90f));
+            Text(root, "Town_Title", "Main Town", 48, textDark, Anchor.Center, new Vector2(0f, 200f), new Vector2(760f, 90f));
             Panel(root, "QuestTracker", panelDark, Anchor.Center, new Vector2(0f, 390f), new Vector2(820f, 170f));
             Text(root, "QuestTracker_Text", "Quest tracker loading...", 28, Color.white, Anchor.Center, new Vector2(-80f, 390f), new Vector2(600f, 120f));
             Button(root, "Button_QuestTracker", "Go", primary, Anchor.Center, new Vector2(340f, 390f), new Vector2(120f, 78f), OpenTrackedQuest);
@@ -472,7 +571,8 @@ namespace Isekai12Realms.UI
             {
                 RealmDefinition realm = contentService.Realms[i];
                 bool unlocked = RealmUnlocked(realm);
-                Button(root, "Button_Realm_" + realm.id, realm.displayName, unlocked ? primary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.TopCenter, new Vector2(-260f, -210f - i * 96f), new Vector2(320f, 76f), unlocked ? () => SelectRealm(realm.id) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
+                Button button = Button(root, "Button_Realm_" + realm.id, realm.displayName, unlocked ? primary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.TopCenter, new Vector2(-260f, -210f - i * 96f), new Vector2(320f, 76f), unlocked ? () => SelectRealm(realm.id) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
+                AddButtonIcon(button, string.IsNullOrEmpty(realm.backgroundAssetId) ? MapNodeAssetId(realm.id) : realm.backgroundAssetId);
             }
 
             if (contentService.Realms.Count > 0)
@@ -491,6 +591,13 @@ namespace Isekai12Realms.UI
 
         private void SelectRealm(string realmId)
         {
+            ContentPackDefinition pack = contentService?.Database?.GetPackForRealm(realmId);
+            if (pack != null && contentPackService != null && !contentPackService.IsPackAvailable(pack.id))
+            {
+                selectedRealmId = realmId;
+                OpenContentDownloadPopup(pack);
+                return;
+            }
             selectedRealmId = realmId;
             RectTransform root = mainLayer.Find("WorldMapUI") as RectTransform;
             if (root == null || contentService == null) return;
@@ -520,6 +627,12 @@ namespace Isekai12Realms.UI
                 screenManager.ToastService?.ShowToast("Select a stage first.");
                 return;
             }
+            ContentPackDefinition pack = contentService?.Database?.GetPackForRealm(selectedStage.realmId);
+            if (pack != null && contentPackService != null && !contentPackService.IsPackAvailable(pack.id))
+            {
+                OpenContentDownloadPopup(pack);
+                return;
+            }
             Transform battleRoot = mainLayer.Find("BattleUI");
             BattleUIController controller = battleRoot != null ? battleRoot.GetComponent<BattleUIController>() : null;
             if (controller != null)
@@ -539,7 +652,8 @@ namespace Isekai12Realms.UI
                 {
                     RealmDefinition realm = contentService.Realms[i];
                     bool unlocked = RealmUnlocked(realm);
-                    Button(root, "Button_Realm_" + realm.id, realm.displayName, unlocked ? primary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.TopCenter, new Vector2(-260f, -210f - i * 96f), new Vector2(320f, 76f), unlocked ? () => SelectRealm(realm.id) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
+                    Button button = Button(root, "Button_Realm_" + realm.id, realm.displayName, unlocked ? primary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.TopCenter, new Vector2(-260f, -210f - i * 96f), new Vector2(320f, 76f), unlocked ? () => SelectRealm(realm.id) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
+                    AddButtonIcon(button, string.IsNullOrEmpty(realm.backgroundAssetId) ? MapNodeAssetId(realm.id) : realm.backgroundAssetId);
                 }
             }
             SelectRealm(string.IsNullOrEmpty(selectedRealmId) ? contentService.Realms[0].id : selectedRealmId);
@@ -548,9 +662,9 @@ namespace Isekai12Realms.UI
         private GameObject CreateAdventure()
         {
             RectTransform root = CreateScreenRoot("AdventureUI", new Color(0.05f, 0.16f, 0.14f, 0.35f));
-            Header(root, "Adventure Placeholder", () => screenManager.ShowScreen(GameUIScreen.MainTown));
+            Header(root, "Adventure", () => screenManager.ShowScreen(GameUIScreen.MainTown));
             Panel(root, "MapPanel", panelCream, Anchor.Center, new Vector2(0f, 80f), new Vector2(900f, 1020f));
-            Text(root, "Map_Text", "2D Map Placeholder", 46, textDark, Anchor.Center, new Vector2(0f, 240f), new Vector2(680f, 90f));
+            Text(root, "Map_Text", "2D Map", 46, textDark, Anchor.Center, new Vector2(0f, 240f), new Vector2(680f, 90f));
             Panel(root, "PlayerPlaceholder", primary, Anchor.Center, new Vector2(-180f, 20f), new Vector2(140f, 180f));
             Text(root, "Player_Text", "Player", 28, Color.white, Anchor.Center, new Vector2(-180f, 20f), new Vector2(140f, 80f));
             Panel(root, "NpcPlaceholder", secondary, Anchor.Center, new Vector2(210f, 30f), new Vector2(150f, 180f));
@@ -568,7 +682,7 @@ namespace Isekai12Realms.UI
                 controller = root.gameObject.AddComponent<BattleUIController>();
             }
 
-            Header(root, "Battle Placeholder", controller.BackToWorldMap);
+            Header(root, "Battle", controller.BackToWorldMap);
 
             Panel(root, "EnemyArea", panelDark, Anchor.TopCenter, new Vector2(0f, -190f), new Vector2(900f, 170f));
             ImageAsset(root, "EnemySprite", "enemy_meadow_slime", Anchor.TopCenter, new Vector2(-405f, -190f), new Vector2(150f, 150f));
@@ -591,6 +705,7 @@ namespace Isekai12Realms.UI
             Button(root, "Button_Item", "Item", primary, Anchor.BottomCenter, new Vector2(315f, 220f), new Vector2(185f, 88f), screenManager.ShowDisabledToast);
             Button(root, "Button_RestartBattle", "Restart Battle", secondary, Anchor.BottomCenter, new Vector2(-340f, 90f), new Vector2(250f, 90f), controller.StartBattle);
             Button(root, "Button_BackWorldMap", "World Map", primary, Anchor.BottomCenter, new Vector2(-70f, 90f), new Vector2(230f, 90f), controller.BackToWorldMap);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             Button(root, "Button_WinTest", "Win Test", new Color(0.5f, 0.85f, 0.34f, 1f), Anchor.BottomCenter, new Vector2(170f, 90f), new Vector2(190f, 90f), controller.WinTest);
             Button(root, "Button_LoseTest", "Lose Test", danger, Anchor.BottomCenter, new Vector2(385f, 90f), new Vector2(190f, 90f), controller.LoseTest);
             RectTransform debug = EnsureChildRect(root, "BattleDebugPanel");
@@ -598,6 +713,7 @@ namespace Isekai12Realms.UI
             EnsureImage(debug.gameObject, new Color(0f, 0f, 0f, 0.68f));
             Text(debug, "DebugText", "Battle Debug\nHidden by default", 22, Color.white, Anchor.Center, Vector2.zero, new Vector2(280f, 200f));
             debug.gameObject.SetActive(false);
+#endif
             controller.Initialize(screenManager, boardController);
             return root.gameObject;
         }
@@ -607,7 +723,8 @@ namespace Isekai12Realms.UI
             RectTransform root = CreateScreenRoot("HeroUI", new Color(0.07f, 0.11f, 0.2f, 0.35f));
             Header(root, "Hero", () => screenManager.ShowScreen(GameUIScreen.MainTown));
             Panel(root, "HeroPreview", panelCream, Anchor.Center, new Vector2(-230f, 160f), new Vector2(360f, 460f));
-            Text(root, "HeroPreview_Text", "Character\nPreview", 36, textDark, Anchor.Center, new Vector2(-230f, 160f), new Vector2(300f, 160f));
+            ImageAsset(root, "HeroPortrait", "portrait_hero_flame", Anchor.Center, new Vector2(-230f, 175f), new Vector2(310f, 310f));
+            Text(root, "HeroPreview_Text", "Character\nPreview", 28, textDark, Anchor.Center, new Vector2(-230f, -70f), new Vector2(300f, 80f));
             Text(root, "Stats_Text", "HP 100\nATK 10\nMAG 8\nDEF 5\nSPD 5\nLUCK 1", 36, Color.white, Anchor.Center, new Vector2(240f, 160f), new Vector2(360f, 340f));
             Text(root, "Exp_Text", "EXP 0 / 50", 30, Color.white, Anchor.Center, new Vector2(240f, -65f), new Vector2(420f, 70f));
             Text(root, "Class_Text", "Class: Flame Squire", 30, Color.white, Anchor.Center, new Vector2(240f, -130f), new Vector2(420f, 60f));
@@ -642,7 +759,7 @@ namespace Isekai12Realms.UI
                 Button(root, "Slot_" + slots[i], slots[i], secondary, Anchor.TopCenter, new Vector2(i % 2 == 0 ? -230f : 230f, -240f - (i / 2) * 120f), new Vector2(360f, 92f), () => SelectEquippedSlot(slot));
             }
             Panel(root, "EquipmentDetail", panelCream, Anchor.BottomCenter, new Vector2(0f, 270f), new Vector2(860f, 400f));
-            Text(root, "EquipmentDetail_Text", "Equipment detail placeholder", 38, textDark, Anchor.BottomCenter, new Vector2(0f, 270f), new Vector2(720f, 140f));
+            Text(root, "EquipmentDetail_Text", "Equipment details", 38, textDark, Anchor.BottomCenter, new Vector2(0f, 270f), new Vector2(720f, 140f));
             Button(root, "Button_EquipChange", "Change", primary, Anchor.BottomCenter, new Vector2(-300f, 90f), new Vector2(180f, 72f), () => screenManager.ShowScreen(GameUIScreen.Inventory));
             Button(root, "Button_Unequip", "Unequip", secondary, Anchor.BottomCenter, new Vector2(-100f, 90f), new Vector2(180f, 72f), UnequipSelectedEquipment);
             Button(root, "Button_UpgradeEquipment", "Upgrade", secondary, Anchor.BottomCenter, new Vector2(100f, 90f), new Vector2(180f, 72f), UpgradeSelectedEquipment);
@@ -661,7 +778,7 @@ namespace Isekai12Realms.UI
             }
             CreateInventoryGrid(root);
             Panel(root, "ItemDetail", panelCream, Anchor.BottomCenter, new Vector2(0f, 200f), new Vector2(860f, 230f));
-            Text(root, "ItemDetail_Text", "Item detail placeholder", 34, textDark, Anchor.BottomCenter, new Vector2(0f, 200f), new Vector2(720f, 90f));
+            Text(root, "ItemDetail_Text", "Item details", 34, textDark, Anchor.BottomCenter, new Vector2(0f, 200f), new Vector2(720f, 90f));
             Text(root, "InventoryList_Text", "Inventory empty", 28, textDark, Anchor.Center, new Vector2(0f, 120f), new Vector2(720f, 500f));
             Button(root, "Button_EquipFirst", "Equip First Equipment", secondary, Anchor.BottomCenter, new Vector2(0f, 335f), new Vector2(460f, 86f), EquipFirstEquipment);
             Button(root, "Button_EquipSelected", "Equip Selected", primary, Anchor.BottomCenter, new Vector2(-310f, 335f), new Vector2(250f, 76f), EquipSelectedEquipment);
@@ -720,11 +837,14 @@ namespace Isekai12Realms.UI
 
         private void RegisterPopups()
         {
+            EnsureModalBlocker(popupLayer);
             GameObject settings = CreateSettingsPopup();
             screenManager.RegisterSettingsPopup(settings);
             CreateDeleteConfirmPopup();
             CreateShopPurchaseConfirmPopup();
+            CreateIapPurchaseSuccessPopup();
             CreateCloudConflictPopup();
+            CreateContentDownloadPopup();
 
             TextMeshProUGUI resultTitle;
             TextMeshProUGUI resultRewards;
@@ -732,50 +852,285 @@ namespace Isekai12Realms.UI
             GameObject defeatButtons;
             GameObject battleResult = CreateBattleResultPopup(out resultTitle, out resultRewards, out victoryButtons, out defeatButtons);
             screenManager.RegisterBattleResultPopup(battleResult, resultTitle, resultRewards, victoryButtons, defeatButtons);
+            popupService?.CloseAll();
         }
 
         private GameObject CreateSettingsPopup()
         {
             RectTransform root = EnsureChildRect(popupLayer, "SettingsPopup");
             Stretch(root);
-            EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.45f)).raycastTarget = true;
-            Panel(root, "SettingsPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(900f, 1340f));
-            Text(root, "Title", "Settings", 54, textDark, Anchor.Center, new Vector2(0f, 565f), new Vector2(660f, 80f));
-            Text(root, "Body", "Audio Settings", 34, textDark, Anchor.Center, new Vector2(0f, 490f), new Vector2(680f, 56f));
-            Toggle(root, "Toggle_Music", "Music", Anchor.Center, new Vector2(-180f, 420f), new Vector2(280f, 62f), audioService == null || audioService.MusicEnabled, value => audioService?.MuteMusic(!value));
-            Toggle(root, "Toggle_Sfx", "SFX", Anchor.Center, new Vector2(180f, 420f), new Vector2(280f, 62f), audioService == null || audioService.SfxEnabled, value => audioService?.MuteSfx(!value));
-            Slider(root, "Slider_MusicVolume", "Music Volume", Anchor.Center, new Vector2(0f, 345f), new Vector2(620f, 54f), audioService != null ? audioService.MusicVolume : 0.7f, value => audioService?.SetMusicVolume(value));
-            Slider(root, "Slider_SfxVolume", "SFX Volume", Anchor.Center, new Vector2(0f, 280f), new Vector2(620f, 54f), audioService != null ? audioService.SfxVolume : 0.85f, value => audioService?.SetSfxVolume(value));
-            Text(root, "AccountTitle", "Account", 34, textDark, Anchor.Center, new Vector2(0f, 210f), new Vector2(680f, 52f));
-            Text(root, "AccountStatus", "Local Only", 26, textDark, Anchor.Center, new Vector2(0f, 150f), new Vector2(760f, 70f));
-            Button(root, "Button_SignInGuest", "Sign in as Guest", primary, Anchor.Center, new Vector2(-220f, 75f), new Vector2(330f, 58f), () => _ = SignInGuestCloud());
-            Button(root, "Button_SignInGoogle", "Sign in with Google", primary, Anchor.Center, new Vector2(220f, 75f), new Vector2(350f, 58f), () => _ = SignInGoogleCloud());
-            Button(root, "Button_SyncNow", "Sync Now", secondary, Anchor.Center, new Vector2(-280f, 5f), new Vector2(250f, 58f), () => _ = SyncCloudNow());
-            Button(root, "Button_UploadLocal", "Upload Local", secondary, Anchor.Center, new Vector2(0f, 5f), new Vector2(250f, 58f), () => _ = UploadLocalCloud());
-            Button(root, "Button_DownloadCloud", "Download Cloud", secondary, Anchor.Center, new Vector2(280f, 5f), new Vector2(270f, 58f), () => _ = DownloadCloudSave());
-            Toggle(root, "Toggle_CloudSync", "Cloud Sync Enabled", Anchor.Center, new Vector2(0f, -65f), new Vector2(520f, 58f), true, SetCloudSyncEnabled);
-            Button(root, "Button_DebugGold", "DEBUG +500 Gold", secondary, Anchor.Center, new Vector2(-220f, -140f), new Vector2(300f, 54f), () => DebugAddGold(500));
-            Button(root, "Button_DebugSoulGem", "DEBUG +500 SoulGem", secondary, Anchor.Center, new Vector2(220f, -140f), new Vector2(330f, 54f), () => DebugAddSoulGem(500));
-            Button(root, "Button_DebugScrolls", "DEBUG +5 Scrolls", secondary, Anchor.Center, new Vector2(-220f, -200f), new Vector2(300f, 54f), () => DebugAddItem("item_skill_scroll", 5));
-            Button(root, "Button_DebugJelly", "DEBUG +10 Jelly", secondary, Anchor.Center, new Vector2(220f, -200f), new Vector2(300f, 54f), () => DebugAddItem("mat_slime_jelly", 10));
-            Button(root, "Button_DebugResetDailyShop", "DEBUG Reset Daily Shop", secondary, Anchor.Center, new Vector2(-220f, -260f), new Vector2(370f, 54f), DebugResetDailyShop);
-            Button(root, "Button_DebugClearPurchases", "DEBUG Clear Purchases", secondary, Anchor.Center, new Vector2(220f, -260f), new Vector2(370f, 54f), DebugClearPurchaseRecords);
-            Button(root, "Button_DebugConflict", "DEBUG Force Cloud Conflict Test", secondary, Anchor.Center, new Vector2(-220f, -320f), new Vector2(390f, 54f), DebugForceCloudConflict);
-            Button(root, "Button_DebugClearFirebase", "DEBUG Clear Firebase UID", secondary, Anchor.Center, new Vector2(220f, -320f), new Vector2(370f, 54f), DebugClearFirebaseUid);
-            Button(root, "Button_DebugPrintSave", "DEBUG Print Local Save Info", secondary, Anchor.Center, new Vector2(-220f, -380f), new Vector2(390f, 54f), DebugPrintLocalSaveInfo);
-            Button(root, "Button_DebugExportSave", "DEBUG Export Local Save JSON", secondary, Anchor.Center, new Vector2(220f, -380f), new Vector2(390f, 54f), DebugExportLocalSaveJson);
-            Button(root, "Button_DebugSword", "DEBUG Wooden Sword", secondary, Anchor.Center, new Vector2(-220f, -440f), new Vector2(330f, 54f), () => DebugAddEquipment("equip_weapon_wooden_sword"));
-            Button(root, "Button_DebugCoat", "DEBUG Traveler Coat", secondary, Anchor.Center, new Vector2(220f, -440f), new Vector2(330f, 54f), () => DebugAddEquipment("equip_armor_traveler_coat"));
-            Button(root, "Button_DeleteSave", "Delete Local Save", danger, Anchor.Center, new Vector2(-210f, -535f), new Vector2(360f, 68f), OpenDeleteConfirm);
-            Button(root, "Button_Close", "Close", primary, Anchor.Center, new Vector2(210f, -535f), new Vector2(300f, 68f), screenManager.CloseSettings);
+            EnsurePopupCanvasGroup(root.gameObject);
+            root.SetAsLastSibling();
+            DeactivateLegacyPopupChildren(root, "ModalPanel");
+
+            RectTransform modalPanel = EnsureChildRect(root, "ModalPanel");
+            SetRect(modalPanel, Anchor.Center, Vector2.zero, new Vector2(900f, 1400f));
+            Image panelImage = EnsureImage(modalPanel.gameObject, panelCream);
+            BindImage(panelImage, "ui_panel_popup");
+
+            RectTransform header = EnsureChildRect(modalPanel, "Header");
+            SetRect(header, Anchor.TopCenter, new Vector2(0f, -70f), new Vector2(820f, 120f));
+            EnsureImage(header.gameObject, new Color(1f, 1f, 1f, 0.02f));
+            Text(header, "Title_Text", "Settings", 54, textDark, Anchor.TopCenter, new Vector2(0f, -12f), new Vector2(520f, 72f));
+            Button(header, "Button_Close", "Close", primary, Anchor.TopRight, new Vector2(-80f, -50f), new Vector2(170f, 68f), screenManager.CloseSettings);
+
+            RectTransform scrollView = EnsureChildRect(modalPanel, "ScrollView");
+            SetRect(scrollView, Anchor.Center, new Vector2(0f, -10f), new Vector2(820f, 1120f));
+            EnsureImage(scrollView.gameObject, new Color(1f, 1f, 1f, 0.03f));
+            ScrollRect scrollRect = scrollView.GetComponent<ScrollRect>();
+            if (scrollRect == null) scrollRect = scrollView.gameObject.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+
+            RectTransform viewport = EnsureChildRect(scrollView, "Viewport");
+            Stretch(viewport);
+            Image viewportImage = EnsureImage(viewport.gameObject, new Color(1f, 1f, 1f, 0.01f));
+            viewportImage.raycastTarget = false;
+            Mask viewportMask = viewport.gameObject.GetComponent<Mask>();
+            if (viewportMask == null) viewportMask = viewport.gameObject.AddComponent<Mask>();
+            viewportMask.showMaskGraphic = false;
+
+            RectTransform content = EnsureChildRect(viewport, "Content");
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.anchoredPosition = Vector2.zero;
+            content.sizeDelta = Vector2.zero;
+            VerticalLayoutGroup contentLayout = content.gameObject.GetComponent<VerticalLayoutGroup>();
+            if (contentLayout == null) contentLayout = content.gameObject.AddComponent<VerticalLayoutGroup>();
+            contentLayout.spacing = 18f;
+            contentLayout.padding = new RectOffset(24, 24, 24, 24);
+            contentLayout.childAlignment = TextAnchor.UpperCenter;
+            contentLayout.childControlWidth = true;
+            contentLayout.childControlHeight = true;
+            contentLayout.childForceExpandWidth = true;
+            contentLayout.childForceExpandHeight = false;
+            ContentSizeFitter contentFitter = content.gameObject.GetComponent<ContentSizeFitter>();
+            if (contentFitter == null) contentFitter = content.gameObject.AddComponent<ContentSizeFitter>();
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            scrollRect.viewport = viewport;
+            scrollRect.content = content;
+            scrollRect.verticalNormalizedPosition = 1f;
+
+            RectTransform audioSection = CreateSettingsSection(content, "Section_Audio", "Audio");
+            Toggle(audioSection, "Toggle_Music", "Music", Anchor.Center, Vector2.zero, new Vector2(710f, 62f), audioService == null || audioService.MusicEnabled, value => audioService?.MuteMusic(!value));
+            Toggle(audioSection, "Toggle_Sfx", "SFX", Anchor.Center, Vector2.zero, new Vector2(710f, 62f), audioService == null || audioService.SfxEnabled, value => audioService?.MuteSfx(!value));
+            Slider(audioSection, "Slider_MusicVolume", "Music Volume", Anchor.Center, Vector2.zero, new Vector2(710f, 54f), audioService != null ? audioService.MusicVolume : 0.7f, value => audioService?.SetMusicVolume(value));
+            Slider(audioSection, "Slider_SfxVolume", "SFX Volume", Anchor.Center, Vector2.zero, new Vector2(710f, 54f), audioService != null ? audioService.SfxVolume : 0.85f, value => audioService?.SetSfxVolume(value));
+
+            RectTransform accountSection = CreateSettingsSection(content, "Section_Account", "Account");
+            Text(accountSection, "AccountStatus", "Status: Local Save", 26, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 76f));
+            Text(accountSection, "AccountText", "Account: Guest", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 60f));
+            Button(accountSection, "Button_SignInGuest", "Sign in as Guest", primary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = SignInGuestCloud());
+            Button(accountSection, "Button_SignInGoogle", "Sign in with Google", primary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = SignInGoogleCloud());
+            if (!CanShowGoogleSignIn()) accountSection.Find("Button_SignInGoogle")?.gameObject.SetActive(false);
+
+            RectTransform cloudSection = CreateSettingsSection(content, "Section_Cloud", "Cloud");
+            Toggle(cloudSection, "Toggle_CloudSync", "Cloud Sync Enabled", Anchor.Center, Vector2.zero, new Vector2(710f, 62f), true, SetCloudSyncEnabled);
+            Button(cloudSection, "Button_SyncNow", "Sync Now", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = SyncCloudNow());
+            Button(cloudSection, "Button_UploadLocal", "Upload Local", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = UploadLocalCloud());
+            Button(cloudSection, "Button_DownloadCloud", "Download Cloud", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = DownloadCloudSave());
+
+            RectTransform contentSection = CreateSettingsSection(content, "Section_Content", "Content");
+            Text(contentSection, "CurrentContentVersion", "Current Content Version: 0.1.0", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 52f));
+            Text(contentSection, "ContentStatus", "Content is stored locally.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 88f));
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Button(contentSection, "Button_ManageDownloads", "Manage Downloads", primary, Anchor.Center, Vector2.zero, new Vector2(710f, 58f), OpenManageDownloads);
+            Button(contentSection, "Button_ClearOptionalCache", "Clear Optional Cache", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 58f), ClearOptionalCache);
+#endif
+
+            RectTransform privacySection = CreateSettingsSection(content, "Section_Privacy", "Privacy");
+            Text(privacySection, "Privacy_Text", "Privacy controls will be added here.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 64f));
+
+            RectTransform restoreSection = CreateSettingsSection(content, "Section_RestorePurchases", "Restore Purchases");
+            Text(restoreSection, "RestorePurchases_Text", "Restore consumed purchases tied to this account.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 64f));
+            Button(restoreSection, "Button_RestorePurchases", "Restore Purchases", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), RestorePurchases);
+
+            RectTransform supportSection = CreateSettingsSection(content, "Section_Support", "Support");
+            Text(supportSection, "Support_Text", "Support is available through the store listing and game page.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 64f));
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            bool debugMode = buildConfigService == null || buildConfigService.EnableDebugPanel;
+            RectTransform debugSection = CreateSettingsSection(content, "Section_Debug", "Debug");
+            debugSection.gameObject.SetActive(debugMode);
+            if (debugMode)
+            {
+                SetDebugButton(Button(debugSection, "Button_DebugGold", "DEBUG +500 Gold", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddGold(500)));
+                SetDebugButton(Button(debugSection, "Button_DebugSoulGem", "DEBUG +500 SoulGem", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddSoulGem(500)));
+                SetDebugButton(Button(debugSection, "Button_DebugTinyIap", "DEBUG Add Tiny Gem Purchase", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => PurchaseIapProduct("gems_tiny")));
+                SetDebugButton(Button(debugSection, "Button_DebugPrintLedger", "DEBUG Print Purchase Ledger", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugPrintPurchaseLedger));
+                SetDebugButton(Button(debugSection, "Button_DebugClearDebugPurchases", "DEBUG Clear Debug Purchases", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugClearPurchaseRecords));
+                SetDebugButton(Button(debugSection, "Button_DebugResetDailyShop", "DEBUG Reset Daily Shop", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugResetDailyShop));
+                SetDebugButton(Button(debugSection, "Button_DebugConflict", "DEBUG Force Cloud Conflict Test", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugForceCloudConflict));
+                SetDebugButton(Button(debugSection, "Button_DebugClearFirebase", "DEBUG Clear Firebase UID", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugClearFirebaseUid));
+                SetDebugButton(Button(debugSection, "Button_DebugPrintSave", "DEBUG Print Local Save Info", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugPrintLocalSaveInfo));
+                SetDebugButton(Button(debugSection, "Button_DebugExportSave", "DEBUG Export Local Save JSON", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugExportLocalSaveJson));
+                SetDebugButton(Button(debugSection, "Button_DebugSword", "DEBUG Wooden Sword", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddEquipment("equip_weapon_wooden_sword")));
+                SetDebugButton(Button(debugSection, "Button_DebugCoat", "DEBUG Traveler Coat", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddEquipment("equip_armor_traveler_coat")));
+            }
+#endif
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            Button(modalPanel, "Button_DeleteSave", "Delete Local Save", danger, Anchor.BottomLeft, new Vector2(170f, 58f), new Vector2(320f, 68f), OpenDeleteConfirm);
+#endif
+            Button(modalPanel, "Button_CloseFooter", "Close", primary, Anchor.BottomRight, new Vector2(-170f, 58f), new Vector2(260f, 68f), screenManager.CloseSettings);
+            header.SetAsLastSibling();
             root.gameObject.SetActive(false);
             return root.gameObject;
+        }
+
+        private RectTransform CreateSettingsSection(Transform parent, string name, string title)
+        {
+            RectTransform section = EnsureChildRect(parent, name);
+            EnsureImage(section.gameObject, new Color(1f, 1f, 1f, 0.08f));
+            VerticalLayoutGroup layout = section.gameObject.GetComponent<VerticalLayoutGroup>();
+            if (layout == null) layout = section.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.spacing = 12f;
+            layout.padding = new RectOffset(22, 22, 18, 18);
+            layout.childAlignment = TextAnchor.UpperCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+            ContentSizeFitter fitter = section.gameObject.GetComponent<ContentSizeFitter>();
+            if (fitter == null) fitter = section.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            LayoutElement element = section.gameObject.GetComponent<LayoutElement>();
+            if (element == null) element = section.gameObject.AddComponent<LayoutElement>();
+            element.minHeight = 0f;
+            element.preferredWidth = 760f;
+            TextMeshProUGUI header = CreateSectionTitle(section, title);
+            if (header != null)
+            {
+                header.margin = new Vector4(0f, 0f, 0f, 0f);
+            }
+            return section;
+        }
+
+        private TextMeshProUGUI CreateSectionTitle(Transform parent, string title)
+        {
+            return Text(parent, "SectionTitle", title, 32, new Color(0.12f, 0.18f, 0.28f, 1f), Anchor.Center, Vector2.zero, new Vector2(720f, 46f));
+        }
+
+        private void ResolvePopupService()
+        {
+            if (popupService == null)
+            {
+                ServiceLocator.TryResolve<IPopupService>(out popupService);
+            }
+
+            if (popupService != null && popupLayer != null)
+            {
+                popupService.SetPopupLayer(popupLayer);
+            }
+        }
+
+        private static void EnsureLayerOrder(RectTransform safeAreaRoot)
+        {
+            string[] order = { "BackgroundLayer", "MainLayer", "HudLayer", "NavigationLayer", "PopupLayer", "ToastLayer", "LoadingLayer" };
+            for (int i = 0; i < order.Length; i++)
+            {
+                Transform child = safeAreaRoot.Find(order[i]);
+                if (child != null)
+                {
+                    child.SetSiblingIndex(i);
+                }
+            }
+        }
+
+        private static void EnsureModalBlocker(Transform popupRoot)
+        {
+            if (popupRoot == null)
+            {
+                return;
+            }
+
+            RectTransform blocker = EnsureChildRect(popupRoot, "ModalBlocker");
+            Stretch(blocker);
+            Image image = EnsureImage(blocker.gameObject, new Color(0f, 0f, 0f, 0.55f));
+            image.raycastTarget = true;
+            blocker.SetAsFirstSibling();
+            blocker.gameObject.SetActive(false);
+        }
+
+        private static void DeactivateLegacyPopupChildren(Transform popupRoot, params string[] allowedChildren)
+        {
+            if (popupRoot == null)
+            {
+                return;
+            }
+
+            HashSet<string> allowed = new HashSet<string>(allowedChildren ?? new string[0]);
+            for (int i = 0; i < popupRoot.childCount; i++)
+            {
+                Transform child = popupRoot.GetChild(i);
+                if (child != null && !allowed.Contains(child.name))
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private static void EnsurePopupCanvasGroup(GameObject root)
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            CanvasGroup canvasGroup = root.GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+            {
+                canvasGroup = root.AddComponent<CanvasGroup>();
+            }
+
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
+            canvasGroup.blocksRaycasts = true;
+        }
+
+        private GameObject ShowPopup(string popupId, object payload = null)
+        {
+            ResolvePopupService();
+            if (popupService != null)
+            {
+                return popupService.ShowPopup(popupId, payload);
+            }
+
+            Transform popup = popupLayer != null ? popupLayer.Find(popupId) : null;
+            if (popup == null)
+            {
+                return null;
+            }
+
+            popup.gameObject.SetActive(true);
+            return popup.gameObject;
+        }
+
+        private void HidePopup(string popupId)
+        {
+            ResolvePopupService();
+            if (popupService != null)
+            {
+                popupService.HidePopup(popupId);
+                return;
+            }
+
+            Transform popup = popupLayer != null ? popupLayer.Find(popupId) : null;
+            if (popup != null)
+            {
+                popup.gameObject.SetActive(false);
+            }
         }
 
         private GameObject CreateDeleteConfirmPopup()
         {
             RectTransform root = EnsureChildRect(popupLayer, "DeleteSaveConfirmPopup");
             Stretch(root);
+            EnsurePopupCanvasGroup(root.gameObject);
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.62f)).raycastTarget = true;
             Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(760f, 520f));
             Text(root, "Title", "Are you sure?", 50, textDark, Anchor.Center, new Vector2(0f, 130f), new Vector2(620f, 80f));
@@ -790,6 +1145,7 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = EnsureChildRect(popupLayer, "ShopPurchaseConfirmPopup");
             Stretch(root);
+            EnsurePopupCanvasGroup(root.gameObject);
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.62f)).raycastTarget = true;
             Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(800f, 620f));
             Text(root, "Title", "Confirm Purchase", 48, textDark, Anchor.Center, new Vector2(0f, 210f), new Vector2(660f, 72f));
@@ -801,10 +1157,25 @@ namespace Isekai12Realms.UI
             return root.gameObject;
         }
 
+        private GameObject CreateIapPurchaseSuccessPopup()
+        {
+            RectTransform root = EnsureChildRect(popupLayer, "IAPPurchaseSuccessPopup");
+            Stretch(root);
+            EnsurePopupCanvasGroup(root.gameObject);
+            EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.62f)).raycastTarget = true;
+            Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(800f, 620f));
+            Text(root, "Title", "Purchase Complete", 52, textDark, Anchor.Center, new Vector2(0f, 210f), new Vector2(680f, 82f));
+            Text(root, "Body", "Soul Gems granted", 34, textDark, Anchor.Center, new Vector2(0f, 45f), new Vector2(680f, 260f));
+            Button(root, "Button_OK", "OK", primary, Anchor.Center, new Vector2(0f, -220f), new Vector2(300f, 92f), CloseIapPurchaseSuccessPopup);
+            root.gameObject.SetActive(false);
+            return root.gameObject;
+        }
+
         private GameObject CreateCloudConflictPopup()
         {
             RectTransform root = EnsureChildRect(popupLayer, "CloudConflictPopup");
             Stretch(root);
+            EnsurePopupCanvasGroup(root.gameObject);
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.65f)).raycastTarget = true;
             Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(920f, 820f));
             Text(root, "Title", "Cloud Save Found", 50, textDark, Anchor.Center, new Vector2(0f, 300f), new Vector2(760f, 80f));
@@ -819,10 +1190,30 @@ namespace Isekai12Realms.UI
             return root.gameObject;
         }
 
+        private GameObject CreateContentDownloadPopup()
+        {
+            RectTransform root = EnsureChildRect(popupLayer, "ContentDownloadPopup");
+            Stretch(root);
+            EnsurePopupCanvasGroup(root.gameObject);
+            EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.62f)).raycastTarget = true;
+            Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(860f, 760f));
+            Text(root, "Title", "Content Pack", 50, textDark, Anchor.Center, new Vector2(0f, 260f), new Vector2(700f, 80f));
+            Text(root, "Description", "Pack details", 30, textDark, Anchor.Center, new Vector2(0f, 130f), new Vector2(700f, 170f));
+            Text(root, "Status", "Status", 28, textDark, Anchor.Center, new Vector2(0f, 20f), new Vector2(700f, 58f));
+            Slider(root, "Progress", "Progress", Anchor.Center, new Vector2(0f, -55f), new Vector2(620f, 54f), 0f, null);
+            Button(root, "Button_Download", "Download", primary, Anchor.Center, new Vector2(-250f, -160f), new Vector2(250f, 82f), DownloadSelectedPack);
+            Button(root, "Button_Cancel", "Cancel", secondary, Anchor.Center, new Vector2(0f, -160f), new Vector2(210f, 82f), CloseContentDownloadPopup);
+            Button(root, "Button_ClearCache", "Clear Cache", danger, Anchor.Center, new Vector2(250f, -160f), new Vector2(250f, 82f), ClearOptionalCache);
+            Button(root, "Button_Close", "Close", primary, Anchor.Center, new Vector2(0f, -275f), new Vector2(300f, 82f), CloseContentDownloadPopup);
+            root.gameObject.SetActive(false);
+            return root.gameObject;
+        }
+
         private GameObject CreateBattleResultPopup(out TextMeshProUGUI title, out TextMeshProUGUI rewards, out GameObject victoryButtons, out GameObject defeatButtons)
         {
             RectTransform root = EnsureChildRect(popupLayer, "BattleResultPopup");
             Stretch(root);
+            EnsurePopupCanvasGroup(root.gameObject);
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.55f)).raycastTarget = true;
             Panel(root, "ResultPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(820f, 820f));
             title = Text(root, "ResultTitle", "Victory!", 58, textDark, Anchor.Center, new Vector2(0f, 275f), new Vector2(680f, 90f));
@@ -873,6 +1264,12 @@ namespace Isekai12Realms.UI
             loading.Initialize(loadingRoot.gameObject, loadingText);
 
             screenManager.RegisterServices(toast, loading);
+            buildConfigService = BuildConfigService.GetOrCreate(buildConfig);
+            buildConfigService.ApplyStartupSettings();
+            PerformanceService performance = new PerformanceService(buildConfigService);
+            performance.Apply();
+            ServiceLocator.Register(performance);
+            RegisterGameConfigService();
 
             audioService = GetComponent<AudioService>();
             if (audioService == null)
@@ -900,6 +1297,88 @@ namespace Isekai12Realms.UI
             battleFloatingTextLayer.SetAsLastSibling();
         }
 
+        private void RegisterReleaseHardeningServices()
+        {
+            diagnosticsService = GetComponent<DiagnosticsService>();
+            if (diagnosticsService == null) diagnosticsService = gameObject.AddComponent<DiagnosticsService>();
+            diagnosticsService.Initialize(buildConfigService, contentService, cloudSaveCoordinator);
+            ServiceLocator.Register(diagnosticsService);
+
+            ErrorPopup errorPopup = GetComponent<ErrorPopup>();
+            if (errorPopup == null) errorPopup = gameObject.AddComponent<ErrorPopup>();
+            errorPopup.Initialize(popupLayer);
+            if (assetManifest == null) errorPopup.Show("Some local art may be incomplete.", "ASSET_MANIFEST_MISSING");
+            if (contentService == null || contentService.Database == null) errorPopup.Show("Content data is unavailable. Some screens may be limited.", "CONTENT_DATABASE_MISSING");
+            if (buildConfigService == null || buildConfigService.Config == null) errorPopup.Show("Build configuration is missing. Safe defaults are active.", "BUILD_CONFIG_MISSING");
+
+            AndroidBackButtonService backButton = GetComponent<AndroidBackButtonService>();
+            if (backButton == null) backButton = gameObject.AddComponent<AndroidBackButtonService>();
+            backButton.Initialize(screenManager, popupLayer);
+
+            AppLifecycleService lifecycle = GetComponent<AppLifecycleService>();
+            if (lifecycle == null) lifecycle = gameObject.AddComponent<AppLifecycleService>();
+            lifecycle.Initialize(cloudSaveCoordinator, shopService, screenManager);
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            QADebugPanelUI qaPanel = GetComponent<QADebugPanelUI>();
+            if (qaPanel == null) qaPanel = gameObject.AddComponent<QADebugPanelUI>();
+            qaPanel.Initialize(popupLayer, screenManager, shopService, cloudSaveCoordinator, diagnosticsService, buildConfigService);
+#endif
+
+            ProductionModeGuard productionGuard = GetComponent<ProductionModeGuard>();
+            if (productionGuard == null) productionGuard = gameObject.AddComponent<ProductionModeGuard>();
+            productionGuard.Apply(buildConfigService);
+        }
+
+        private void EnsureVisibleScreenOrRecover()
+        {
+            if (HasVisibleMainScreen())
+            {
+                return;
+            }
+
+            Debug.Log("[UI] No visible screen detected. Restoring TitleScreenUI.");
+            RepairSceneUi();
+            popupService?.CloseAll();
+            screenManager?.ShowScreen(GameUIScreen.Title);
+        }
+
+        private bool HasVisibleMainScreen()
+        {
+            if (mainLayer == null)
+            {
+                return false;
+            }
+
+            foreach (Transform child in mainLayer)
+            {
+                if (child != null && child.gameObject.activeSelf)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void RegisterGameConfigService()
+        {
+#if UNITY_EDITOR
+            if (gameConfigDefaults == null)
+            {
+                gameConfigDefaults = UnityEditor.AssetDatabase.LoadAssetAtPath<GameConfigData>("Assets/_Game/ScriptableObjects/GameConfigData.asset");
+            }
+#endif
+#if USE_FIREBASE_REMOTE_CONFIG
+            IRemoteConfigService remoteConfig = new FirebaseRemoteConfigService();
+#else
+            IRemoteConfigService remoteConfig = new MockRemoteConfigService();
+#endif
+            gameConfigService = new GameConfigService(gameConfigDefaults, remoteConfig);
+            ServiceLocator.Register(gameConfigService);
+            _ = gameConfigService.InitializeAsync();
+        }
+
         private void StartExistingGame()
         {
             progressionService?.LoadOrCreate();
@@ -919,6 +1398,7 @@ namespace Isekai12Realms.UI
         {
             selectedCreationClassId = classId;
             SetText("CharacterCreationUI/HeroName_Text", "Hero Class: " + DisplayClass(classId));
+            SetBoundImageAsset("CharacterCreationUI/Hero_Class_Preview", ClassIdleSpriteAssetId(classId));
         }
 
         private void SelectSkillClass(string classId)
@@ -1142,12 +1622,12 @@ namespace Isekai12Realms.UI
             }
 
             selectedShopItemId = shopItemId;
-            Transform popup = popupLayer.Find("ShopPurchaseConfirmPopup");
+            GameObject popupObject = ShowPopup("ShopPurchaseConfirmPopup");
+            Transform popup = popupObject != null ? popupObject.transform : null;
             if (popup == null) return;
             SetPopupText(popup, "Title", item.displayName);
             SetPopupText(popup, "Body", $"{item.description}\nAmount: {Mathf.Max(1, item.amount)}\nPrice: {item.priceAmount} {ShopService.CurrencyDisplayName(item.priceCurrency)}");
             SetPopupText(popup, "Warning", item.priceCurrency == CurrencyType.SoulGem ? "Spending Soul Gems. Confirm carefully." : string.Empty);
-            popup.gameObject.SetActive(true);
         }
 
         private void ConfirmShopPurchase()
@@ -1163,15 +1643,76 @@ namespace Isekai12Realms.UI
 
         private void CloseShopPurchaseConfirm()
         {
-            Transform popup = popupLayer.Find("ShopPurchaseConfirmPopup");
-            if (popup != null) popup.gameObject.SetActive(false);
+            HidePopup("ShopPurchaseConfirmPopup");
         }
 
-        private void SimulateIapPurchase(string productId)
+        private void PurchaseIapProduct(string productId)
         {
-            iapPlaceholderService?.SimulatePurchase(productId);
-            cloudSaveCoordinator?.QueueCloudSync(1f);
+            if (iapService == null || !iapService.IsAvailable)
+            {
+                screenManager.ToastService?.ShowToast("Store is currently unavailable. Please try again later.");
+                return;
+            }
+            iapService?.Purchase(productId);
+        }
+
+        private void RestorePurchases()
+        {
+            iapService?.RestorePurchases();
+            purchaseLedgerService = purchaseLedgerService ?? (ServiceLocator.TryResolve<ISaveService>(out ISaveService saveService) ? new PurchaseLedgerService(saveService) : null);
+            screenManager.ToastService?.ShowToast("Purchase records refreshed.");
+        }
+
+        private void OnIapPurchaseStarted(string productId)
+        {
+            screenManager.LoadingOverlay?.ShowLoading("Processing purchase...");
+        }
+
+        private void OnIapPurchaseSucceeded(PurchaseRecord record)
+        {
+            screenManager.LoadingOverlay?.HideLoading();
+            ShowIapPurchaseSuccessPopup(record);
+            cloudSaveCoordinator?.QueuePurchaseLedgerSync();
             RefreshSaveBackedUi();
+        }
+
+        private void OnIapPurchaseFailed(string productId, string reason)
+        {
+            screenManager.LoadingOverlay?.HideLoading();
+            string message = reason != null && reason.ToLowerInvariant().Contains("cancel") ? "Purchase cancelled." : "Purchase failed. Please try again.";
+            screenManager.ToastService?.ShowToast(message);
+            RefreshSaveBackedUi();
+        }
+
+        private void OnIapRestoreCompleted()
+        {
+            screenManager.ToastService?.ShowToast("Purchase records refreshed.");
+            RefreshSaveBackedUi();
+        }
+
+        private void OnIapStatusChanged(string status)
+        {
+            if (!string.IsNullOrEmpty(status)) Debug.Log("[IAP] " + status);
+            RefreshSaveBackedUi();
+        }
+
+        private void ShowIapPurchaseSuccessPopup(PurchaseRecord record)
+        {
+            GameObject popupObject = ShowPopup("IAPPurchaseSuccessPopup");
+            Transform popup = popupObject != null ? popupObject.transform : null;
+            if (popup == null || record == null) return;
+            SetPopupText(popup, "Body", $"{ProductName(record.productId)}\nSoul Gems +{record.amount}\nBonus +{record.bonusAmount}\nTotal Granted {record.totalGranted}\nCurrent Soul Gems: {progressionService?.CurrentSave?.soulGem ?? 0}");
+        }
+
+        private void CloseIapPurchaseSuccessPopup()
+        {
+            HidePopup("IAPPurchaseSuccessPopup");
+        }
+
+        private string ProductName(string productId)
+        {
+            IAPProductDefinition product = contentService?.Database?.GetIAPProductById(productId);
+            return product != null ? product.displayName : productId;
         }
 
         private async System.Threading.Tasks.Task SignInGuestCloud()
@@ -1218,11 +1759,11 @@ namespace Isekai12Realms.UI
 
         private void OnCloudConflictDetected(CloudSaveMeta local, CloudSaveMeta cloud)
         {
-            Transform popup = popupLayer != null ? popupLayer.Find("CloudConflictPopup") : null;
+            GameObject popupObject = ShowPopup("CloudConflictPopup");
+            Transform popup = popupObject != null ? popupObject.transform : null;
             if (popup == null) return;
             SetPopupText(popup, "Local_Text", BuildCloudMetaText("Local Save", local));
             SetPopupText(popup, "Cloud_Text", BuildCloudMetaText("Cloud Save", cloud));
-            popup.gameObject.SetActive(true);
         }
 
         private async System.Threading.Tasks.Task ResolveCloudUseLocal()
@@ -1249,26 +1790,17 @@ namespace Isekai12Realms.UI
 
         private void CloseCloudConflictPopup()
         {
-            Transform popup = popupLayer != null ? popupLayer.Find("CloudConflictPopup") : null;
-            if (popup != null) popup.gameObject.SetActive(false);
+            HidePopup("CloudConflictPopup");
         }
 
         private void OpenDeleteConfirm()
         {
-            Transform popup = popupLayer.Find("DeleteSaveConfirmPopup");
-            if (popup != null)
-            {
-                popup.gameObject.SetActive(true);
-            }
+            ShowPopup("DeleteSaveConfirmPopup");
         }
 
         private void CloseDeleteConfirm()
         {
-            Transform popup = popupLayer.Find("DeleteSaveConfirmPopup");
-            if (popup != null)
-            {
-                popup.gameObject.SetActive(false);
-            }
+            HidePopup("DeleteSaveConfirmPopup");
         }
 
         private void ConfirmDeleteSave()
@@ -1300,8 +1832,21 @@ namespace Isekai12Realms.UI
 
         private void DebugClearPurchaseRecords()
         {
-            iapPlaceholderService?.ClearPurchaseRecords();
+            purchaseLedgerService?.ClearDebugRecords();
+            screenManager.ToastService?.ShowToast("Debug purchase records cleared.");
             RefreshSaveBackedUi();
+        }
+
+        private void DebugPrintPurchaseLedger()
+        {
+            List<PurchaseRecord> records = purchaseLedgerService != null ? purchaseLedgerService.GetAllRecords() : new List<PurchaseRecord>();
+            string text = "[IAP] Purchase Ledger (" + records.Count + ")";
+            foreach (PurchaseRecord record in records)
+            {
+                if (record == null) continue;
+                text += $"\n{record.transactionId} product={record.productId} total={record.totalGranted} granted={record.granted} cloudSynced={record.cloudSynced}";
+            }
+            Debug.Log(text);
         }
 
         private void DebugForceCloudConflict()
@@ -1366,14 +1911,24 @@ namespace Isekai12Realms.UI
             SetText("MainTownUI/Gems_Text", $"Gems: {save.soulGem}");
             SetText("TitleScreenUI/AccountStatus_Text", BuildTitleAccountStatus());
             Transform settings = popupLayer != null ? popupLayer.Find("SettingsPopup") : null;
-            SetPopupText(settings, "AccountStatus", BuildSettingsAccountStatus(save));
-            Toggle cloudToggle = settings != null ? settings.Find("Toggle_CloudSync")?.GetComponent<Toggle>() : null;
+            SetPopupText(settings, "ModalPanel/ScrollView/Viewport/Content/Section_Account/AccountStatus", BuildSettingsAccountStatus(save));
+            SetPopupText(settings, "ModalPanel/ScrollView/Viewport/Content/Section_Account/AccountText", BuildSettingsAccountText());
+            string remoteStatus = gameConfigService != null && gameConfigService.RemoteContentEnabled ? "Enabled" : "Disabled";
+            string configured = assetLoadService != null && assetLoadService.IsAvailable ? "Configured" : "Content is stored locally.";
+            SetPopupText(settings, "ModalPanel/ScrollView/Viewport/Content/Section_Content/CurrentContentVersion", $"Current Content Version: {gameConfigService?.CurrentContentVersion ?? "0.1.0"}");
+            SetPopupText(settings, "ModalPanel/ScrollView/Viewport/Content/Section_Content/ContentStatus", $"Remote Content: {remoteStatus}\n{configured}");
+            Toggle cloudToggle = settings != null ? settings.Find("ModalPanel/ScrollView/Viewport/Content/Section_Cloud/Toggle_CloudSync")?.GetComponent<Toggle>() : null;
             if (cloudToggle != null) cloudToggle.SetIsOnWithoutNotify(save.cloudSyncEnabled);
+            GameObject guestButton = settings != null ? settings.Find("ModalPanel/ScrollView/Viewport/Content/Section_Account/Button_SignInGuest")?.gameObject : null;
+            if (guestButton != null) guestButton.SetActive(cloudSaveCoordinator == null || cloudSaveCoordinator.CurrentUser == null);
+            GameObject googleButton = settings != null ? settings.Find("ModalPanel/ScrollView/Viewport/Content/Section_Account/Button_SignInGoogle")?.gameObject : null;
+            if (googleButton != null) googleButton.SetActive(CanShowGoogleSignIn());
 
             PlayerStats stats = progressionService.CalculateTotalStats();
             SetText("HeroUI/Stats_Text", $"Lv. {save.level}\nHP {stats.maxHp}\nMana {stats.mana}\nATK {stats.atk}\nMAG {stats.mag}\nDEF {stats.def}\nSPD {stats.spd}\nLUCK {stats.luck}");
             SetText("HeroUI/Exp_Text", $"EXP {save.exp} / {progressionService.GetExpRequired(save.level)}");
             SetText("HeroUI/Class_Text", "Class: " + DisplayClass(save.selectedClassId));
+            SetBoundImageAsset("HeroUI/HeroPortrait", ClassPortraitAssetId(save.selectedClassId));
             SetText("HeroUI/EquippedSkills_Text", "Skills: " + SkillName(save.equippedSkill1Id) + " / " + SkillName(save.equippedSkill2Id) + " / " + SkillName(save.equippedUltimateId));
             selectedSkillClassId = save.selectedClassId;
             RefreshSkillsUi();
@@ -1406,7 +1961,17 @@ namespace Isekai12Realms.UI
 
             if (selectedShopType == ShopType.IAPPlaceholder)
             {
-                RefreshIapPlaceholderUi(root);
+                if (iapService == null || !iapService.IsAvailable)
+                {
+                    SetText("ShopUI/ShopInfo_Text", "Soul Gem Packs\nStore is currently unavailable. Please try again later.");
+                    return;
+                }
+                if (gameConfigService != null && !gameConfigService.IapEnabled)
+                {
+                    SetText("ShopUI/ShopInfo_Text", "Soul Gem Packs\nStore is currently unavailable. Please try again later.");
+                    return;
+                }
+                RefreshIapShopUi(root);
                 return;
             }
 
@@ -1432,23 +1997,22 @@ namespace Isekai12Realms.UI
             }
         }
 
-        private void RefreshIapPlaceholderUi(Transform root)
+        private void RefreshIapShopUi(Transform root)
         {
-            SetText("ShopUI/ShopInfo_Text", "Soul Gem Packs\nIAP is not connected yet. This screen is a placeholder for Unity IAP.\nIAP will only sell Soul Gem currency.");
-            List<IAPProductDefinition> products = iapPlaceholderService != null ? iapPlaceholderService.GetProducts() : new List<IAPProductDefinition>();
+            SetText("ShopUI/ShopInfo_Text", iapService != null && iapService.IsAvailable ? "Soul Gem Packs\nIAP only sells Soul Gem currency." : "Soul Gem Packs\nStore is currently unavailable. Please try again later.");
+            List<IAPProductViewData> products = iapService != null ? iapService.GetProducts() : new List<IAPProductViewData>();
             for (int i = 0; i < Mathf.Min(products.Count, 6); i++)
             {
-                IAPProductDefinition product = products[i];
+                IAPProductViewData product = products[i];
                 if (product == null) continue;
                 string capturedId = product.productId;
-                int total = Mathf.Max(0, product.soulGemAmount) + Mathf.Max(0, product.bonusSoulGemAmount);
-                bool canSimulate = iapPlaceholderService != null && iapPlaceholderService.CanSimulatePurchases();
-                string buttonLabel = canSimulate ? "DEBUG SIMULATE PURCHASE" : "Coming Soon";
-                string label = $"{product.displayName}\nSoul Gems: {product.soulGemAmount}\nBonus: {product.bonusSoulGemAmount}\nTotal: {total}\n{product.priceTextPlaceholder}\n{buttonLabel}";
-                Button card = Button(root, "IapProductCard_" + i, label, canSimulate ? secondary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.Center, new Vector2(i % 2 == 0 ? -225f : 225f, 345f - (i / 2) * 190f), new Vector2(420f, 170f), canSimulate ? () => SimulateIapPurchase(capturedId) : screenManager.ShowDisabledToast);
+                bool canBuy = product.available && iapService != null && iapService.IsAvailable;
+                string label = $"{product.displayName}\nSoul Gems: {product.soulGemAmount}\nBonus: {product.bonusSoulGemAmount}\nTotal: {product.totalSoulGemAmount}\n{product.localizedPriceText}\n{(canBuy ? "Buy" : "Unavailable")}";
+                UnityEngine.Events.UnityAction action = canBuy ? (UnityEngine.Events.UnityAction)(() => PurchaseIapProduct(capturedId)) : screenManager.ShowDisabledToast;
+                Button card = Button(root, "IapProductCard_" + i, label, canBuy ? secondary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.Center, new Vector2(i % 2 == 0 ? -225f : 225f, 345f - (i / 2) * 190f), new Vector2(420f, 170f), action);
                 FormatCardLabel(card, 21);
                 ImageAsset(card.transform, "Icon", "currency_soul_gem", Anchor.Center, new Vector2(-170f, 35f), new Vector2(58f, 58f)).raycastTarget = false;
-                SetButtonEnabled(card, canSimulate);
+                SetButtonEnabled(card, canBuy);
                 card.gameObject.SetActive(true);
             }
         }
@@ -1464,18 +2028,93 @@ namespace Isekai12Realms.UI
         private string BuildTitleAccountStatus()
         {
             PlayerSaveData save = progressionService?.CurrentSave;
-            if (save == null) return "Local Save";
-            if (cloudSaveCoordinator == null || cloudSaveCoordinator.GetStatus() == CloudSaveStatus.LocalOnly) return "Local Save";
-            if (save.authProvider == "Google") return "Google Cloud Save";
-            return "Guest Cloud Save";
+            if (save == null) return "Account: Local";
+            if (cloudSaveCoordinator == null || cloudSaveCoordinator.GetStatus() == CloudSaveStatus.LocalOnly) return "Account: Local";
+            if (save.authProvider == "Google") return "Account: Google";
+            return "Account: Guest";
+        }
+
+        private string BuildSettingsAccountText()
+        {
+            PlayerSaveData save = progressionService?.CurrentSave;
+            string account = "Local";
+            if (cloudSaveCoordinator != null && cloudSaveCoordinator.CurrentUser != null)
+            {
+                account = cloudSaveCoordinator.CurrentUser.providerType == AuthProviderType.Google ? "Google" : "Guest";
+            }
+
+            string syncState = cloudSaveCoordinator == null ? "Disabled" : cloudSaveCoordinator.GetStatus() == CloudSaveStatus.Error ? "Error" : save != null && save.cloudSyncEnabled ? "Enabled" : "Disabled";
+            string lastSynced = save != null && save.lastCloudUploadAt > 0 ? DateTimeOffset.FromUnixTimeSeconds(save.lastCloudUploadAt).ToLocalTime().ToString("g") : "Never";
+            return $"Account: {account}\nCloud Sync: {syncState}\nLast synced: {lastSynced}";
+        }
+
+        private bool CanShowGoogleSignIn()
+        {
+            return cloudSaveCoordinator != null && cloudSaveCoordinator.IsGoogleSignInConfigured;
+        }
+
+        private void OpenManageDownloads()
+        {
+            ContentPackDefinition pack = contentPackService?.GetDownloadablePacks().Find(p => p != null && !p.includedInBuild);
+            if (pack == null) pack = contentPackService?.GetAllPacks().Find(p => p != null && p.downloadable);
+            if (pack == null) pack = contentPackService?.GetAllPacks().Find(p => p != null);
+            if (pack != null) OpenContentDownloadPopup(pack);
+            else screenManager.ToastService?.ShowToast("No content packs found.");
+        }
+
+        private void OpenContentDownloadPopup(ContentPackDefinition pack)
+        {
+            if (pack == null) return;
+            selectedContentPackId = pack.id;
+            GameObject popupObject = ShowPopup("ContentDownloadPopup");
+            Transform popup = popupObject != null ? popupObject.transform : null;
+            if (popup == null) return;
+            ContentPackDownloadStatus status = contentPackService != null ? contentPackService.GetPackDownloadStatus(pack.id) : ContentPackDownloadStatus.Unknown;
+            string remoteText = assetLoadService != null && assetLoadService.IsAvailable && gameConfigService != null && gameConfigService.RemoteContentEnabled
+                ? string.Empty
+                : "\nOptional downloads are unavailable in this build.";
+            SetPopupText(popup, "Title", pack.displayName);
+            SetPopupText(popup, "Description", $"{pack.description}\nSize: {FormatBytes(pack.estimatedSizeBytes)}\nVersion: {pack.version}{remoteText}");
+            SetPopupText(popup, "Status", "Status: " + status);
+            Slider progress = popup.Find("Progress")?.GetComponent<Slider>();
+            if (progress != null) progress.SetValueWithoutNotify(status == ContentPackDownloadStatus.Downloaded || status == ContentPackDownloadStatus.AvailableLocal ? 1f : 0f);
+        }
+
+        private async void DownloadSelectedPack()
+        {
+            if (string.IsNullOrEmpty(selectedContentPackId) || contentPackService == null) return;
+            ContentPackDefinition pack = contentService?.Database?.GetContentPackById(selectedContentPackId);
+            await contentPackService.DownloadPackAsync(selectedContentPackId);
+            if (pack != null) OpenContentDownloadPopup(pack);
+            RefreshWorldMapState();
+        }
+
+        private async void ClearOptionalCache()
+        {
+            if (contentPackService != null) await contentPackService.ClearOptionalPacksAsync();
+            screenManager.ToastService?.ShowToast("Optional content cache cleared.");
+            RefreshSaveBackedUi();
+        }
+
+        private void CloseContentDownloadPopup()
+        {
+            HidePopup("ContentDownloadPopup");
+        }
+
+        private static string FormatBytes(long bytes)
+        {
+            if (bytes <= 0) return "Unknown";
+            if (bytes < 1024L * 1024L) return Mathf.CeilToInt(bytes / 1024f) + " KB";
+            return (bytes / (1024f * 1024f)).ToString("0.0") + " MB";
         }
 
         private string BuildSettingsAccountStatus(PlayerSaveData save)
         {
             string status = cloudSaveCoordinator != null ? cloudSaveCoordinator.GetStatus().ToString() : "LocalOnly";
-            string account = string.IsNullOrEmpty(save.firebaseUid) ? "Local Only" : save.authProvider;
+            string account = string.IsNullOrEmpty(save.firebaseUid) ? "Local" : (save.authProvider == "Google" ? "Google" : "Guest");
             string uid = ShortId(save.firebaseUid);
-            return $"Status: {status}\nAccount: {account}\nUID: {uid}\nCloud Sync: {(save.cloudSyncEnabled ? "Enabled" : "Disabled")}";
+            string sync = status == "Error" ? "Error" : save.cloudSyncEnabled ? "Enabled" : "Disabled";
+            return $"Status: {status}\nAccount: {account}\nUID: {uid}\nCloud Sync: {sync}";
         }
 
         private static string BuildCloudMetaText(string title, CloudSaveMeta meta)
@@ -1489,6 +2128,15 @@ namespace Isekai12Realms.UI
             return string.IsNullOrEmpty(id) ? "-" : id.Substring(0, Mathf.Min(8, id.Length));
         }
 
+        private static bool IsDebugBuild()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            return true;
+#else
+            return false;
+#endif
+        }
+
         private static void FormatCardLabel(Button card, int fontSize)
         {
             TextMeshProUGUI label = card != null ? card.GetComponentInChildren<TextMeshProUGUI>() : null;
@@ -1496,6 +2144,15 @@ namespace Isekai12Realms.UI
             label.fontSize = fontSize;
             label.alignment = TextAlignmentOptions.Center;
             label.margin = new Vector4(68f, 4f, 8f, 4f);
+        }
+
+        private static void SetDebugButton(Button button)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            SetButtonEnabled(button, true);
+#else
+            SetButtonEnabled(button, false);
+#endif
         }
 
         private void RefreshSkillsUi()
@@ -1698,7 +2355,8 @@ namespace Isekai12Realms.UI
                     bool equipped = equipmentService != null && equipmentService.IsEquipped(equipment.instanceId);
                     string label = $"{equipment.displayName}\nLv {equipment.level} {equipment.rarity} {equipment.slot}{(equipped ? " [E]" : string.Empty)}{(equipment.locked ? " [L]" : string.Empty)}";
                     Button card = Button(inventoryRoot, "EquipmentCard_" + i, label, equipment.instanceId == selectedEquipmentInstanceId ? secondary : primary, Anchor.Center, new Vector2(i % 2 == 0 ? -235f : 235f, 345f - (i / 2) * 95f), new Vector2(430f, 82f), () => SelectEquipment(captured));
-                    Image icon = ImageAsset(card.transform, "Icon", equipment.equipmentId, Anchor.Center, new Vector2(-180f, 0f), new Vector2(52f, 52f));
+                    EquipmentDefinition definition = equipmentService != null ? equipmentService.GetDefinition(equipment.equipmentId) : null;
+                    Image icon = ImageAsset(card.transform, "Icon", definition != null && !string.IsNullOrEmpty(definition.iconAssetId) ? definition.iconAssetId : equipment.equipmentId, Anchor.Center, new Vector2(-180f, 0f), new Vector2(52f, 52f));
                     icon.raycastTarget = false;
                     card.gameObject.SetActive(true);
                 }
@@ -1835,6 +2493,13 @@ namespace Isekai12Realms.UI
             label.color = color;
             label.alignment = TextAlignmentOptions.Center;
             label.raycastTarget = false;
+            LayoutElement layout = rect.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = rect.gameObject.AddComponent<LayoutElement>();
+            }
+            layout.preferredWidth = rectSize.x;
+            layout.preferredHeight = rectSize.y;
             return label;
         }
 
@@ -1857,6 +2522,13 @@ namespace Isekai12Realms.UI
                 button.onClick.AddListener(action);
             }
             Text(rect, "Text", text, Mathf.RoundToInt(size.y * 0.34f), Color.white, Anchor.Center, Vector2.zero, size);
+            LayoutElement layout = rect.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = rect.gameObject.AddComponent<LayoutElement>();
+            }
+            layout.preferredWidth = size.x;
+            layout.preferredHeight = size.y;
             return button;
         }
 
@@ -1872,6 +2544,13 @@ namespace Isekai12Realms.UI
             toggle.isOn = isOn;
             toggle.onValueChanged.RemoveAllListeners();
             if (action != null) toggle.onValueChanged.AddListener(action);
+            LayoutElement layout = rect.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = rect.gameObject.AddComponent<LayoutElement>();
+            }
+            layout.preferredWidth = size.x;
+            layout.preferredHeight = size.y;
             return toggle;
         }
 
@@ -1892,6 +2571,13 @@ namespace Isekai12Realms.UI
             slider.minValue = 0f; slider.maxValue = 1f; slider.value = value;
             slider.onValueChanged.RemoveAllListeners();
             if (action != null) slider.onValueChanged.AddListener(action);
+            LayoutElement layout = rect.GetComponent<LayoutElement>();
+            if (layout == null)
+            {
+                layout = rect.gameObject.AddComponent<LayoutElement>();
+            }
+            layout.preferredWidth = size.x;
+            layout.preferredHeight = size.y;
             return slider;
         }
 
@@ -1922,6 +2608,36 @@ namespace Isekai12Realms.UI
             }
         }
 
+        private static string MapNodeAssetId(string realmId)
+        {
+            if (realmId == "realm_02_ember") return "map_node_realm_02_ember";
+            if (realmId == "realm_03_tide") return "map_node_realm_03_tide";
+            return "map_node_realm_01_meadow";
+        }
+
+        private static string ClassIdleSpriteAssetId(string classId)
+        {
+            if (classId == "tide_acolyte") return "char_hero_tide_idle";
+            if (classId == "storm_scout") return "char_hero_storm_idle";
+            return "char_hero_flame_idle";
+        }
+
+        private static string ClassPortraitAssetId(string classId)
+        {
+            if (classId == "tide_acolyte") return "portrait_hero_tide";
+            if (classId == "storm_scout") return "portrait_hero_storm";
+            return "portrait_hero_flame";
+        }
+
+        private void AddButtonIcon(Button button, string assetId)
+        {
+            if (button == null || string.IsNullOrEmpty(assetId)) return;
+            Image icon = ImageAsset(button.transform, "Icon", assetId, Anchor.Center, new Vector2(-126f, 0f), new Vector2(54f, 54f));
+            icon.raycastTarget = false;
+            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>();
+            if (label != null) label.margin = new Vector4(52f, 0f, 0f, 0f);
+        }
+
         private string GetButtonAssetId(string name, Color color)
         {
             if (name.Contains("Close")) return "ui_btn_close";
@@ -1945,6 +2661,14 @@ namespace Isekai12Realms.UI
             binder.assetId = assetId;
             binder.targetImage = image;
             binder.Apply();
+        }
+
+        private void SetBoundImageAsset(string path, string assetId)
+        {
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(assetId) || mainLayer == null) return;
+            Transform target = mainLayer.Find(path);
+            Image image = target != null ? target.GetComponent<Image>() : null;
+            if (image != null) BindImage(image, assetId);
         }
 
         private static void SetButtonEnabled(Button button, bool enabled)
@@ -2004,6 +2728,12 @@ namespace Isekai12Realms.UI
                 case Anchor.TopCenter:
                     rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
                     break;
+                case Anchor.BottomLeft:
+                    rect.anchorMin = rect.anchorMax = new Vector2(0f, 0f);
+                    break;
+                case Anchor.BottomRight:
+                    rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+                    break;
                 case Anchor.BottomCenter:
                     rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
                     break;
@@ -2022,6 +2752,8 @@ namespace Isekai12Realms.UI
             TopCenter,
             TopLeft,
             TopRight,
+            BottomLeft,
+            BottomRight,
             BottomCenter
         }
     }

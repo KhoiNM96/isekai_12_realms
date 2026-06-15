@@ -48,5 +48,5 @@ service cloud.firestore {
 
 ## Notes
 - IAP remains a placeholder and must not sell direct equipment or power items.
-- Cloud purchase records are backup/audit data only. Local save remains the source of truth for placeholder grants.
-- If Firebase fails at runtime, keep playing with local save.
+- For production setup and security rules, see `docs/release/production_iap_firebase_setup.md` and `docs/release/firestore_security_rules_production.md`.
+- If Firebase fails at runtime in internal testing, keep playing with local save.

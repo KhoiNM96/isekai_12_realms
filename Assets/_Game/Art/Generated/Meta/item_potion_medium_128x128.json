@@ -1,0 +1,14 @@
+{
+    "id":  "item_potion_medium",
+    "file":  "item_potion_medium_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Item",
+    "usage":  "item_potion_medium item icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy item or currency icon item_potion_medium, transparent background, no text."
+}

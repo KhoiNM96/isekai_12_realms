@@ -1,0 +1,14 @@
+{
+    "id":  "char_hero_storm_cast",
+    "file":  "char_hero_storm_cast_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "Character",
+    "usage":  "storm hero cast sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original cute chibi isekai storm hero cast pose, transparent background, no text."
+}

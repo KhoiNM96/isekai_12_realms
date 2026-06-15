@@ -1,0 +1,14 @@
+{
+    "id":  "map_node_realm_01_meadow",
+    "file":  "map_node_realm_01_meadow_192x192.png",
+    "size":  [
+                 192,
+                 192
+             ],
+    "category":  "Map",
+    "usage":  "map_node_realm_01_meadow world map node",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original fantasy realm map node map_node_realm_01_meadow, transparent background, no text."
+}

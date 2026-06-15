@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Threading.Tasks;
+using Isekai12Realms.Addressables;
 using Isekai12Realms.UI;
 using TMPro;
 using UnityEngine;
@@ -18,6 +20,7 @@ namespace Isekai12Realms.Battle
         private Coroutine moveRoutine;
         private Coroutine hpRoutine;
         private Coroutine manaRoutine;
+        private int spriteLoadVersion;
 
         public void Bind(TextMeshProUGUI name, Image hp, Image mana, Image sprite)
         {
@@ -35,11 +38,31 @@ namespace Isekai12Realms.Battle
         public void SetSprite(string assetId)
         {
             if (spriteImage == null) return;
-            Sprite sprite = AssetSpriteBinder.GetSprite(assetId);
-            if (sprite == null) return;
+            Sprite sprite = AssetSpriteBinder.GetSprite(assetId) ?? AssetSpriteBinder.GetSprite("missing_sprite");
+            if (sprite != null) ApplySprite(sprite);
+            _ = SetSpriteAsync(assetId);
+        }
+
+        private async Task SetSpriteAsync(string assetId)
+        {
+            int version = ++spriteLoadVersion;
+            IAssetLoadService service = AssetSpriteBinder.AssetLoadService;
+            if (service == null) return;
+            Sprite sprite = await service.LoadSpriteAsync(assetId);
+            if (version != spriteLoadVersion || this == null || !isActiveAndEnabled || spriteImage == null || sprite == null) return;
+            ApplySprite(sprite);
+        }
+
+        private void ApplySprite(Sprite sprite)
+        {
             spriteImage.sprite = sprite;
             spriteImage.preserveAspect = true;
             spriteImage.color = Color.white;
+        }
+
+        private void OnDisable()
+        {
+            spriteLoadVersion++;
         }
 
         public void PlayIdle() { }

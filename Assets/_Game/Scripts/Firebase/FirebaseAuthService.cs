@@ -34,6 +34,7 @@ namespace Isekai12Realms.FirebaseIntegration
 #endif
         public bool IsSignedIn => currentUser != null;
         public AuthUserData CurrentUser => currentUser;
+        public bool IsGoogleSignInConfigured => false;
 
         public async Task<AuthUserData> SignInAnonymousAsync()
         {
@@ -66,6 +67,12 @@ namespace Isekai12Realms.FirebaseIntegration
 
         public Task<AuthUserData> SignInGoogleAsync()
         {
+#if USE_FIREBASE
+            if (!IsGoogleSignInConfigured)
+            {
+                return Task.FromResult<AuthUserData>(null);
+            }
+#endif
             toastService?.ShowToast("Google Sign-In is not configured yet.");
             return Task.FromResult<AuthUserData>(null);
         }

@@ -31,11 +31,11 @@ namespace Isekai12Realms.Editor
         private static string GuideText()
         {
             return "# Firebase Setup Guide\n\n" +
-                   "Firebase is optional. The game compiles and plays local-only when Firebase is missing.\n\n" +
+                   "Firebase is optional for editor/local development, but production builds should use the real Firebase setup.\n\n" +
                    "## Required Firebase Modules\n- Authentication\n- Cloud Firestore\n\n" +
                    "## Steps\n1. Enable Anonymous Auth.\n2. Enable Google Sign-In later.\n3. Add Android package name.\n4. Download google-services.json into Assets/.\n5. Add USE_FIREBASE scripting define.\n\n" +
                    "## Firestore Paths\n- /users/{uid}/profile/main\n- /users/{uid}/saves/default\n- /users/{uid}/purchases/{transactionId}\n\n" +
-                   "## Security Rules Draft\n```js\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function signedIn() { return request.auth != null; }\n    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }\n    match /users/{uid} {\n      allow read, write: if isOwner(uid);\n      match /{document=**} { allow read, write: if isOwner(uid); }\n    }\n  }\n}\n```\n";
+                   "## Production Rules\nSee `docs/release/firestore_security_rules_production.md`.\n";
         }
     }
 }

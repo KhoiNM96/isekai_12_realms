@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Isekai12Realms.Auth;
 using Isekai12Realms.Data;
 using Isekai12Realms.FirebaseIntegration;
+using Isekai12Realms.Purchases;
 using Isekai12Realms.Services;
 using Isekai12Realms.Shop;
 using Isekai12Realms.UI;
@@ -31,6 +32,7 @@ namespace Isekai12Realms.CloudSave
         public AuthUserData CurrentUser => authService?.CurrentUser;
         public bool IsCloudAvailable => cloudSaveService != null && cloudSaveService.IsAvailable;
         public bool CloudSyncEnabled => saveService?.CurrentSave == null || saveService.CurrentSave.cloudSyncEnabled;
+        public bool IsGoogleSignInConfigured => authService is FirebaseIntegration.FirebaseAuthService firebaseAuth && firebaseAuth.IsGoogleSignInConfigured;
 
         public void Initialize(ISaveService save, ToastService toast)
         {
@@ -40,8 +42,13 @@ namespace Isekai12Realms.CloudSave
             authService = new FirebaseAuthService(saveService, toastService);
             cloudSaveService = new FirestoreCloudSaveService(saveService);
 #else
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             authService = new MockAuthService(saveService);
             cloudSaveService = new MockCloudSaveService();
+#else
+            authService = new LocalOnlyAuthService();
+            cloudSaveService = new LocalOnlyCloudSaveService();
+#endif
 #endif
             _ = InitializeAsync();
         }
@@ -67,7 +74,7 @@ namespace Isekai12Realms.CloudSave
             if (!IsCloudAvailable)
             {
                 SetStatus(CloudSaveStatus.LocalOnly);
-                Debug.Log("[Cloud] Firebase unavailable. Running local-only.");
+                Debug.Log("[Cloud] Cloud save unavailable. Running local-only.");
                 return;
             }
 
@@ -88,7 +95,7 @@ namespace Isekai12Realms.CloudSave
             if (user == null || !IsCloudAvailable)
             {
                 SetStatus(CloudSaveStatus.LocalOnly);
-                if (showToast) toastService?.ShowToast("Firebase unavailable. Local save kept.");
+                if (showToast) toastService?.ShowToast("Cloud save is currently unavailable.");
                 return user;
             }
 
@@ -104,7 +111,7 @@ namespace Isekai12Realms.CloudSave
         public async Task<AuthUserData> SignInGoogleAsync()
         {
             AuthUserData user = await authService.SignInGoogleAsync();
-            if (user == null || user.providerType != AuthProviderType.Google) toastService?.ShowToast("Google Sign-In is not configured yet.");
+            if (user == null || user.providerType != AuthProviderType.Google) toastService?.ShowToast("Google Sign-In is not available.");
             return user;
         }
 
@@ -122,7 +129,7 @@ namespace Isekai12Realms.CloudSave
             {
                 SetStatus(CloudSaveStatus.Syncing);
                 await cloudSaveService.UploadSaveAsync(CurrentUser.uid, saveService.CurrentSave);
-                await cloudSaveService.MergePurchaseRecordsAsync(CurrentUser.uid, saveService.CurrentSave.purchaseRecords);
+                await SyncPurchaseLedgerNowAsync();
                 saveService.CurrentSave.lastCloudUploadAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 saveService.CurrentSave.lastSyncedDeviceId = saveService.CurrentSave.deviceId;
                 saveService.SaveNow();
@@ -133,7 +140,7 @@ namespace Isekai12Realms.CloudSave
             {
                 Debug.LogWarning("[Cloud] Upload failed: " + e.Message);
                 SetStatus(CloudSaveStatus.Error);
-                if (showToast) toastService?.ShowToast("Cloud sync failed. Local save kept.");
+                if (showToast) toastService?.ShowToast("Cloud sync failed. Please try again.");
             }
         }
 
@@ -157,7 +164,7 @@ namespace Isekai12Realms.CloudSave
             {
                 Debug.LogWarning("[Cloud] Download failed: " + e.Message);
                 SetStatus(CloudSaveStatus.Error);
-                toastService?.ShowToast("Cloud download failed. Local save kept.");
+                toastService?.ShowToast("Cloud save download failed. Please try again.");
             }
         }
 
@@ -189,6 +196,23 @@ namespace Isekai12Realms.CloudSave
             nextSyncAt = Time.unscaledTime + Mathf.Max(1f, debounceSeconds);
         }
 
+        public void QueuePurchaseLedgerSync()
+        {
+            QueueCloudSync(1f);
+        }
+
+        public async Task SyncPurchaseLedgerNowAsync()
+        {
+            if (!ReadyForCloudAction()) return;
+            PurchaseLedgerService ledger = new PurchaseLedgerService(saveService);
+            List<PurchaseRecord> unsynced = ledger.GetUnsyncedRecords();
+            await cloudSaveService.MergePurchaseRecordsAsync(CurrentUser.uid, unsynced);
+            foreach (PurchaseRecord record in unsynced)
+            {
+                if (record != null) ledger.MarkCloudSynced(record.transactionId);
+            }
+        }
+
         public void SetCloudSyncEnabled(bool enabled)
         {
             if (saveService?.CurrentSave == null) return;
@@ -199,6 +223,7 @@ namespace Isekai12Realms.CloudSave
 
         public void ClearFirebaseUidFromLocalSave()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             PlayerSaveData save = saveService?.CurrentSave;
             if (save == null) return;
             save.firebaseUid = string.Empty;
@@ -206,10 +231,12 @@ namespace Isekai12Realms.CloudSave
             saveService.SaveNow();
             toastService?.ShowToast("Firebase UID cleared locally.");
             StatusChanged?.Invoke();
+#endif
         }
 
         public void ForceConflictTest()
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             PlayerSaveData save = saveService?.CurrentSave;
             if (save == null) return;
             CloudSaveMeta local = CloudSaveFactory.CreateMeta(save.firebaseUid, save);
@@ -220,6 +247,7 @@ namespace Isekai12Realms.CloudSave
             pendingCloudMeta = cloud;
             SetStatus(CloudSaveStatus.Conflict);
             ConflictDetected?.Invoke(local, cloud);
+#endif
         }
 
         private async Task CompareLocalAndCloudAsync(bool allowAutoUpload)
@@ -289,7 +317,7 @@ namespace Isekai12Realms.CloudSave
             }
             if (!IsCloudAvailable || CurrentUser == null)
             {
-                if (showToast) toastService?.ShowToast("Firebase unavailable. Running local-only.");
+                if (showToast) toastService?.ShowToast("Cloud save is currently unavailable.");
                 SetStatus(CloudSaveStatus.LocalOnly);
                 return false;
             }
@@ -311,6 +339,26 @@ namespace Isekai12Realms.CloudSave
         {
             Status = status;
             StatusChanged?.Invoke();
+        }
+
+        private class LocalOnlyAuthService : IAuthService
+        {
+            public bool IsAvailable => false;
+            public bool IsSignedIn => false;
+            public AuthUserData CurrentUser => null;
+            public Task<AuthUserData> SignInAnonymousAsync() => Task.FromResult<AuthUserData>(null);
+            public Task<AuthUserData> SignInGoogleAsync() => Task.FromResult<AuthUserData>(null);
+            public Task SignOutAsync() => Task.CompletedTask;
+        }
+
+        private class LocalOnlyCloudSaveService : ICloudSaveService
+        {
+            public bool IsAvailable => false;
+            public CloudSaveStatus Status => CloudSaveStatus.LocalOnly;
+            public Task<CloudSaveMeta> GetCloudMetaAsync(string uid) => Task.FromResult<CloudSaveMeta>(null);
+            public Task<CloudSaveDocument> DownloadSaveAsync(string uid) => Task.FromResult<CloudSaveDocument>(null);
+            public Task UploadSaveAsync(string uid, PlayerSaveData save) => Task.CompletedTask;
+            public Task MergePurchaseRecordsAsync(string uid, List<PurchaseRecord> localRecords) => Task.CompletedTask;
         }
     }
 }

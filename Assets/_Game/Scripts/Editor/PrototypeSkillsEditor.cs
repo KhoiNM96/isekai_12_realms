@@ -17,8 +17,8 @@ namespace Isekai12Realms.Editor
         {
             if (!Directory.Exists(SkillsPath)) Directory.CreateDirectory(SkillsPath);
             Skill("skill_flame_spark_slash", "Spark Slash", "flame_squire", SkillSlotType.Skill1, SkillTargetType.Enemy, "skill_flame_spark_slash", 30, 1, Effect(SkillEffectType.Damage, 20, true));
-            Skill("skill_flame_shuffle_bell", "Shuffle Bell", "flame_squire", SkillSlotType.Skill2, SkillTargetType.Board, "skill_storm_tile_swap", 20, 3, Effect(SkillEffectType.ShuffleBoard));
-            Skill("skill_flame_realm_burst", "Realm Burst", "flame_squire", SkillSlotType.Ultimate, SkillTargetType.Enemy, "skill_flame_burst", 100, 0, Effect(SkillEffectType.Damage, 50, true), Area(3));
+            Skill("skill_flame_shuffle_bell", "Shuffle Bell", "flame_squire", SkillSlotType.Skill2, SkillTargetType.Board, "skill_flame_shuffle_bell", 20, 3, Effect(SkillEffectType.ShuffleBoard));
+            Skill("skill_flame_realm_burst", "Realm Burst", "flame_squire", SkillSlotType.Ultimate, SkillTargetType.Enemy, "skill_flame_realm_burst", 100, 0, Effect(SkillEffectType.Damage, 50, true), Area(3));
             Skill("skill_tide_aqua_heal", "Aqua Heal", "tide_acolyte", SkillSlotType.Skill1, SkillTargetType.Player, "skill_tide_aqua_heal", 25, 1, Effect(SkillEffectType.Heal, 28, true));
             Skill("skill_tide_bubble_guard", "Bubble Guard", "tide_acolyte", SkillSlotType.Skill2, SkillTargetType.Player, "skill_tide_bubble_guard", 30, 2, Effect(SkillEffectType.Shield, 35, true));
             Skill("skill_tide_moon_tide", "Moon Tide", "tide_acolyte", SkillSlotType.Ultimate, SkillTargetType.Player, "skill_tide_moon_tide", 100, 0, Effect(SkillEffectType.Heal, 70, true), Effect(SkillEffectType.Shield, 40, true), Effect(SkillEffectType.CleanseDebuff));

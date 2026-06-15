@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Isekai12Realms.Core;
+using Isekai12Realms.Services;
 using TMPro;
 using UnityEngine;
 
@@ -98,8 +100,16 @@ namespace Isekai12Realms.UI
                 navigationRoot.SetActive(screen == GameUIScreen.MainTown);
             }
 
-            CloseSettings();
-            CloseBattleResult();
+            if (ServiceLocator.TryResolve<IPopupService>(out IPopupService popupService))
+            {
+                popupService.CloseAll();
+            }
+            else
+            {
+                CloseSettings();
+                CloseBattleResult();
+            }
+
             CurrentScreen = screen;
             Debug.Log($"[UI] Screen transition: {previous} -> {screen}");
             ScreenChanged?.Invoke(previous, screen);
@@ -107,6 +117,13 @@ namespace Isekai12Realms.UI
 
         public void OpenSettings()
         {
+            if (ServiceLocator.TryResolve<IPopupService>(out IPopupService popupService))
+            {
+                popupService.ShowPopup("SettingsPopup");
+                Debug.Log("[UI] Settings popup opened");
+                return;
+            }
+
             if (settingsPopup != null)
             {
                 settingsPopup.SetActive(true);
@@ -116,6 +133,12 @@ namespace Isekai12Realms.UI
 
         public void CloseSettings()
         {
+            if (ServiceLocator.TryResolve<IPopupService>(out IPopupService popupService))
+            {
+                popupService.HidePopup("SettingsPopup");
+                return;
+            }
+
             if (settingsPopup != null)
             {
                 settingsPopup.SetActive(false);
@@ -139,7 +162,15 @@ namespace Isekai12Realms.UI
                 return;
             }
 
-            battleResultPopup.SetActive(true);
+            if (ServiceLocator.TryResolve<IPopupService>(out IPopupService popupService))
+            {
+                popupService.ShowPopup("BattleResultPopup");
+            }
+            else
+            {
+                battleResultPopup.SetActive(true);
+            }
+
             if (battleResultTitle != null)
             {
                 battleResultTitle.text = victory ? "Victory!" : "Try Again";
@@ -167,6 +198,12 @@ namespace Isekai12Realms.UI
 
         public void CloseBattleResult()
         {
+            if (ServiceLocator.TryResolve<IPopupService>(out IPopupService popupService))
+            {
+                popupService.HidePopup("BattleResultPopup");
+                return;
+            }
+
             if (battleResultPopup != null)
             {
                 battleResultPopup.SetActive(false);
@@ -177,7 +214,7 @@ namespace Isekai12Realms.UI
         {
             if (ToastService != null)
             {
-                ToastService.ShowToast("Placeholder only. This feature is not implemented yet.");
+                ToastService.ShowToast("This option is not available.");
             }
         }
     }

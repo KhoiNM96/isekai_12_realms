@@ -5,10 +5,10 @@
                  768,
                  384
              ],
-    "category":  "loading",
-    "usage":  "logo_game_main placeholder",
-    "style":  "bright chibi fantasy placeholder 2D",
+    "category":  "Loading",
+    "usage":  "main game logo",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
     "transparent":  true,
     "replaceable":  true,
-    "prompt":  "original procedural placeholder for logo_game_main, no copied art, no watermark"
+    "prompt":  "Original game logo text ISEKAI 12 REALMS, cute fantasy logo, readable, transparent, no watermark."
 }

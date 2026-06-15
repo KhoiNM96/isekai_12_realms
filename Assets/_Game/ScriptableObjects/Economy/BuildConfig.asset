@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 905ba84f132657241919ccc1fc99f013, type: 3}
+  m_Name: BuildConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Build.BuildConfig
+  appVersion: 0.1.0
+  bundleVersionCode: 1
+  environment: production
+  developmentBuild: 0
+  enableDebugPanel: 0
+  enableMockIAP: 0
+  enableVerboseLogs: 0
+  enableCloudSave: 1
+  enableRemoteContent: 0
+  enableAnalytics: 0
+  requireServerReceiptValidationForProduction: 0
+  targetFrameRate: 60
+  fallbackFrameRate: 30
+  allowDebugCheatsInBuild: 0
+  allowMockPurchasesInBuild: 0

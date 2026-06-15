@@ -6,6 +6,7 @@ using Isekai12Realms.Economy;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
 using Isekai12Realms.Quests;
+using Isekai12Realms.RemoteConfig;
 using Isekai12Realms.Services;
 using Isekai12Realms.Stages;
 using Isekai12Realms.UI;
@@ -21,13 +22,14 @@ namespace Isekai12Realms.Shop
         private EquipmentService equipmentService;
         private QuestService questService;
         private ToastService toastService;
+        private GameConfigService gameConfigService;
 
         public event Action Changed;
 
         private PlayerSaveData Save => saveService?.CurrentSave;
         private GameContentDatabase Database => contentService?.Database;
 
-        public void Initialize(ISaveService save, ContentDatabaseService content, PlayerProgressionService progression, EquipmentService equipment, QuestService quests, ToastService toast)
+        public void Initialize(ISaveService save, ContentDatabaseService content, PlayerProgressionService progression, EquipmentService equipment, QuestService quests, ToastService toast, GameConfigService config = null)
         {
             saveService = save;
             contentService = content;
@@ -35,6 +37,7 @@ namespace Isekai12Realms.Shop
             equipmentService = equipment;
             questService = quests;
             toastService = toast;
+            gameConfigService = config;
             EnsureSaveState();
             CheckDailyRefresh();
         }
@@ -212,7 +215,13 @@ namespace Isekai12Realms.Shop
             if (string.IsNullOrEmpty(Save.lastDailyShopRefreshDate)) Save.lastDailyShopRefreshDate = TodayKey();
         }
 
-        private static string TodayKey() => DateTime.Now.ToString("yyyy-MM-dd");
+        private string TodayKey()
+        {
+            DateTime now = DateTime.Now;
+            int refreshHour = gameConfigService != null ? gameConfigService.DailyShopRefreshHour : 4;
+            if (now.Hour < refreshHour) now = now.AddDays(-1);
+            return now.ToString("yyyy-MM-dd");
+        }
         private static long Now() => DateTimeOffset.UtcNow.ToUnixTimeSeconds();
     }
 }

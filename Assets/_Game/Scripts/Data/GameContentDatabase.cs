@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Isekai12Realms.Crafting;
+using Isekai12Realms.ContentPacks;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Enemies;
 using Isekai12Realms.Equipment;
@@ -27,6 +28,7 @@ namespace Isekai12Realms.Data
         public List<TutorialDefinition> tutorials = new List<TutorialDefinition>();
         public List<ShopDefinition> shops = new List<ShopDefinition>();
         public List<IAPProductDefinition> iapProducts = new List<IAPProductDefinition>();
+        public List<ContentPackDefinition> contentPacks = new List<ContentPackDefinition>();
 
         public RealmDefinition GetRealmById(string id) => realms != null ? realms.Find(r => r != null && r.id == id) : null;
         public StageDefinition GetStageById(string id) => stages != null ? stages.Find(s => s != null && s.id == id) : null;
@@ -52,6 +54,13 @@ namespace Isekai12Realms.Data
             return null;
         }
         public IAPProductDefinition GetIAPProductById(string productId) => iapProducts != null ? iapProducts.Find(p => p != null && p.productId == productId) : null;
+        public ContentPackDefinition GetContentPackById(string id) => contentPacks != null ? contentPacks.Find(p => p != null && p.id == id) : null;
+        public List<ContentPackDefinition> GetContentPacksByType(ContentPackType type) => contentPacks != null ? contentPacks.FindAll(p => p != null && p.packType == type) : new List<ContentPackDefinition>();
+
+        public ContentPackDefinition GetPackForRealm(string realmId)
+        {
+            return contentPacks != null ? contentPacks.Find(p => p != null && p.realmIds != null && p.realmIds.Contains(realmId)) : null;
+        }
 
         public List<SkillDefinition> GetDefaultSkillsForClass(string classId)
         {

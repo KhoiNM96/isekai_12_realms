@@ -1,0 +1,14 @@
+{
+    "id":  "enemy_tide_bubble",
+    "file":  "enemy_tide_bubble_512x512.png",
+    "size":  [
+                 512,
+                 512
+             ],
+    "category":  "Enemy",
+    "usage":  "enemy_tide_bubble battle sprite",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original cute non-threatening fantasy enemy enemy_tide_bubble, transparent background, no text, no gore."
+}

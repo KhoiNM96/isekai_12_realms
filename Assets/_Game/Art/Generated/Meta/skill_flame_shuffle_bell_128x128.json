@@ -1,0 +1,14 @@
+{
+    "id":  "skill_flame_shuffle_bell",
+    "file":  "skill_flame_shuffle_bell_128x128.png",
+    "size":  [
+                 128,
+                 128
+             ],
+    "category":  "Skill",
+    "usage":  "skill_flame_shuffle_bell skill icon",
+    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
+    "transparent":  true,
+    "replaceable":  true,
+    "prompt":  "Original readable fantasy skill icon skill_flame_shuffle_bell, transparent background, no text."
+}

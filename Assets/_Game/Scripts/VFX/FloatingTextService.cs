@@ -1,4 +1,6 @@
 using System.Collections;
+using Isekai12Realms.Core;
+using Isekai12Realms.Performance;
 using TMPro;
 using UnityEngine;
 
@@ -8,6 +10,8 @@ namespace Isekai12Realms.VFX
     {
         private RectTransform root;
         private float duration = 0.75f;
+        private int shownThisSecond;
+        private float secondWindowStart;
 
         public void Initialize(RectTransform layer, float textDuration)
         {
@@ -18,6 +22,16 @@ namespace Isekai12Realms.VFX
         public void Show(string text, Vector3 worldPosition, Color color, int size = 34)
         {
             if (root == null) return;
+            if (ServiceLocator.TryResolve<PerformanceService>(out PerformanceService performance) && performance.ReduceEffects)
+            {
+                if (Time.unscaledTime - secondWindowStart >= 1f)
+                {
+                    secondWindowStart = Time.unscaledTime;
+                    shownThisSecond = 0;
+                }
+                if (shownThisSecond >= 4) return;
+                shownThisSecond++;
+            }
             GameObject go = new GameObject("FloatingText", typeof(RectTransform));
             go.transform.SetParent(root, false);
             RectTransform rect = go.GetComponent<RectTransform>();
