@@ -164,6 +164,7 @@ namespace Isekai12Realms.Editor
                     if (drop.isEquipment && !equipmentIds.Contains(drop.equipmentId)) errors.Add($"Drop table {dropTable.id} references missing equipment {drop.equipmentId}");
                 }
             }
+            EconomyValidator.Validate(db, errors);
 
             if (errors.Count == 0) Debug.Log("[Content] Validation passed.");
             else Debug.LogError("[Content] Validation failed:\n" + string.Join("\n", errors));

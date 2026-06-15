@@ -2,13 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Isekai12Realms.Crafting;
 using Isekai12Realms.Data;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Enemies;
 using Isekai12Realms.Equipment;
+using Isekai12Realms.Quests;
 using Isekai12Realms.Realms;
+using Isekai12Realms.Shop;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
+using Isekai12Realms.Tutorial;
 using Isekai12Realms.UI;
 using Isekai12Realms.Battle;
 using UnityEditor;
@@ -25,10 +29,12 @@ namespace Isekai12Realms.Editor.ContentTools
         private const string DropPath = Root + "/DropTables";
         private const string SkillPath = Root + "/Skills";
         private const string EquipmentPath = Root + "/Equipment";
+        private const string ShopPath = Root + "/Shop";
+        private const string EconomyPath = Root + "/Economy";
         private const string DatabasePath = Root + "/GameContentDatabase.asset";
         private const string ExportPath = "Assets/_Game/Export/content_export.json";
 
-        private readonly string[] tabs = { "Realms", "Stages", "Enemies", "Drop Tables", "Skills", "Equipment", "Validate", "Export / Import" };
+        private readonly string[] tabs = { "Realms", "Stages", "Enemies", "Drop Tables", "Skills", "Equipment", "Shops", "IAP Products", "Validate", "Export / Import" };
         private int tabIndex;
         private Vector2 scroll;
         private GameContentDatabase database;
@@ -38,17 +44,23 @@ namespace Isekai12Realms.Editor.ContentTools
         private DropTableDefinition selectedDropTable;
         private SkillDefinition selectedSkill;
         private EquipmentDefinition selectedEquipment;
+        private ShopDefinition selectedShop;
+        private IAPProductDefinition selectedIapProduct;
         private string newRealmId = "realm_new";
         private string newStageId = "stage_new";
         private string newEnemyId = "enemy_new";
         private string newDropTableId = "drop_new";
         private string newSkillId = "skill_new";
         private string newEquipmentId = "equip_new";
+        private string newShopId = "shop_new";
+        private string newIapProductId = "gems_new";
         private string skillClassFilter = string.Empty;
         private EquipmentSlot equipmentSlotFilter;
         private EquipmentRarity equipmentRarityFilter;
+        private ShopType shopTypeFilter;
         private bool useEquipmentSlotFilter;
         private bool useEquipmentRarityFilter;
+        private bool useShopTypeFilter;
         private string stageRealmFilter = string.Empty;
         private string validationReport = "Run validation to see report.";
 
@@ -166,8 +178,10 @@ namespace Isekai12Realms.Editor.ContentTools
                 case 3: DrawDropTablesTab(); break;
                 case 4: DrawSkillsTab(); break;
                 case 5: DrawEquipmentTab(); break;
-                case 6: DrawValidateTab(); break;
-                case 7: DrawExportImportTab(); break;
+                case 6: DrawShopsTab(); break;
+                case 7: DrawIapProductsTab(); break;
+                case 8: DrawValidateTab(); break;
+                case 9: DrawExportImportTab(); break;
             }
             EditorGUILayout.EndScrollView();
         }
@@ -278,6 +292,34 @@ namespace Isekai12Realms.Editor.ContentTools
             DrawEquipmentFields(selectedEquipment);
             DrawValidationBox(ValidateEquipment(selectedEquipment));
             DrawSavePing(selectedEquipment);
+        }
+
+        private void DrawShopsTab()
+        {
+            EditorGUILayout.LabelField("Shop Editor", EditorStyles.boldLabel);
+            useShopTypeFilter = EditorGUILayout.Toggle("Filter by ShopType", useShopTypeFilter);
+            if (useShopTypeFilter) shopTypeFilter = (ShopType)EditorGUILayout.EnumPopup("ShopType", shopTypeFilter);
+            DrawCreateRow("New Shop ID", ref newShopId, CreateShopAsset);
+            List<ShopDefinition> source = database.shops ?? new List<ShopDefinition>();
+            List<ShopDefinition> shops = useShopTypeFilter ? source.Where(s => s != null && s.shopType == shopTypeFilter).ToList() : source;
+            DrawAssetList(shops, selectedShop, asset => selectedShop = asset);
+            if (selectedShop == null) return;
+            if (GUILayout.Button("Duplicate Selected Shop")) DuplicateAsset(selectedShop, ShopPath, copy => { if (database.shops == null) database.shops = new List<ShopDefinition>(); copy.id = UniqueId(selectedShop.id + "_copy", database.shops.Select(s => s != null ? s.id : string.Empty)); copy.displayName = selectedShop.displayName + " Copy"; selectedShop = copy; AddMissing(database.shops, copy); });
+            DrawScriptableInspector(selectedShop);
+            DrawValidationBox(ValidateShop(selectedShop));
+            DrawSavePing(selectedShop);
+        }
+
+        private void DrawIapProductsTab()
+        {
+            EditorGUILayout.LabelField("IAP Product Editor", EditorStyles.boldLabel);
+            DrawCreateRow("New Product ID", ref newIapProductId, CreateIapProductAsset);
+            DrawAssetList(database.iapProducts ?? new List<IAPProductDefinition>(), selectedIapProduct, asset => selectedIapProduct = asset);
+            if (selectedIapProduct == null) return;
+            if (GUILayout.Button("Duplicate Selected Product")) DuplicateAsset(selectedIapProduct, EconomyPath, copy => { if (database.iapProducts == null) database.iapProducts = new List<IAPProductDefinition>(); copy.productId = UniqueId(selectedIapProduct.productId + "_copy", database.iapProducts.Select(p => p != null ? p.productId : string.Empty)); copy.displayName = selectedIapProduct.displayName + " Copy"; selectedIapProduct = copy; AddMissing(database.iapProducts, copy); });
+            DrawScriptableInspector(selectedIapProduct);
+            DrawValidationBox(ValidateIapProduct(selectedIapProduct));
+            DrawSavePing(selectedIapProduct);
         }
 
         private void DrawValidateTab()
@@ -487,7 +529,7 @@ namespace Isekai12Realms.Editor.ContentTools
             List<string> warnings = new List<string>();
             if (database == null) errors.Add("GameContentDatabase missing.");
             ValidateDatabase(errors, warnings);
-            string report = $"Errors\n{(errors.Count == 0 ? "None" : string.Join("\n", errors))}\n\nWarnings\n{(warnings.Count == 0 ? "None" : string.Join("\n", warnings))}\n\nSummary\nRealms: {database?.realms.Count ?? 0}\nStages: {database?.stages.Count ?? 0}\nEnemies: {database?.enemies.Count ?? 0}\nDrop Tables: {database?.dropTables.Count ?? 0}";
+            string report = $"Errors\n{(errors.Count == 0 ? "None" : string.Join("\n", errors))}\n\nWarnings\n{(warnings.Count == 0 ? "None" : string.Join("\n", warnings))}\n\nSummary\nRealms: {database?.realms.Count ?? 0}\nStages: {database?.stages.Count ?? 0}\nEnemies: {database?.enemies.Count ?? 0}\nDrop Tables: {database?.dropTables.Count ?? 0}\nSkills: {database?.skills.Count ?? 0}\nEquipment: {database?.equipmentDefinitions.Count ?? 0}";
             if (log)
             {
                 if (errors.Count > 0) Debug.LogError("[Content Validation]\n" + report);
@@ -511,6 +553,7 @@ namespace Isekai12Realms.Editor.ContentTools
             foreach (SkillDefinition s in (database.skills ?? new List<SkillDefinition>()).Where(s => s != null)) { AddValidation(ValidateSkill(s), errors); if (!skillIds.Add(s.id)) errors.Add("Duplicate skill id: " + s.id); }
             HashSet<string> equipmentIds = new HashSet<string>();
             foreach (EquipmentDefinition e in (database.equipmentDefinitions ?? new List<EquipmentDefinition>()).Where(e => e != null)) { AddValidation(ValidateEquipment(e), errors); if (!equipmentIds.Add(e.id)) errors.Add("Duplicate equipment id: " + e.id); }
+            Isekai12Realms.Editor.EconomyValidator.Validate(database, errors);
             foreach (string defaultSkill in new[] { "skill_flame_spark_slash", "skill_flame_shuffle_bell", "skill_flame_realm_burst", "skill_tide_aqua_heal", "skill_tide_bubble_guard", "skill_tide_moon_tide", "skill_storm_quick_jab", "skill_storm_static_step", "skill_storm_thunder_chain" }) if (!skillIds.Contains(defaultSkill)) errors.Add("Default skill missing: " + defaultSkill);
             foreach (StageDefinition s in (database.stages ?? new List<StageDefinition>()).Where(s => s != null && s.requiredCompletedStageIds != null)) foreach (string req in s.requiredCompletedStageIds) if (!stageIds.Contains(req)) errors.Add($"{s.id} requires missing stage {req}");
             foreach (DropTableDefinition d in (database.dropTables ?? new List<DropTableDefinition>()).Where(d => d != null)) foreach (DropEntry drop in d.drops ?? new List<DropEntry>()) if (drop.isEquipment && !equipmentIds.Contains(drop.equipmentId)) errors.Add($"Drop table {d.id} references missing equipment {drop.equipmentId}");
@@ -524,6 +567,8 @@ namespace Isekai12Realms.Editor.ContentTools
             database.enemies = DistinctById(database.enemies.Where(x => x != null).ToList(), x => x.id);
             database.dropTables = DistinctById(database.dropTables.Where(x => x != null).ToList(), x => x.id);
             database.skills = DistinctById((database.skills ?? new List<SkillDefinition>()).Where(x => x != null).ToList(), x => x.id);
+            database.shops = DistinctById((database.shops ?? new List<ShopDefinition>()).Where(x => x != null).ToList(), x => x.id);
+            database.iapProducts = DistinctById((database.iapProducts ?? new List<IAPProductDefinition>()).Where(x => x != null).ToList(), x => x.productId);
             SaveAsset(database);
         }
 
@@ -660,9 +705,46 @@ namespace Isekai12Realms.Editor.ContentTools
             SaveAsset(database);
         }
 
+        private void CreateShopAsset()
+        {
+            if (!CanCreate(newShopId)) return;
+            selectedShop = FindShopById(newShopId);
+            if (selectedShop == null)
+            {
+                selectedShop = CreateAsset<ShopDefinition>(ShopPath, newShopId);
+                selectedShop.id = newShopId;
+                selectedShop.displayName = newShopId;
+                selectedShop.shopType = shopTypeFilter;
+                selectedShop.items = new List<ShopItemDefinition>();
+            }
+            if (database.shops == null) database.shops = new List<ShopDefinition>();
+            AddMissing(database.shops, selectedShop);
+            SaveAsset(selectedShop);
+            SaveAsset(database);
+        }
+
+        private void CreateIapProductAsset()
+        {
+            if (!CanCreate(newIapProductId)) return;
+            selectedIapProduct = FindIapProductById(newIapProductId);
+            if (selectedIapProduct == null)
+            {
+                selectedIapProduct = CreateAsset<IAPProductDefinition>(EconomyPath, newIapProductId);
+                selectedIapProduct.productId = newIapProductId;
+                selectedIapProduct.displayName = newIapProductId;
+                selectedIapProduct.platformProductId = newIapProductId;
+                selectedIapProduct.priceTextPlaceholder = "$0.99";
+                selectedIapProduct.enabled = true;
+            }
+            if (database.iapProducts == null) database.iapProducts = new List<IAPProductDefinition>();
+            AddMissing(database.iapProducts, selectedIapProduct);
+            SaveAsset(selectedIapProduct);
+            SaveAsset(database);
+        }
+
         private void AddStageToRealm(StageDefinition stage) { RealmDefinition realm = database.GetRealmById(stage.realmId); if (realm == null) return; if (realm.stages == null) realm.stages = new List<StageDefinition>(); if (!realm.stages.Contains(stage)) { realm.stages.Add(stage); SaveAsset(realm); } }
-        private void RefreshDatabase() { database = AssetDatabase.LoadAssetAtPath<GameContentDatabase>(DatabasePath) ?? RebuildDatabase(); if (database.skills == null) database.skills = new List<SkillDefinition>(); if (database.equipmentDefinitions == null) database.equipmentDefinitions = new List<EquipmentDefinition>(); }
-        private static void EnsureFolders() { foreach (string p in new[] { Root, RealmPath, StagePath, EnemyPath, DropPath, SkillPath, EquipmentPath }) if (!Directory.Exists(p)) Directory.CreateDirectory(p); }
+        private void RefreshDatabase() { database = AssetDatabase.LoadAssetAtPath<GameContentDatabase>(DatabasePath) ?? RebuildDatabase(); if (database.skills == null) database.skills = new List<SkillDefinition>(); if (database.equipmentDefinitions == null) database.equipmentDefinitions = new List<EquipmentDefinition>(); if (database.shops == null) database.shops = new List<ShopDefinition>(); if (database.iapProducts == null) database.iapProducts = new List<IAPProductDefinition>(); }
+        private static void EnsureFolders() { foreach (string p in new[] { Root, RealmPath, StagePath, EnemyPath, DropPath, SkillPath, EquipmentPath, ShopPath, EconomyPath }) if (!Directory.Exists(p)) Directory.CreateDirectory(p); }
 
         private static GameContentDatabase RebuildDatabase()
         {
@@ -674,6 +756,11 @@ namespace Isekai12Realms.Editor.ContentTools
             db.dropTables = FindAssets<DropTableDefinition>().ToList();
             db.skills = FindAssets<SkillDefinition>().ToList();
             db.equipmentDefinitions = FindAssets<EquipmentDefinition>().ToList();
+            db.craftingRecipes = FindAssets<CraftingRecipeDefinition>().ToList();
+            db.quests = FindAssets<QuestDefinition>().ToList();
+            db.tutorials = FindAssets<TutorialDefinition>().ToList();
+            db.shops = FindAssets<ShopDefinition>().ToList();
+            db.iapProducts = FindAssets<IAPProductDefinition>().ToList();
             EditorUtility.SetDirty(db); AssetDatabase.SaveAssets(); AssetDatabase.Refresh(); return db;
         }
 
@@ -684,6 +771,8 @@ namespace Isekai12Realms.Editor.ContentTools
         private static DropTableDefinition FindDropTableById(string id) => FindAssets<DropTableDefinition>().FirstOrDefault(d => d.id == id);
         private static SkillDefinition FindSkillById(string id) => FindAssets<SkillDefinition>().FirstOrDefault(s => s.id == id);
         private static EquipmentDefinition FindEquipmentById(string id) => FindAssets<EquipmentDefinition>().FirstOrDefault(e => e.id == id);
+        private static ShopDefinition FindShopById(string id) => FindAssets<ShopDefinition>().FirstOrDefault(s => s.id == id);
+        private static IAPProductDefinition FindIapProductById(string id) => FindAssets<IAPProductDefinition>().FirstOrDefault(p => p.productId == id);
         private static T LoadOrCreate<T>(string path) where T : ScriptableObject { T asset = AssetDatabase.LoadAssetAtPath<T>(path); if (asset != null) return asset; EnsureFolders(); asset = ScriptableObject.CreateInstance<T>(); AssetDatabase.CreateAsset(asset, path); return asset; }
         private static T CreateAsset<T>(string folder, string id) where T : ScriptableObject { EnsureFolders(); string path = $"{folder}/{id}.asset"; T asset = AssetDatabase.LoadAssetAtPath<T>(path); if (asset != null) return asset; asset = ScriptableObject.CreateInstance<T>(); AssetDatabase.CreateAsset(asset, path); return asset; }
         private static void SaveAsset(UnityEngine.Object asset) { if (asset == null) return; EditorUtility.SetDirty(asset); AssetDatabase.SaveAssets(); }
@@ -698,6 +787,8 @@ namespace Isekai12Realms.Editor.ContentTools
         private List<string> ValidateDropTable(DropTableDefinition d) { List<string> e = new List<string>(); if (!ValidId(d.id)) e.Add("Invalid drop table id: " + d.id); foreach (DropEntry drop in d.drops ?? new List<DropEntry>()) { if (drop.chance < 0 || drop.chance > 1) e.Add("Invalid chance in " + d.id); if (drop.minAmount < 1) e.Add("minAmount < 1 in " + d.id); if (drop.maxAmount < drop.minAmount) e.Add("maxAmount < minAmount in " + d.id); if (drop.isEquipment && string.IsNullOrEmpty(drop.equipmentId)) e.Add("Equipment drop missing equipmentId in " + d.id); if (!drop.isEquipment && string.IsNullOrEmpty(drop.itemId)) e.Add("Item drop missing itemId in " + d.id); } if (database.dropTables.Count(x => x != null && x.id == d.id) > 1) e.Add("Duplicate drop table id: " + d.id); return e; }
         private List<string> ValidateSkill(SkillDefinition s) { List<string> e = new List<string>(); if (!ValidId(s.id)) e.Add("Invalid skill id: " + s.id); if (string.IsNullOrEmpty(s.displayName)) e.Add("Skill displayName missing: " + s.id); if (string.IsNullOrEmpty(s.classId)) e.Add("Skill classId missing: " + s.id); if (s.maxLevel < 1) e.Add("Skill maxLevel < 1: " + s.id); if (s.activationType == SkillActivationType.Active && s.baseManaCost < 0) e.Add("Skill mana cost < 0: " + s.id); foreach (SkillLevelData l in s.levels ?? new List<SkillLevelData>()) if (l.level < 1 || l.level > s.maxLevel) e.Add("Skill level out of range: " + s.id); foreach (SkillEffectData effect in s.effects ?? new List<SkillEffectData>()) if (!Enum.IsDefined(typeof(SkillEffectType), effect.effectType)) e.Add("Skill effectType invalid: " + s.id); if ((database.skills ?? new List<SkillDefinition>()).Count(x => x != null && x.id == s.id) > 1) e.Add("Duplicate skill id: " + s.id); return e; }
         private List<string> ValidateEquipment(EquipmentDefinition eDef) { List<string> e = new List<string>(); if (!ValidId(eDef.id)) e.Add("Invalid equipment id: " + eDef.id); if (string.IsNullOrEmpty(eDef.displayName)) e.Add("Equipment displayName missing: " + eDef.id); if (eDef.maxLevel < 1) e.Add("Equipment maxLevel < 1: " + eDef.id); if (!Enum.IsDefined(typeof(EquipmentSlot), eDef.slot)) e.Add("Equipment slot invalid: " + eDef.id); if (!Enum.IsDefined(typeof(EquipmentRarity), eDef.rarity)) e.Add("Equipment rarity invalid: " + eDef.id); foreach (EquipmentUpgradeCostData c in eDef.upgradeCosts ?? new List<EquipmentUpgradeCostData>()) if (c.targetLevel < 2 || c.targetLevel > eDef.maxLevel) e.Add("Equipment upgrade targetLevel out of range: " + eDef.id); if ((database.equipmentDefinitions ?? new List<EquipmentDefinition>()).Count(x => x != null && x.id == eDef.id) > 1) e.Add("Duplicate equipment id: " + eDef.id); return e; }
+        private List<string> ValidateShop(ShopDefinition shop) { List<string> e = new List<string>(); GameContentDatabase temp = ScriptableObject.CreateInstance<GameContentDatabase>(); temp.shops = new List<ShopDefinition> { shop }; temp.equipmentDefinitions = database.equipmentDefinitions; temp.iapProducts = database.iapProducts; Isekai12Realms.Editor.EconomyValidator.Validate(temp, e); DestroyImmediate(temp); return e; }
+        private List<string> ValidateIapProduct(IAPProductDefinition product) { List<string> e = new List<string>(); GameContentDatabase temp = ScriptableObject.CreateInstance<GameContentDatabase>(); temp.iapProducts = new List<IAPProductDefinition> { product }; Isekai12Realms.Editor.EconomyValidator.Validate(temp, e); DestroyImmediate(temp); return e; }
         private static List<T> DistinctById<T>(List<T> list, Func<T, string> id) { HashSet<string> seen = new HashSet<string>(); return list.Where(x => seen.Add(id(x))).ToList(); }
         private void TestRoll(DropTableDefinition table, int count) { Dictionary<string, int> rewards = new Dictionary<string, int>(); for (int i = 0; i < count; i++) foreach (DropEntry d in table.drops ?? new List<DropEntry>()) if (UnityEngine.Random.value <= d.chance) { string key = d.isEquipment ? d.equipmentId : d.itemId; int amount = d.isEquipment ? 1 : UnityEngine.Random.Range(d.minAmount, d.maxAmount + 1); rewards[key] = rewards.ContainsKey(key) ? rewards[key] + amount : amount; } Debug.Log($"[DropTest] {table.id} x{count}\n" + string.Join("\n", rewards.Select(kv => kv.Key + ": " + kv.Value))); }
         private void DrawCreateRow(string label, ref string id, Action create) { EditorGUILayout.BeginHorizontal(); id = EditorGUILayout.TextField(label, id); if (GUILayout.Button("Create", GUILayout.Width(90))) create(); EditorGUILayout.EndHorizontal(); }
@@ -706,6 +797,7 @@ namespace Isekai12Realms.Editor.ContentTools
         private void DrawObjectList<T>(List<T> list) where T : UnityEngine.Object { for (int i = list.Count - 1; i >= 0; i--) { EditorGUILayout.BeginHorizontal(); list[i] = (T)EditorGUILayout.ObjectField(list[i], typeof(T), false); if (GUILayout.Button("Remove", GUILayout.Width(80))) list.RemoveAt(i); EditorGUILayout.EndHorizontal(); } }
         private void DrawStringList(string label, List<string> list) { if (list == null) return; EditorGUILayout.LabelField(label, EditorStyles.boldLabel); for (int i = list.Count - 1; i >= 0; i--) { EditorGUILayout.BeginHorizontal(); list[i] = EditorGUILayout.TextField(list[i]); if (GUILayout.Button("Remove", GUILayout.Width(80))) list.RemoveAt(i); EditorGUILayout.EndHorizontal(); } if (GUILayout.Button("Add Requirement")) list.Add(string.Empty); }
         private void DrawAssetList<T>(List<T> assets, T selected, Action<T> select) where T : UnityEngine.Object { foreach (T asset in assets.Where(a => a != null)) { GUI.enabled = asset != selected; if (GUILayout.Button(asset.name)) select(asset); GUI.enabled = true; } }
+        private void DrawScriptableInspector(UnityEngine.Object asset) { if (asset == null) return; UnityEditor.Editor editor = UnityEditor.Editor.CreateEditor(asset); if (editor != null) { editor.OnInspectorGUI(); DestroyImmediate(editor); } }
         private void DuplicateAsset<T>(T source, string folder, Action<T> onCreated) where T : ScriptableObject { string path = AssetDatabase.GetAssetPath(source); string newPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{source.name}_copy.asset"); if (!AssetDatabase.CopyAsset(path, newPath)) { Debug.LogError("[Content] Could not duplicate asset: " + path); return; } T copy = AssetDatabase.LoadAssetAtPath<T>(newPath); if (copy == null) { Debug.LogError("[Content] Could not load duplicated asset: " + newPath); return; } onCreated(copy); SaveAsset(copy); SaveAsset(database); }
 
         [Serializable] public class ContentExportDto { public List<RealmDto> realms; public List<StageDto> stages; public List<EnemyDto> enemies; public List<DropTableDto> dropTables; }

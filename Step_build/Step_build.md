@@ -3644,7 +3644,7 @@ If VFX asset is missing, use fallback visual effects.
 * No console errors
 * No missing script errors
 
-### Prompt 12 <-->
+### Prompt 12
 
 Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
 
@@ -5533,4 +5533,1063 @@ Do not break:
 * No missing script errors
 
 ### Prompt 15
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish
+* Local save and progression
+* Inventory/equipment system
+* Skill system
+* Quest/tutorial system
+* Shop offline
+* IAP placeholder
+* Stage/Realm/Enemy/DropTable data
+* Content Editor tools
+* AssetManifest and placeholder PNG pipeline
+
+Next task: implement Firebase Auth and Cloud Save with offline-first behavior.
+
+Do not implement real Unity IAP yet.
+Do not implement Addressables yet.
+Do not rewrite gameplay systems.
+Do not break local save.
+Do not make the game require internet to play.
+
+Goal:
+Add Firebase integration so the player can:
+
+* play offline using local save
+* sign in as Guest using Firebase Anonymous Auth
+* sign in with Google later
+* upload local save to cloud
+* download cloud save
+* resolve cloud/local conflicts
+* backup purchase records
+* never lose progress if Firebase is unavailable
+
+Important:
+Game must work without Firebase configured. If Firebase packages/config files are missing, use MockCloudSaveService and keep the game playable.
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/Firebase
+   Assets/_Game/Scripts/CloudSave
+   Assets/_Game/Scripts/Auth
+   Assets/_Game/Scripts/Account
+
+2. Create AuthProviderType enum:
+
+* None
+* LocalOnly
+* FirebaseAnonymous
+* Google
+
+3. Create CloudSaveStatus enum:
+
+* Unknown
+* LocalOnly
+* SignedOut
+* SignedIn
+* Syncing
+* Synced
+* Conflict
+* Error
+
+4. Create AuthUserData.cs.
+
+Fields:
+
+* string uid
+* string displayName
+* string email
+* bool isAnonymous
+* AuthProviderType providerType
+
+5. Update PlayerSaveData.
+
+Add fields if missing:
+
+* string firebaseUid
+* string authProvider
+* string cloudSaveId
+* long lastCloudUploadAt
+* long lastCloudDownloadAt
+* string lastSyncedDeviceId
+* bool cloudSyncEnabled
+* string deviceId
+
+Migration:
+
+* If missing, initialize safely
+* cloudSyncEnabled default true
+* deviceId generated once and saved locally
+* Do not reset player progression
+
+6. Create CloudSaveMeta.cs.
+
+Fields:
+
+* string uid
+* string playerName
+* int level
+* long exp
+* int gold
+* int soulGem
+* string currentRealmId
+* string currentStageId
+* long saveVersion
+* long updatedAt
+* long totalPlaySeconds
+* string deviceId
+* string appVersion
+
+7. Create CloudSaveDocument.cs.
+
+Fields:
+
+* CloudSaveMeta meta
+* string saveJson
+* string checksum
+* List<PurchaseRecord> purchaseRecords
+* long uploadedAt
+
+8. Create interfaces.
+
+IAuthService:
+
+* bool IsAvailable { get; }
+* bool IsSignedIn { get; }
+* AuthUserData CurrentUser { get; }
+* Task<AuthUserData> SignInAnonymousAsync()
+* Task<AuthUserData> SignInGoogleAsync()
+* Task SignOutAsync()
+
+ICloudSaveService:
+
+* bool IsAvailable { get; }
+* CloudSaveStatus Status { get; }
+* Task<CloudSaveMeta> GetCloudMetaAsync(string uid)
+* Task<CloudSaveDocument> DownloadSaveAsync(string uid)
+* Task UploadSaveAsync(string uid, PlayerSaveData save)
+* Task MergePurchaseRecordsAsync(string uid, List<PurchaseRecord> localRecords)
+
+9. Create MockAuthService.cs.
+
+Behavior:
+
+* Always available
+* Creates local-only mock user:
+  uid = localGuestId or deviceId
+  providerType = LocalOnly
+* Does not use internet
+* Used when Firebase package/config is missing
+
+10. Create MockCloudSaveService.cs.
+
+Behavior:
+
+* IsAvailable false or local mock only
+* GetCloudMetaAsync returns null
+* Upload/Download do nothing safely
+* Logs:
+  "[Cloud] Firebase unavailable. Running local-only."
+* Never crashes
+
+11. Create FirebaseAuthService.cs.
+
+Use Firebase Auth if available.
+
+Responsibilities:
+
+* Initialize Firebase dependencies safely
+* SignInAnonymousAsync
+* SignInGoogleAsync placeholder if Google Sign-In package is not configured
+* Return AuthUserData
+* Handle Firebase unavailable errors gracefully
+
+Important:
+If Google Sign-In is not configured yet:
+
+* Do not crash
+* Show toast:
+  "Google Sign-In is not configured yet."
+* Keep Anonymous Auth working
+
+12. Create FirestoreCloudSaveService.cs.
+
+Use Cloud Firestore if available.
+
+Firestore paths:
+
+* /users/{uid}/profile/main
+* /users/{uid}/saves/default
+* /users/{uid}/purchases/{transactionId}
+
+UploadSaveAsync:
+
+* Serialize PlayerSaveData to JSON
+* Create CloudSaveMeta
+* Upload saveJson and meta
+* Upload purchase records separately by transactionId
+* Update lastCloudUploadAt in local save
+* Save local after upload metadata update
+
+DownloadSaveAsync:
+
+* Download saveJson and meta
+* Deserialize safely
+* Return CloudSaveDocument
+* Do not overwrite local automatically
+
+MergePurchaseRecordsAsync:
+
+* For each PurchaseRecord:
+
+  * write to /users/{uid}/purchases/{transactionId}
+  * do not duplicate transactionId
+* Never grant currency in cloud merge
+* Local grant already happened through local save/IAP placeholder
+
+13. Create CloudSaveCoordinator.cs.
+
+Responsibilities:
+
+* Select correct AuthService and CloudSaveService implementation
+* Initialize auth/cloud on game start
+* Auto sign in anonymous if internet/Firebase available and no user signed in
+* Keep game local-only if Firebase fails
+* Compare local and cloud save
+* Resolve conflict based on player choice
+* Manual Sync Now
+* Upload Local
+* Download Cloud
+* Merge purchase records
+
+Methods:
+
+* InitializeAsync()
+* SignInGuestAsync()
+* SignInGoogleAsync()
+* SyncNowAsync()
+* UploadLocalSaveAsync()
+* DownloadCloudSaveAsync()
+* ResolveConflictUseLocalAsync()
+* ResolveConflictUseCloudAsync()
+* GetStatus()
+
+14. Conflict detection.
+
+When cloud meta exists:
+Compare:
+
+* saveVersion
+* updatedAt
+* deviceId
+* level
+* currentStageId
+* totalPlaySeconds if available
+
+Conflict rules:
+
+* If no cloud save: upload local automatically after sign-in
+* If local saveVersion > cloud saveVersion: suggest Use Local
+* If cloud saveVersion > local saveVersion: show conflict popup
+* If same saveVersion but different deviceId and updatedAt differs: show conflict popup
+* Never overwrite silently if both saves have meaningful progress
+
+15. Create CloudConflictPopup.
+
+Under PopupLayer.
+
+UI:
+Title:
+
+* "Cloud Save Found"
+
+Left card: Local Save
+
+* player name
+* level
+* gold
+* gems
+* current realm/stage
+* updated time
+* device id short
+
+Right card: Cloud Save
+
+* same fields
+
+Buttons:
+
+* Use Local
+* Use Cloud
+* Cancel
+
+Behavior:
+
+* Use Local uploads local save to cloud
+* Use Cloud downloads cloud save and replaces local save after backup
+* Cancel keeps local save and disables auto sync for this session
+
+16. Update Settings popup.
+
+Add Account section:
+
+* Current status:
+
+  * Local Only
+  * Guest Account
+  * Google Account
+  * Cloud Synced
+  * Sync Error
+* UID short display if signed in
+* Button: Sign in as Guest
+* Button: Sign in with Google
+* Button: Sync Now
+* Button: Upload Local Save
+* Button: Download Cloud Save
+* Toggle: Cloud Sync Enabled
+
+Rules:
+
+* Buttons must work even if Firebase unavailable by showing safe toast
+* Sync Now disabled or toast if local-only
+* Do not hide gameplay behind login
+
+17. Update Title Screen.
+
+Add small account status text:
+
+* "Local Save"
+* "Guest Cloud Save"
+* "Google Cloud Save"
+
+Do not force login before Start Game.
+
+18. Auto sync behavior.
+
+On game start:
+
+* Load local save first
+* Initialize CloudSaveCoordinator in background
+* If Firebase available:
+
+  * sign in anonymous if no Firebase user
+  * compare cloud/local
+  * if safe, upload local if no cloud
+  * if conflict, show CloudConflictPopup
+* If Firebase unavailable:
+
+  * continue local only
+
+After important local saves:
+
+* Do not upload every save immediately
+* Queue cloud sync
+* Debounce upload by 10 seconds
+* Upload on:
+
+  * app pause
+  * manual Sync Now
+  * major milestones:
+
+    * battle victory
+    * IAP grant
+    * quest claim
+    * equipment upgrade
+    * skill upgrade
+
+19. Save backup before cloud download.
+
+Before applying cloud save:
+
+* Save current local to backup path:
+  save_v1_before_cloud_download.json
+* Then replace local save
+* Reload PlayerProgressionService
+* Refresh UI
+
+If downloaded save is invalid:
+
+* Do not replace local
+* Show toast:
+  "Cloud save is invalid. Local save kept."
+
+20. Purchase records safety.
+
+PurchaseRecord merge rules:
+
+* transactionId is unique
+* Never grant same transaction twice
+* Cloud purchase records are backup only for now
+* When using cloud save, merge purchaseRecords by transactionId
+* If local has transaction not in cloud, upload it
+* If cloud has transaction not in local, add record but do not double grant currency unless there is a safe grant audit system
+* For placeholder IAP, keep local as source of truth
+
+21. Add checksum helper.
+
+Create SaveChecksumUtility.cs:
+
+* string ComputeChecksum(string json)
+* bool VerifyChecksum(string json, string checksum)
+
+Use SHA256 if available.
+Do not block old saves without checksum.
+For new cloud save, include checksum.
+
+22. Firebase availability detection.
+
+The project must compile even if Firebase SDK is not installed.
+
+Use one of these safe approaches:
+
+* assembly definition with optional Firebase references
+  or
+* wrapper classes with preprocessor symbol USE_FIREBASE
+  or
+* keep Firebase implementation files behind #if USE_FIREBASE
+
+Default:
+
+* If USE_FIREBASE is not defined, compile MockAuthService and MockCloudSaveService only.
+* No compiler errors.
+
+Add documentation comment:
+To enable real Firebase:
+
+* import Firebase Unity SDK Auth and Firestore
+* add google-services.json
+* define USE_FIREBASE in Player Settings Scripting Define Symbols
+* configure Firebase project
+
+23. Create Firebase setup guide file.
+
+Create:
+docs/firebase_setup.md
+
+Include:
+
+* Firebase modules needed:
+
+  * Authentication
+  * Firestore
+* Enable Anonymous Auth
+* Enable Google Sign-In later
+* Add Android app package name
+* Download google-services.json
+* Put google-services.json in Assets/
+* Add USE_FIREBASE scripting define
+* Firestore paths
+* Security rules draft
+
+Security rules draft:
+service cloud.firestore {
+match /databases/{database}/documents {
+function signedIn() {
+return request.auth != null;
+}
+
+```
+function isOwner(uid) {
+  return signedIn() && request.auth.uid == uid;
+}
+
+match /users/{uid} {
+  allow read, write: if isOwner(uid);
+
+  match /{document=**} {
+    allow read, write: if isOwner(uid);
+  }
+}
+```
+
+}
+}
+
+24. Create editor helper.
+
+Menu:
+Tools/Isekai 12 Realms/Firebase/Create Setup Checklist
+
+It should create or refresh docs/firebase_setup.md and log checklist.
+
+Menu:
+Tools/Isekai 12 Realms/Cloud Save/Print Local Save Info
+
+It should print:
+
+* save path
+* backup path
+* player name
+* level
+* saveVersion
+* updatedAt
+* firebaseUid
+* cloudSyncEnabled
+
+25. Add debug buttons in Settings dev panel.
+
+DEBUG:
+
+* Force Cloud Conflict Test
+* Clear Firebase UID from Local Save
+* Print Local Save Info
+* Export Local Save JSON to Assets/_Game/Export/local_save_debug.json
+
+These must be clearly labelled DEBUG.
+
+26. Preserve existing systems.
+
+Do not break:
+
+* local save/load
+* battle
+* rewards
+* stage unlock
+* inventory/equipment
+* skills
+* quests/tutorials
+* shop
+* IAP placeholder
+* content editor
+* asset manifest
+
+27. Acceptance criteria without Firebase SDK:
+
+* Project compiles without Firebase SDK installed
+* Open GameScene and press Play
+* Start Game
+* Game works local-only
+* Settings shows Local Only or Firebase unavailable
+* Sync Now shows safe toast, no crash
+* Local save still works
+* Battle reward still saves
+* No console errors
+* No missing script errors
+
+28. Acceptance criteria with Firebase SDK later:
+
+* Add Firebase SDK and google-services.json
+* Define USE_FIREBASE
+* Anonymous sign-in works
+* UID is saved to PlayerSaveData.firebaseUid
+* Upload Local Save creates Firestore document:
+  /users/{uid}/saves/default
+* Sync Now uploads save
+* Download Cloud Save works
+* Conflict popup appears when local/cloud differ
+* Use Local uploads local
+* Use Cloud downloads cloud and refreshes UI
+* Purchase records merge by transactionId
+* Game remains playable if internet is disconnected
+
+### Prompt 16 <-->
+
+Read docs/spec.md, docs/ai_rules.md, docs/asset_manifest.md, docs/firebase_setup.md if it exists, and inspect the current Unity project.
+
+The project already has:
+
+* UI shell
+* Match-3 battle prototype
+* Battle polish
+* Local save and progression
+* Inventory/equipment system
+* Skill system
+* Quest/tutorial system
+* Offline shop
+* IAP placeholder shop
+* Firebase Auth / Cloud Save abstraction with mock fallback
+* PurchaseRecord data structure
+* AssetManifest and placeholder PNG pipeline
+* Content Editor tools
+
+Next task: implement real Unity IAP integration safely.
+
+Do not sell equipment through IAP.
+Do not sell items directly through IAP.
+Do not sell level boost through IAP.
+Do not sell stage unlock through IAP.
+IAP must only grant Soul Gem currency.
+
+Goal:
+Replace the debug IAP placeholder flow with a safe real IAP service layer that:
+
+* supports Unity IAP when available
+* compiles without Unity IAP installed
+* loads IAPProductDefinition data
+* registers consumable Soul Gem products
+* grants Soul Gems once per transaction
+* stores purchase records locally
+* queues cloud sync after successful purchase
+* supports restore / refresh purchase records
+* keeps debug simulate purchase only in Editor or Development Build
+
+Requirements:
+
+1. Create folders if missing:
+   Assets/_Game/Scripts/IAP
+   Assets/_Game/Scripts/Purchases
+   Assets/_Game/ScriptableObjects/IAP
+
+2. Add preprocessor-safe architecture.
+
+The project must compile even if Unity IAP package is not installed.
+
+Use a scripting define:
+USE_UNITY_IAP
+
+If USE_UNITY_IAP is not defined:
+
+* compile MockIAPService only
+* real Unity IAP classes must not cause compiler errors
+* IAP UI should show:
+  "Unity IAP is not configured yet."
+
+If USE_UNITY_IAP is defined:
+
+* compile UnityIAPService
+* initialize Unity Purchasing
+* register consumable products from IAPProductDefinition
+
+3. Create IIAPService interface.
+
+Methods:
+
+* bool IsAvailable { get; }
+* bool IsInitialized { get; }
+* Task InitializeAsync()
+* List<IAPProductViewData> GetProducts()
+* void Purchase(string productId)
+* void RestorePurchases()
+* bool HasGrantedTransaction(string transactionId)
+
+Events:
+
+* OnInitialized
+* OnPurchaseStarted
+* OnPurchaseSucceeded
+* OnPurchaseFailed
+* OnRestoreCompleted
+* OnIAPStatusChanged
+
+4. Create IAPProductViewData.cs.
+
+Fields:
+
+* string productId
+* string displayName
+* string description
+* string localizedPriceText
+* int soulGemAmount
+* int bonusSoulGemAmount
+* int totalSoulGemAmount
+* bool enabled
+* bool available
+
+5. Update IAPProductDefinition if needed.
+
+Required fields:
+
+* string productId
+* string displayName
+* string description
+* string platformProductId
+* int soulGemAmount
+* int bonusSoulGemAmount
+* string priceTextPlaceholder
+* bool enabled
+
+Rule:
+platformProductId should default to productId if empty.
+
+6. Update PurchaseRecord.cs.
+
+Fields must include:
+
+* string transactionId
+* string productId
+* string platformProductId
+* string source
+* int amount
+* int bonusAmount
+* int totalGranted
+* string platform
+* string receiptHash
+* long purchasedAt
+* long grantedAt
+* bool granted
+* bool cloudSynced
+
+For old records:
+
+* migrate safely
+* do not duplicate grants
+
+7. Create PurchaseLedgerService.cs.
+
+Responsibilities:
+
+* Load purchase records from PlayerSaveData
+* Check if transactionId already granted
+* AddPurchaseRecord(PurchaseRecord record)
+* MarkCloudSynced(string transactionId)
+* GetAllRecords()
+* GetUnsyncedRecords()
+* Save immediately after adding record
+
+Rules:
+
+* transactionId is the unique key
+* never grant currency twice for same transactionId
+* if transactionId missing, create safe fallback:
+  productId + purchasedAt + receiptHash
+* log warning for missing transactionId
+
+8. Create CurrencyGrantService.cs or extend PlayerProgressionService.
+
+Method:
+
+* GrantSoulGemFromPurchase(string productId, int amount, int bonusAmount, string transactionId)
+
+Flow:
+
+* Check PurchaseLedgerService.HasGrantedTransaction(transactionId)
+* If already granted:
+
+  * do not add gems
+  * show toast "Purchase already processed."
+* If not granted:
+
+  * add SoulGem amount + bonus
+  * create PurchaseRecord
+  * save local immediately
+  * queue cloud sync if cloud is available
+  * show purchase success popup
+
+9. Create MockIAPService.cs.
+
+Behavior:
+
+* IsAvailable false unless Editor/Development debug mode
+* GetProducts returns IAPProductDefinition data with placeholder price
+* Purchase(productId):
+
+  * In Editor or Development Build only:
+
+    * simulate a successful transaction
+    * transactionId = "debug_iap_" + productId + "_" + timestamp
+    * source = "debug_iap"
+  * In normal build:
+
+    * show toast "Unity IAP is not configured."
+* RestorePurchases:
+
+  * show toast "Restore is not available in mock mode."
+
+10. Create UnityIAPService.cs behind USE_UNITY_IAP.
+
+Responsibilities:
+
+* Initialize Unity IAP
+* Register all enabled IAPProductDefinition as Consumable
+* Start purchase by productId
+* Receive purchase callback
+* Extract:
+
+  * transactionId
+  * productId
+  * platform product id
+  * receipt
+  * localized price if available
+* Call CurrencyGrantService
+* Confirm/complete purchase only after local grant succeeds
+* On failure, show safe error toast
+* Never crash on store unavailable
+
+Important:
+
+* All IAP products must be consumable
+* No non-consumable or subscription products in this game yet
+
+11. Receipt handling.
+
+For MVP:
+
+* Store receiptHash only, not raw receipt in PlayerSaveData
+* Use SHA256 hash of raw receipt string if available
+* Do not implement server validation yet
+* Add interface for future validation:
+
+IReceiptValidatorService:
+
+* Task<ReceiptValidationResult> ValidateAsync(string productId, string transactionId, string receipt)
+
+For now:
+
+* MockReceiptValidatorService always returns Valid in development
+* In production without server validation, log warning:
+  "Server receipt validation is not configured."
+
+Do not block local grant in MVP if server validation is missing.
+But keep code structured so Cloud Functions validation can be added later.
+
+12. Update ShopUI IAP tab.
+
+IAP tab must now use IIAPService.
+
+Display:
+
+* Soul Gem Packs title
+* Product cards from IAPProductDefinition / IIAPService.GetProducts()
+* displayName
+* description
+* soulGemAmount
+* bonusSoulGemAmount
+* total
+* localized price if available, otherwise placeholder price
+* Buy button
+
+Button behavior:
+
+* If Unity IAP initialized:
+
+  * call IIAPService.Purchase(productId)
+* If mock mode in Editor/Development:
+
+  * show button "DEBUG SIMULATE PURCHASE"
+* If unavailable in normal build:
+
+  * disabled button "Unavailable"
+
+13. Purchase processing overlay.
+
+When purchase starts:
+
+* show LoadingOverlay:
+  "Processing purchase..."
+
+When purchase succeeds:
+
+* hide loading
+* show IAPPurchaseSuccessPopup
+
+When purchase fails:
+
+* hide loading
+* show toast or popup:
+  "Purchase failed. Please try again."
+
+When user cancels:
+
+* hide loading
+* show toast:
+  "Purchase cancelled."
+
+14. Create IAPPurchaseSuccessPopup.
+
+Under PopupLayer.
+
+Display:
+
+* "Purchase Complete"
+* product name
+* Soul Gems + amount
+* Bonus + amount if any
+* Total Granted
+* Current Soul Gem balance
+* Button: OK
+
+15. Restore purchases.
+
+Settings popup:
+Add button:
+
+* "Restore Purchases"
+
+Behavior:
+
+* For Android consumable products, restore may not re-grant consumed products.
+* The button should call IIAPService.RestorePurchases()
+* Also run PurchaseLedgerService consistency check
+* Show toast:
+  "Purchase records refreshed."
+
+Do not grant duplicate Soul Gems during restore.
+
+16. Cloud sync integration.
+
+After successful purchase grant:
+
+* Save local immediately
+* Mark PurchaseRecord.cloudSynced = false
+* Ask CloudSaveCoordinator to queue purchase ledger sync
+* If cloud unavailable, keep record unsynced
+* On next Sync Now, upload unsynced PurchaseRecords by transactionId
+
+Rules:
+
+* Cloud sync failure must not remove local purchase
+* Local purchase grant is source of truth after successful store callback
+* Never grant again from cloud record unless a future verified server ledger is implemented
+
+17. Update CloudSaveCoordinator if needed.
+
+Add method:
+
+* QueuePurchaseLedgerSync()
+* SyncPurchaseLedgerNowAsync()
+
+Upload path:
+
+* /users/{uid}/purchases/{transactionId}
+
+Data:
+
+* productId
+* platformProductId
+* totalGranted
+* purchasedAt
+* grantedAt
+* platform
+* receiptHash
+* appVersion
+* deviceId
+
+18. Update validation.
+
+EconomyValidator / Content Validator must check:
+
+* Every IAPProductDefinition has productId
+* No duplicate productId
+* enabled products have soulGemAmount > 0
+* bonusSoulGemAmount >= 0
+* platformProductId not empty or falls back to productId
+* no IAP product references item/equipment/stage unlock
+* IAP tab only lists Soul Gem products
+
+19. Update Content Editor IAP Products tab.
+
+Allow editing:
+
+* productId
+* platformProductId
+* displayName
+* description
+* soulGemAmount
+* bonusSoulGemAmount
+* priceTextPlaceholder
+* enabled
+
+Add button:
+
+* Validate IAP Products
+
+20. Add setup guide.
+
+Create or update:
+docs/iap_setup.md
+
+Include:
+
+* install Unity IAP package
+* enable Unity Gaming Services if needed by project setup
+* create consumable products:
+
+  * gems_tiny
+  * gems_small
+  * gems_medium
+  * gems_large
+  * gems_mega
+* set same product IDs in Google Play Console
+* define USE_UNITY_IAP after package setup
+* test with license tester account
+* never test real cards on production without internal testing
+* IAP only grants Soul Gem currency
+* purchase ledger prevents duplicate grant
+
+21. Add editor menu.
+
+Tools/Isekai 12 Realms/IAP/Create Setup Guide
+
+* creates docs/iap_setup.md
+
+Tools/Isekai 12 Realms/IAP/Validate IAP Products
+
+* validates product definitions
+
+Tools/Isekai 12 Realms/IAP/Print Purchase Ledger
+
+* logs local purchase records
+
+Tools/Isekai 12 Realms/IAP/Clear Debug Purchase Records
+
+* only works in Editor
+* asks confirmation
+* does not clear real-looking transaction records unless explicitly confirmed
+
+22. Debug controls.
+
+Settings debug panel:
+
+* Keep "DEBUG Simulate Purchase" only in Editor/Development
+* Add:
+
+  * DEBUG Add Tiny Gem Purchase
+  * DEBUG Print Purchase Ledger
+  * DEBUG Clear Debug Purchase Records
+
+All debug buttons must be hidden or disabled in non-development builds.
+
+23. Preserve existing systems.
+
+Do not break:
+
+* local save/load
+* shop purchases with Gold/SoulGem
+* battle rewards
+* inventory/equipment
+* skill upgrades
+* quests/tutorials
+* Firebase mock/cloud save
+* asset manifest
+* content editor
+
+24. Acceptance criteria without Unity IAP package:
+
+* Project compiles without Unity IAP installed
+* Open GameScene and press Play
+* Open Shop -> IAP tab
+* Products appear from IAPProductDefinition
+* UI says Unity IAP is not configured
+* In Editor, DEBUG SIMULATE PURCHASE grants Soul Gems
+* The same transactionId cannot grant twice
+* PurchaseRecord is saved locally
+* Restart Play Mode
+* SoulGem balance and purchase record persist
+* No console errors
+* No missing script errors
+
+25. Acceptance criteria with Unity IAP package later:
+
+* Add Unity IAP package
+* Define USE_UNITY_IAP
+* Product definitions register as consumables
+* Purchase gems_tiny through test store
+* Loading overlay appears
+* Purchase success popup appears
+* Soul Gems are granted once
+* PurchaseRecord includes transactionId/productId/receiptHash
+* Sync Now uploads purchase record to cloud if Firebase is available
+* Reprocessing same transaction does not duplicate gems
+* Restore Purchases does not duplicate consumables
+* Game remains playable if store is unavailable
+
+
 

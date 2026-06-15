@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
+using Isekai12Realms.Quests;
+using Isekai12Realms.Shop;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 
@@ -36,6 +38,25 @@ namespace Isekai12Realms.Data
         public string equippedSkill1Id = "skill_flame_spark_slash";
         public string equippedSkill2Id = "skill_flame_shuffle_bell";
         public string equippedUltimateId = "skill_flame_realm_burst";
+        public List<PlayerQuestData> quests = new List<PlayerQuestData>();
+        public List<string> completedTutorialStepIds = new List<string>();
+        public bool tutorialEnabled = true;
+        public string activeTutorialId = "";
+        public string activeTutorialStepId = "";
+        public string lastDailyResetDate = "";
+        public List<PurchaseRecord> purchaseRecords = new List<PurchaseRecord>();
+        public List<ShopPurchaseLimitData> shopPurchaseLimits = new List<ShopPurchaseLimitData>();
+        public int inventoryExtraSlots;
+        public string lastDailyShopRefreshDate = "";
+        public string firebaseUid = "";
+        public string authProvider = "LocalOnly";
+        public string cloudSaveId = "default";
+        public long lastCloudUploadAt;
+        public long lastCloudDownloadAt;
+        public string lastSyncedDeviceId = "";
+        public bool cloudSyncEnabled = true;
+        public string deviceId = "";
+        public long totalPlaySeconds;
 
         public long createdAt;
         public long updatedAt;

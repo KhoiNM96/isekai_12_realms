@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using UnityEngine;
 using Isekai12Realms.Data;
+using Isekai12Realms.Quests;
+using Isekai12Realms.Shop;
 using Isekai12Realms.Skills;
 
 namespace Isekai12Realms.Services
@@ -15,6 +17,12 @@ namespace Isekai12Realms.Services
         void DeleteSave();
         bool HasSave();
         PlayerSaveData CreateNewSave();
+        string SaveFilePath { get; }
+        string BackupFilePath { get; }
+        string CloudDownloadBackupPath { get; }
+        void BackupBeforeCloudDownload();
+        bool ReplaceCurrentSave(PlayerSaveData save);
+        string ExportCurrentSaveJson();
     }
 
     public class SaveService : ISaveService
@@ -24,8 +32,9 @@ namespace Isekai12Realms.Services
         
         public PlayerSaveData CurrentSave { get; private set; }
 
-        private string SaveFilePath => Path.Combine(Application.persistentDataPath, SaveFileName);
-        private string BackupFilePath => Path.Combine(Application.persistentDataPath, BackupFileName);
+        public string SaveFilePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+        public string BackupFilePath => Path.Combine(Application.persistentDataPath, BackupFileName);
+        public string CloudDownloadBackupPath => Path.Combine(Application.persistentDataPath, "save_v1_before_cloud_download.json");
 
         public bool HasSave()
         {
@@ -136,6 +145,34 @@ namespace Isekai12Realms.Services
             return CurrentSave;
         }
 
+        public void BackupBeforeCloudDownload()
+        {
+            try
+            {
+                if (File.Exists(SaveFilePath)) File.Copy(SaveFilePath, CloudDownloadBackupPath, true);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[Save] Could not create cloud download backup: " + e.Message);
+            }
+        }
+
+        public bool ReplaceCurrentSave(PlayerSaveData save)
+        {
+            if (save == null) return false;
+            BackupBeforeCloudDownload();
+            CurrentSave = save;
+            EnsureSaveDefaults(CurrentSave);
+            CurrentSave.lastCloudDownloadAt = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            SaveNow();
+            return true;
+        }
+
+        public string ExportCurrentSaveJson()
+        {
+            return CurrentSave != null ? JsonUtility.ToJson(CurrentSave, true) : string.Empty;
+        }
+
         private PlayerSaveData LoadSaveFromFile(string path)
         {
             string json = File.ReadAllText(path);
@@ -205,6 +242,26 @@ namespace Isekai12Realms.Services
             {
                 data.skills = new System.Collections.Generic.List<PlayerSkillData>();
             }
+
+            if (data.quests == null)
+            {
+                data.quests = new System.Collections.Generic.List<PlayerQuestData>();
+            }
+
+            if (data.completedTutorialStepIds == null)
+            {
+                data.completedTutorialStepIds = new System.Collections.Generic.List<string>();
+            }
+
+            if (string.IsNullOrEmpty(data.lastDailyResetDate)) data.lastDailyResetDate = DateTime.Now.ToString("yyyy-MM-dd");
+            if (data.purchaseRecords == null) data.purchaseRecords = new System.Collections.Generic.List<PurchaseRecord>();
+            if (data.shopPurchaseLimits == null) data.shopPurchaseLimits = new System.Collections.Generic.List<ShopPurchaseLimitData>();
+            if (string.IsNullOrEmpty(data.lastDailyShopRefreshDate)) data.lastDailyShopRefreshDate = DateTime.Now.ToString("yyyy-MM-dd");
+            bool missingCloudAuthFields = string.IsNullOrEmpty(data.authProvider);
+            if (missingCloudAuthFields) data.cloudSyncEnabled = true;
+            if (string.IsNullOrEmpty(data.authProvider)) data.authProvider = "LocalOnly";
+            if (string.IsNullOrEmpty(data.cloudSaveId)) data.cloudSaveId = "default";
+            if (string.IsNullOrEmpty(data.deviceId)) data.deviceId = "device_" + Guid.NewGuid().ToString("N");
 
             if (string.IsNullOrEmpty(data.playerName)) data.playerName = "Guest Hero";
             if (string.IsNullOrEmpty(data.selectedClassId)) data.selectedClassId = "flame_squire";

@@ -205,29 +205,10 @@ namespace Isekai12Realms.Character
             toastService?.ShowToast(message);
         }
 
-        private bool IsEquipped(string instanceId)
-        {
-            EquipmentLoadoutData loadout = CurrentSave.equipment;
-            return loadout.weaponInstanceId == instanceId || loadout.armorInstanceId == instanceId || loadout.headInstanceId == instanceId || loadout.bootsInstanceId == instanceId || loadout.ringInstanceId == instanceId || loadout.charmInstanceId == instanceId;
-        }
-
         private EquipmentService GetEquipmentService()
         {
             if (equipmentService == null) equipmentService = GetComponent<EquipmentService>();
             return equipmentService;
-        }
-
-        private void SetEquippedInstance(EquipmentSlot slot, string instanceId)
-        {
-            switch (slot)
-            {
-                case EquipmentSlot.Weapon: CurrentSave.equipment.weaponInstanceId = instanceId; break;
-                case EquipmentSlot.Armor: CurrentSave.equipment.armorInstanceId = instanceId; break;
-                case EquipmentSlot.Head: CurrentSave.equipment.headInstanceId = instanceId; break;
-                case EquipmentSlot.Boots: CurrentSave.equipment.bootsInstanceId = instanceId; break;
-                case EquipmentSlot.Ring: CurrentSave.equipment.ringInstanceId = instanceId; break;
-                case EquipmentSlot.Charm: CurrentSave.equipment.charmInstanceId = instanceId; break;
-            }
         }
     }
 }

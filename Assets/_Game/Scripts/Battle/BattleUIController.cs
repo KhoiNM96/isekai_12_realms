@@ -1,12 +1,15 @@
 using Isekai12Realms.Board;
 using Isekai12Realms.Character;
+using Isekai12Realms.CloudSave;
 using Isekai12Realms.Data;
 using Isekai12Realms.Audio;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Inventory;
+using Isekai12Realms.Quests;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
+using Isekai12Realms.Tutorial;
 using Isekai12Realms.UI;
 using Isekai12Realms.VFX;
 using System.Collections;
@@ -49,6 +52,9 @@ namespace Isekai12Realms.Battle
         private AudioService audioService;
         private SkillService skillService;
         private EquipmentService equipmentService;
+        private QuestService questService;
+        private TutorialService tutorialService;
+        private CloudSaveCoordinator cloudSaveCoordinator;
         private BattleAnimationSettings animationSettings;
         private Button skill1Button;
         private Button skill2Button;
@@ -79,6 +85,9 @@ namespace Isekai12Realms.Battle
             audioService = FindObjectOfType<AudioService>();
             skillService = FindObjectOfType<SkillService>();
             equipmentService = FindObjectOfType<EquipmentService>();
+            questService = FindObjectOfType<QuestService>();
+            tutorialService = FindObjectOfType<TutorialService>();
+            cloudSaveCoordinator = FindObjectOfType<CloudSaveCoordinator>();
             battleService.SetSkillService(skillService);
             animationSettings = BattleAnimationSettings.CreateDefault();
             CacheReferences();
@@ -163,6 +172,7 @@ namespace Isekai12Realms.Battle
 
         public void StartBattle()
         {
+            EnsureQuestServices();
             if (boardController == null)
             {
                 CacheReferences();
@@ -174,6 +184,7 @@ namespace Isekai12Realms.Battle
             }
 
             battleService.StartBattle(boardController, selectedStage);
+            tutorialService?.HandleBattleStarted();
             if (progressionService != null)
             {
                 battleService.SetPlayerStats(progressionService.CalculateTotalStats());
@@ -238,6 +249,7 @@ namespace Isekai12Realms.Battle
             }
 
             rewardGranted = true;
+            EnsureQuestServices();
             if (progressionService == null)
             {
                 progressionService = FindObjectOfType<PlayerProgressionService>();
@@ -265,8 +277,14 @@ namespace Isekai12Realms.Battle
                 drops += RollDrops();
                 string stageId = selectedStage != null ? selectedStage.id : "stage_01_01";
                 progressionService.MarkStageCompleted(stageId);
+                questService?.TrackProgress(QuestObjectiveType.WinBattle, "any", 1);
+                questService?.TrackProgress(QuestObjectiveType.CompleteStage, stageId, 1);
+                questService?.TrackProgress(QuestObjectiveType.EarnGold, "any", gold);
+                if (leveledUp) questService?.TrackProgress(QuestObjectiveType.ReachLevel, "any", progressionService.CurrentSave.level);
+                if (selectedStage != null && selectedStage.enemy != null) questService?.TrackProgress(QuestObjectiveType.DefeatEnemy, selectedStage.enemy.id, 1);
                 StageProgressionService stageProgression = FindObjectOfType<StageProgressionService>();
                 stageProgression?.IncrementStageClearCount(stageId);
+                cloudSaveCoordinator?.QueueCloudSync(1f);
             }
 
             string stageName = selectedStage != null ? selectedStage.displayName : "First Slime";
@@ -282,6 +300,7 @@ namespace Isekai12Realms.Battle
             if (table == null)
             {
                 progressionService.AddItem("mat_slime_jelly", 2);
+                questService?.TrackProgress(QuestObjectiveType.CollectItem, "mat_slime_jelly", 2);
                 return "\nSlime Jelly x2";
             }
 
@@ -296,11 +315,13 @@ namespace Isekai12Realms.Battle
                     if (equipmentService == null) equipmentService = FindObjectOfType<EquipmentService>();
                     EquipmentInstanceData equipment = equipmentService != null ? equipmentService.CreateEquipmentInstance(drop.equipmentId) : PrototypeEquipmentFactory.Create(drop.equipmentId);
                     progressionService.AddEquipment(equipment);
+                    questService?.TrackProgress(QuestObjectiveType.OwnEquipment, equipment.equipmentId, 1);
                     text += $"\n{equipment.displayName}";
                 }
                 else
                 {
                     progressionService.AddItem(drop.itemId, amount);
+                    questService?.TrackProgress(QuestObjectiveType.CollectItem, drop.itemId, amount);
                     text += $"\n{PrototypeItemDatabase.Get(drop.itemId).displayName} x{amount}";
                 }
             }
@@ -367,6 +388,7 @@ namespace Isekai12Realms.Battle
 
         private void TryUseSkill(SkillSlotType slot)
         {
+            EnsureQuestServices();
             if (battleService.State.currentTurnOwner != BattleTurnOwner.Player)
             {
                 screenManager?.ToastService?.ShowToast("Wait for your turn.");
@@ -376,7 +398,10 @@ namespace Isekai12Realms.Battle
             if (skill == null || !battleService.UseEquippedSkill(slot))
             {
                 screenManager?.ToastService?.ShowToast(skill != null ? $"{skill.displayName} is not ready." : "No skill equipped.");
+                return;
             }
+
+            questService?.TrackProgress(QuestObjectiveType.UseSkill, skill.id, 1);
         }
 
         private void OnSkillResolved(SkillDefinition skill, SkillResolveResult result)
@@ -621,6 +646,7 @@ namespace Isekai12Realms.Battle
 
         private void OnCascadeResolved(List<MatchGroup> groups, int combo)
         {
+            EnsureQuestServices();
             if (combo >= 2)
             {
                 floatingText?.Show("Combo x" + combo, BoardPosition(), new Color(1f, 0.86f, 0.28f, 1f), 44);
@@ -628,6 +654,12 @@ namespace Isekai12Realms.Battle
 
             foreach (MatchGroup group in groups)
             {
+                if (battleService.State.currentTurnOwner == BattleTurnOwner.Player)
+                {
+                    string tileTarget = group.tileType.ToString().ToLowerInvariant();
+                    questService?.TrackProgress(QuestObjectiveType.MatchTokenCount, tileTarget, group.count);
+                    tutorialService?.HandleTileMatched(group.tileType);
+                }
                 ShowMatchFeedback(group, battleService.State.currentTurnOwner);
             }
         }
@@ -635,6 +667,13 @@ namespace Isekai12Realms.Battle
         private void OnBoardFeedback(string text)
         {
             floatingText?.Show(text, BoardPosition(), new Color(1f, 0.86f, 0.28f, 1f), 42);
+        }
+
+        private void EnsureQuestServices()
+        {
+            if (questService == null) questService = FindObjectOfType<QuestService>();
+            if (tutorialService == null) tutorialService = FindObjectOfType<TutorialService>();
+            if (cloudSaveCoordinator == null) cloudSaveCoordinator = FindObjectOfType<CloudSaveCoordinator>();
         }
 
         private void ShowMatchFeedback(MatchGroup group, BattleTurnOwner owner)

@@ -1,16 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Isekai12Realms.Battle;
 using Isekai12Realms.Board;
 using Isekai12Realms.Character;
+using Isekai12Realms.CloudSave;
 using Isekai12Realms.Core;
+using Isekai12Realms.Crafting;
 using Isekai12Realms.Data;
 using Isekai12Realms.Audio;
+using Isekai12Realms.Economy;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
+using Isekai12Realms.Quests;
 using Isekai12Realms.Services;
+using Isekai12Realms.Shop;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
+using Isekai12Realms.Tutorial;
 using Isekai12Realms.Realms;
 using Isekai12Realms.VFX;
 using TMPro;
@@ -31,6 +38,13 @@ namespace Isekai12Realms.UI
         private StageProgressionService stageProgressionService;
         private SkillService skillService;
         private EquipmentService equipmentService;
+        private CraftingService craftingService;
+        private QuestService questService;
+        private TutorialService tutorialService;
+        private TutorialOverlayUI tutorialOverlay;
+        private ShopService shopService;
+        private IAPPlaceholderService iapPlaceholderService;
+        private CloudSaveCoordinator cloudSaveCoordinator;
         [SerializeField] private GameAssetManifest assetManifest;
         private StageDefinition selectedStage;
         private string selectedRealmId;
@@ -38,6 +52,8 @@ namespace Isekai12Realms.UI
         private string selectedSkillClassId = "flame_squire";
         private string selectedSkillId;
         private string selectedEquipmentInstanceId;
+        private ShopType selectedShopType = ShopType.Daily;
+        private string selectedShopItemId;
         private RectTransform mainLayer;
         private RectTransform navigationLayer;
         private RectTransform popupLayer;
@@ -99,6 +115,12 @@ namespace Isekai12Realms.UI
             popupLayer = EnsureLayer(safeAreaRoot, "PopupLayer");
             toastLayer = EnsureLayer(safeAreaRoot, "ToastLayer");
             loadingLayer = EnsureLayer(safeAreaRoot, "LoadingLayer");
+            tutorialOverlay = GetComponent<TutorialOverlayUI>();
+            if (tutorialOverlay == null)
+            {
+                tutorialOverlay = gameObject.AddComponent<TutorialOverlayUI>();
+            }
+            tutorialOverlay.Initialize(popupLayer);
 
             RegisterAssetManifest();
             EnsureBackground(backgroundLayer);
@@ -157,12 +179,60 @@ namespace Isekai12Realms.UI
                     equipmentService = gameObject.AddComponent<EquipmentService>();
                 }
                 equipmentService.Initialize(saveService, contentService, screenManager.ToastService);
+                craftingService = GetComponent<CraftingService>();
+                if (craftingService == null)
+                {
+                    craftingService = gameObject.AddComponent<CraftingService>();
+                }
+                craftingService.Initialize(saveService, equipmentService, screenManager.ToastService);
                 skillService = GetComponent<SkillService>();
                 if (skillService == null)
                 {
                     skillService = gameObject.AddComponent<SkillService>();
                 }
                 skillService.Initialize(saveService, contentService, screenManager.ToastService);
+                questService = GetComponent<QuestService>();
+                if (questService == null)
+                {
+                    questService = gameObject.AddComponent<QuestService>();
+                }
+                questService.Initialize(saveService, contentService, progressionService, equipmentService, screenManager.ToastService);
+                shopService = GetComponent<ShopService>();
+                if (shopService == null)
+                {
+                    shopService = gameObject.AddComponent<ShopService>();
+                }
+                shopService.Initialize(saveService, contentService, progressionService, equipmentService, questService, screenManager.ToastService);
+                iapPlaceholderService = GetComponent<IAPPlaceholderService>();
+                if (iapPlaceholderService == null)
+                {
+                    iapPlaceholderService = gameObject.AddComponent<IAPPlaceholderService>();
+                }
+                iapPlaceholderService.Initialize(saveService, contentService, screenManager.ToastService);
+                cloudSaveCoordinator = GetComponent<CloudSaveCoordinator>();
+                if (cloudSaveCoordinator == null)
+                {
+                    cloudSaveCoordinator = gameObject.AddComponent<CloudSaveCoordinator>();
+                }
+                cloudSaveCoordinator.Initialize(saveService, screenManager.ToastService);
+                tutorialService = GetComponent<TutorialService>();
+                if (tutorialService == null)
+                {
+                    tutorialService = gameObject.AddComponent<TutorialService>();
+                }
+                tutorialService.Initialize(saveService, contentService, tutorialOverlay);
+                questService.QuestsChanged -= RefreshSaveBackedUi;
+                questService.QuestsChanged += RefreshSaveBackedUi;
+                questService.QuestCompleted -= OnQuestCompleted;
+                questService.QuestCompleted += OnQuestCompleted;
+                shopService.Changed -= RefreshSaveBackedUi;
+                shopService.Changed += RefreshSaveBackedUi;
+                iapPlaceholderService.Changed -= RefreshSaveBackedUi;
+                iapPlaceholderService.Changed += RefreshSaveBackedUi;
+                cloudSaveCoordinator.StatusChanged -= RefreshSaveBackedUi;
+                cloudSaveCoordinator.StatusChanged += RefreshSaveBackedUi;
+                cloudSaveCoordinator.ConflictDetected -= OnCloudConflictDetected;
+                cloudSaveCoordinator.ConflictDetected += OnCloudConflictDetected;
                 progressionService.Changed -= RefreshSaveBackedUi;
                 progressionService.Changed += RefreshSaveBackedUi;
             }
@@ -174,11 +244,25 @@ namespace Isekai12Realms.UI
 
         private void OnScreenChanged(GameUIScreen previous, GameUIScreen current)
         {
+            string screenTargetId = ScreenTargetId(current);
+            questService?.TrackProgress(QuestObjectiveType.OpenScreen, screenTargetId, 1);
+            tutorialService?.HandleScreenOpened(screenTargetId);
             RefreshSaveBackedUi();
             if (current == GameUIScreen.WorldMap)
             {
                 RefreshWorldMapState();
             }
+        }
+
+        private void OnQuestCompleted(string questId)
+        {
+            tutorialService?.HandleQuestCompleted(questId);
+            RefreshSaveBackedUi();
+        }
+
+        private static string ScreenTargetId(GameUIScreen screen)
+        {
+            return "screen_" + screen.ToString().ToLowerInvariant();
         }
 
         public static void EnsureEventSystem()
@@ -316,6 +400,7 @@ namespace Isekai12Realms.UI
             ImageAsset(root, "Logo_Image", "logo_game_main", Anchor.TopCenter, new Vector2(0f, -185f), new Vector2(620f, 300f));
             Text(root, "Title_Text", "ISEKAI 12 REALMS", 68, new Color(1f, 0.86f, 0.38f, 1f), Anchor.TopCenter, new Vector2(0f, -250f), new Vector2(940f, 110f));
             Text(root, "Subtitle_Text", "Offline Match-3 RPG", 38, Color.white, Anchor.TopCenter, new Vector2(0f, -340f), new Vector2(760f, 70f));
+            Text(root, "AccountStatus_Text", "Local Save", 28, Color.white, Anchor.TopCenter, new Vector2(0f, -405f), new Vector2(760f, 50f));
             ImageAsset(root, "Hero_Preview", "char_hero_flame_idle", Anchor.Center, new Vector2(0f, 105f), new Vector2(360f, 360f));
 
             Button(root, "Button_Start", "Start Game", primary, Anchor.Center, new Vector2(0f, -330f), new Vector2(520f, 112f), StartExistingGame);
@@ -356,6 +441,9 @@ namespace Isekai12Realms.UI
 
             Panel(root, "TownPanel", panelCream, Anchor.Center, new Vector2(0f, 60f), new Vector2(900f, 980f));
             Text(root, "Town_Title", "Main Town Placeholder", 48, textDark, Anchor.Center, new Vector2(0f, 200f), new Vector2(760f, 90f));
+            Panel(root, "QuestTracker", panelDark, Anchor.Center, new Vector2(0f, 390f), new Vector2(820f, 170f));
+            Text(root, "QuestTracker_Text", "Quest tracker loading...", 28, Color.white, Anchor.Center, new Vector2(-80f, 390f), new Vector2(600f, 120f));
+            Button(root, "Button_QuestTracker", "Go", primary, Anchor.Center, new Vector2(340f, 390f), new Vector2(120f, 78f), OpenTrackedQuest);
             Button(root, "Button_QuestElder", "Quest Elder", secondary, Anchor.Center, new Vector2(-260f, -40f), new Vector2(240f, 104f), () => screenManager.ShowScreen(GameUIScreen.Quest));
             Button(root, "Button_Blacksmith", "Blacksmith", new Color(0.5f, 0.62f, 0.72f, 1f), Anchor.Center, new Vector2(0f, -40f), new Vector2(240f, 104f), () => screenManager.ShowScreen(GameUIScreen.Equipment));
             Button(root, "Button_ShopKeeper", "Shop Keeper", primary, Anchor.Center, new Vector2(260f, -40f), new Vector2(240f, 104f), () => screenManager.ShowScreen(GameUIScreen.Shop));
@@ -587,9 +675,15 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = CreateScreenRoot("QuestUI", new Color(0.07f, 0.09f, 0.17f, 0.35f));
             Header(root, "Quest", () => screenManager.ShowScreen(GameUIScreen.MainTown));
+            string[] tabs = { "Main", "Tutorial", "Daily", "Achievement", "Completed" };
+            for (int i = 0; i < tabs.Length; i++)
+            {
+                Button(root, "Tab_" + tabs[i], tabs[i], primary, Anchor.TopCenter, new Vector2(-400f + i * 200f, -205f), new Vector2(180f, 82f), RefreshSaveBackedUi);
+            }
             Panel(root, "QuestPanel", panelCream, Anchor.Center, new Vector2(0f, 110f), new Vector2(860f, 860f));
-            Text(root, "QuestList_Text", "Main Quest: Reach Meadow Gate\nDaily Quest: Win 3 Battles\nAchievement: First Match", 38, textDark, Anchor.Center, new Vector2(0f, 160f), new Vector2(740f, 260f));
-            Button(root, "Button_ClaimDisabled", "Claim (Disabled)", new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.BottomCenter, new Vector2(0f, 230f), new Vector2(520f, 100f), screenManager.ShowDisabledToast);
+            Text(root, "QuestList_Text", "Quest data loading...", 28, textDark, Anchor.Center, new Vector2(0f, 160f), new Vector2(740f, 610f));
+            Button(root, "Button_ClaimQuest", "Claim Completed", secondary, Anchor.BottomCenter, new Vector2(-190f, 230f), new Vector2(340f, 100f), ClaimFirstCompletedQuest);
+            Button(root, "Button_GoQuest", "Go To Quest", primary, Anchor.BottomCenter, new Vector2(190f, 230f), new Vector2(300f, 100f), OpenTrackedQuest);
             return root.gameObject;
         }
 
@@ -597,14 +691,16 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = CreateScreenRoot("ShopUI", new Color(0.08f, 0.07f, 0.15f, 0.35f));
             Header(root, "Shop", () => screenManager.ShowScreen(GameUIScreen.MainTown));
-            string[] tabs = { "Daily", "Gold Shop", "Gem Shop", "IAP" };
+            string[] tabs = { "Daily", "Gold Shop", "Gem Shop", "Cosmetic", "IAP" };
+            ShopType[] types = { ShopType.Daily, ShopType.GoldShop, ShopType.GemShop, ShopType.Cosmetic, ShopType.IAPPlaceholder };
             for (int i = 0; i < tabs.Length; i++)
             {
-                Button(root, "Tab_" + tabs[i].Replace(" ", ""), tabs[i], i == 3 ? secondary : primary, Anchor.TopCenter, new Vector2(-315f + i * 210f, -205f), new Vector2(190f, 82f), screenManager.ShowDisabledToast);
+                ShopType capturedType = types[i];
+                Button(root, "Tab_" + tabs[i].Replace(" ", ""), tabs[i], primary, Anchor.TopCenter, new Vector2(-400f + i * 200f, -205f), new Vector2(180f, 82f), () => SelectShopTab(capturedType));
             }
             Panel(root, "ShopPanel", panelCream, Anchor.Center, new Vector2(0f, 70f), new Vector2(860f, 860f));
-            Text(root, "GemPack_Text", "Tiny Gem Pack\nSmall Gem Pack\nMedium Gem Pack\nLarge Gem Pack", 38, textDark, Anchor.Center, new Vector2(0f, 160f), new Vector2(720f, 260f));
-            Text(root, "IapRule_Text", "IAP will only sell Soul Gem currency.", 34, danger, Anchor.BottomCenter, new Vector2(0f, 230f), new Vector2(760f, 90f));
+            Text(root, "ShopCurrency_Text", "Gold: 0   Soul Gems: 0", 30, textDark, Anchor.TopCenter, new Vector2(0f, -300f), new Vector2(760f, 54f));
+            Text(root, "ShopInfo_Text", "Shop data loading...", 28, textDark, Anchor.BottomCenter, new Vector2(0f, 215f), new Vector2(760f, 110f));
             return root.gameObject;
         }
 
@@ -627,6 +723,8 @@ namespace Isekai12Realms.UI
             GameObject settings = CreateSettingsPopup();
             screenManager.RegisterSettingsPopup(settings);
             CreateDeleteConfirmPopup();
+            CreateShopPurchaseConfirmPopup();
+            CreateCloudConflictPopup();
 
             TextMeshProUGUI resultTitle;
             TextMeshProUGUI resultRewards;
@@ -641,20 +739,35 @@ namespace Isekai12Realms.UI
             RectTransform root = EnsureChildRect(popupLayer, "SettingsPopup");
             Stretch(root);
             EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.45f)).raycastTarget = true;
-            Panel(root, "SettingsPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(880f, 900f));
-            Text(root, "Title", "Settings", 54, textDark, Anchor.Center, new Vector2(0f, 260f), new Vector2(660f, 80f));
-            Text(root, "Body", "Audio Settings", 36, textDark, Anchor.Center, new Vector2(0f, 165f), new Vector2(680f, 70f));
-            Toggle(root, "Toggle_Music", "Music", Anchor.Center, new Vector2(-180f, 70f), new Vector2(280f, 72f), audioService == null || audioService.MusicEnabled, value => audioService?.MuteMusic(!value));
-            Toggle(root, "Toggle_Sfx", "SFX", Anchor.Center, new Vector2(180f, 70f), new Vector2(280f, 72f), audioService == null || audioService.SfxEnabled, value => audioService?.MuteSfx(!value));
-            Slider(root, "Slider_MusicVolume", "Music Volume", Anchor.Center, new Vector2(0f, -25f), new Vector2(620f, 60f), audioService != null ? audioService.MusicVolume : 0.7f, value => audioService?.SetMusicVolume(value));
-            Slider(root, "Slider_SfxVolume", "SFX Volume", Anchor.Center, new Vector2(0f, -105f), new Vector2(620f, 60f), audioService != null ? audioService.SfxVolume : 0.85f, value => audioService?.SetSfxVolume(value));
-            Button(root, "Button_DebugGold", "DEBUG +500 Gold", secondary, Anchor.Center, new Vector2(-220f, -175f), new Vector2(300f, 62f), () => DebugAddGold(500));
-            Button(root, "Button_DebugScrolls", "DEBUG +5 Scrolls", secondary, Anchor.Center, new Vector2(220f, -175f), new Vector2(300f, 62f), () => DebugAddItem("item_skill_scroll", 5));
-            Button(root, "Button_DebugJelly", "DEBUG +10 Jelly", secondary, Anchor.Center, new Vector2(-220f, -245f), new Vector2(300f, 62f), () => DebugAddItem("mat_slime_jelly", 10));
-            Button(root, "Button_DebugSword", "DEBUG Wooden Sword", secondary, Anchor.Center, new Vector2(220f, -245f), new Vector2(300f, 62f), () => DebugAddEquipment("equip_weapon_wooden_sword"));
-            Button(root, "Button_DebugCoat", "DEBUG Traveler Coat", secondary, Anchor.Center, new Vector2(0f, -315f), new Vector2(340f, 62f), () => DebugAddEquipment("equip_armor_traveler_coat"));
-            Button(root, "Button_DeleteSave", "Delete Local Save", danger, Anchor.Center, new Vector2(-210f, -395f), new Vector2(360f, 76f), OpenDeleteConfirm);
-            Button(root, "Button_Close", "Close", primary, Anchor.Center, new Vector2(210f, -395f), new Vector2(300f, 76f), screenManager.CloseSettings);
+            Panel(root, "SettingsPanel", panelCream, Anchor.Center, Vector2.zero, new Vector2(900f, 1340f));
+            Text(root, "Title", "Settings", 54, textDark, Anchor.Center, new Vector2(0f, 565f), new Vector2(660f, 80f));
+            Text(root, "Body", "Audio Settings", 34, textDark, Anchor.Center, new Vector2(0f, 490f), new Vector2(680f, 56f));
+            Toggle(root, "Toggle_Music", "Music", Anchor.Center, new Vector2(-180f, 420f), new Vector2(280f, 62f), audioService == null || audioService.MusicEnabled, value => audioService?.MuteMusic(!value));
+            Toggle(root, "Toggle_Sfx", "SFX", Anchor.Center, new Vector2(180f, 420f), new Vector2(280f, 62f), audioService == null || audioService.SfxEnabled, value => audioService?.MuteSfx(!value));
+            Slider(root, "Slider_MusicVolume", "Music Volume", Anchor.Center, new Vector2(0f, 345f), new Vector2(620f, 54f), audioService != null ? audioService.MusicVolume : 0.7f, value => audioService?.SetMusicVolume(value));
+            Slider(root, "Slider_SfxVolume", "SFX Volume", Anchor.Center, new Vector2(0f, 280f), new Vector2(620f, 54f), audioService != null ? audioService.SfxVolume : 0.85f, value => audioService?.SetSfxVolume(value));
+            Text(root, "AccountTitle", "Account", 34, textDark, Anchor.Center, new Vector2(0f, 210f), new Vector2(680f, 52f));
+            Text(root, "AccountStatus", "Local Only", 26, textDark, Anchor.Center, new Vector2(0f, 150f), new Vector2(760f, 70f));
+            Button(root, "Button_SignInGuest", "Sign in as Guest", primary, Anchor.Center, new Vector2(-220f, 75f), new Vector2(330f, 58f), () => _ = SignInGuestCloud());
+            Button(root, "Button_SignInGoogle", "Sign in with Google", primary, Anchor.Center, new Vector2(220f, 75f), new Vector2(350f, 58f), () => _ = SignInGoogleCloud());
+            Button(root, "Button_SyncNow", "Sync Now", secondary, Anchor.Center, new Vector2(-280f, 5f), new Vector2(250f, 58f), () => _ = SyncCloudNow());
+            Button(root, "Button_UploadLocal", "Upload Local", secondary, Anchor.Center, new Vector2(0f, 5f), new Vector2(250f, 58f), () => _ = UploadLocalCloud());
+            Button(root, "Button_DownloadCloud", "Download Cloud", secondary, Anchor.Center, new Vector2(280f, 5f), new Vector2(270f, 58f), () => _ = DownloadCloudSave());
+            Toggle(root, "Toggle_CloudSync", "Cloud Sync Enabled", Anchor.Center, new Vector2(0f, -65f), new Vector2(520f, 58f), true, SetCloudSyncEnabled);
+            Button(root, "Button_DebugGold", "DEBUG +500 Gold", secondary, Anchor.Center, new Vector2(-220f, -140f), new Vector2(300f, 54f), () => DebugAddGold(500));
+            Button(root, "Button_DebugSoulGem", "DEBUG +500 SoulGem", secondary, Anchor.Center, new Vector2(220f, -140f), new Vector2(330f, 54f), () => DebugAddSoulGem(500));
+            Button(root, "Button_DebugScrolls", "DEBUG +5 Scrolls", secondary, Anchor.Center, new Vector2(-220f, -200f), new Vector2(300f, 54f), () => DebugAddItem("item_skill_scroll", 5));
+            Button(root, "Button_DebugJelly", "DEBUG +10 Jelly", secondary, Anchor.Center, new Vector2(220f, -200f), new Vector2(300f, 54f), () => DebugAddItem("mat_slime_jelly", 10));
+            Button(root, "Button_DebugResetDailyShop", "DEBUG Reset Daily Shop", secondary, Anchor.Center, new Vector2(-220f, -260f), new Vector2(370f, 54f), DebugResetDailyShop);
+            Button(root, "Button_DebugClearPurchases", "DEBUG Clear Purchases", secondary, Anchor.Center, new Vector2(220f, -260f), new Vector2(370f, 54f), DebugClearPurchaseRecords);
+            Button(root, "Button_DebugConflict", "DEBUG Force Cloud Conflict Test", secondary, Anchor.Center, new Vector2(-220f, -320f), new Vector2(390f, 54f), DebugForceCloudConflict);
+            Button(root, "Button_DebugClearFirebase", "DEBUG Clear Firebase UID", secondary, Anchor.Center, new Vector2(220f, -320f), new Vector2(370f, 54f), DebugClearFirebaseUid);
+            Button(root, "Button_DebugPrintSave", "DEBUG Print Local Save Info", secondary, Anchor.Center, new Vector2(-220f, -380f), new Vector2(390f, 54f), DebugPrintLocalSaveInfo);
+            Button(root, "Button_DebugExportSave", "DEBUG Export Local Save JSON", secondary, Anchor.Center, new Vector2(220f, -380f), new Vector2(390f, 54f), DebugExportLocalSaveJson);
+            Button(root, "Button_DebugSword", "DEBUG Wooden Sword", secondary, Anchor.Center, new Vector2(-220f, -440f), new Vector2(330f, 54f), () => DebugAddEquipment("equip_weapon_wooden_sword"));
+            Button(root, "Button_DebugCoat", "DEBUG Traveler Coat", secondary, Anchor.Center, new Vector2(220f, -440f), new Vector2(330f, 54f), () => DebugAddEquipment("equip_armor_traveler_coat"));
+            Button(root, "Button_DeleteSave", "Delete Local Save", danger, Anchor.Center, new Vector2(-210f, -535f), new Vector2(360f, 68f), OpenDeleteConfirm);
+            Button(root, "Button_Close", "Close", primary, Anchor.Center, new Vector2(210f, -535f), new Vector2(300f, 68f), screenManager.CloseSettings);
             root.gameObject.SetActive(false);
             return root.gameObject;
         }
@@ -669,6 +782,39 @@ namespace Isekai12Realms.UI
             Text(root, "Body", "This deletes the local save on this device.", 32, textDark, Anchor.Center, new Vector2(0f, 40f), new Vector2(620f, 80f));
             Button(root, "Button_Confirm", "Confirm", danger, Anchor.Center, new Vector2(-150f, -145f), new Vector2(260f, 92f), ConfirmDeleteSave);
             Button(root, "Button_Cancel", "Cancel", primary, Anchor.Center, new Vector2(150f, -145f), new Vector2(260f, 92f), CloseDeleteConfirm);
+            root.gameObject.SetActive(false);
+            return root.gameObject;
+        }
+
+        private GameObject CreateShopPurchaseConfirmPopup()
+        {
+            RectTransform root = EnsureChildRect(popupLayer, "ShopPurchaseConfirmPopup");
+            Stretch(root);
+            EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.62f)).raycastTarget = true;
+            Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(800f, 620f));
+            Text(root, "Title", "Confirm Purchase", 48, textDark, Anchor.Center, new Vector2(0f, 210f), new Vector2(660f, 72f));
+            Text(root, "Body", "Purchase details", 32, textDark, Anchor.Center, new Vector2(0f, 50f), new Vector2(660f, 250f));
+            Text(root, "Warning", "", 30, danger, Anchor.Center, new Vector2(0f, -115f), new Vector2(660f, 62f));
+            Button(root, "Button_Confirm", "Confirm", secondary, Anchor.Center, new Vector2(-160f, -220f), new Vector2(260f, 92f), ConfirmShopPurchase);
+            Button(root, "Button_Cancel", "Cancel", primary, Anchor.Center, new Vector2(160f, -220f), new Vector2(260f, 92f), CloseShopPurchaseConfirm);
+            root.gameObject.SetActive(false);
+            return root.gameObject;
+        }
+
+        private GameObject CreateCloudConflictPopup()
+        {
+            RectTransform root = EnsureChildRect(popupLayer, "CloudConflictPopup");
+            Stretch(root);
+            EnsureImage(root.gameObject, new Color(0f, 0f, 0f, 0.65f)).raycastTarget = true;
+            Panel(root, "Panel", panelCream, Anchor.Center, Vector2.zero, new Vector2(920f, 820f));
+            Text(root, "Title", "Cloud Save Found", 50, textDark, Anchor.Center, new Vector2(0f, 300f), new Vector2(760f, 80f));
+            Panel(root, "LocalCard", panelDark, Anchor.Center, new Vector2(-225f, 80f), new Vector2(390f, 390f));
+            Panel(root, "CloudCard", panelDark, Anchor.Center, new Vector2(225f, 80f), new Vector2(390f, 390f));
+            Text(root, "Local_Text", "Local Save", 28, Color.white, Anchor.Center, new Vector2(-225f, 80f), new Vector2(340f, 320f));
+            Text(root, "Cloud_Text", "Cloud Save", 28, Color.white, Anchor.Center, new Vector2(225f, 80f), new Vector2(340f, 320f));
+            Button(root, "Button_UseLocal", "Use Local", secondary, Anchor.Center, new Vector2(-280f, -245f), new Vector2(240f, 88f), () => _ = ResolveCloudUseLocal());
+            Button(root, "Button_UseCloud", "Use Cloud", primary, Anchor.Center, new Vector2(0f, -245f), new Vector2(240f, 88f), () => _ = ResolveCloudUseCloud());
+            Button(root, "Button_Cancel", "Cancel", danger, Anchor.Center, new Vector2(280f, -245f), new Vector2(220f, 88f), CancelCloudConflict);
             root.gameObject.SetActive(false);
             return root.gameObject;
         }
@@ -798,7 +944,14 @@ namespace Isekai12Realms.UI
             SkillDefinition skill = SelectedSkillOrFirstVisible();
             if (skill != null && skillService != null)
             {
-                skillService.UpgradeSkill(skill.id);
+                int goldBefore = progressionService?.CurrentSave?.gold ?? 0;
+                if (skillService.UpgradeSkill(skill.id))
+                {
+                    questService?.TrackProgress(QuestObjectiveType.UpgradeSkill, skill.id, 1);
+                    int goldSpent = Mathf.Max(0, goldBefore - (progressionService?.CurrentSave?.gold ?? goldBefore));
+                    if (goldSpent > 0) questService?.TrackProgress(QuestObjectiveType.SpendGold, "any", goldSpent);
+                    cloudSaveCoordinator?.QueueCloudSync(1f);
+                }
                 RefreshSaveBackedUi();
             }
         }
@@ -833,8 +986,13 @@ namespace Isekai12Realms.UI
                 return;
             }
 
-            progressionService.Equip(save.inventory.equipments[0].instanceId);
-            selectedEquipmentInstanceId = save.inventory.equipments[0].instanceId;
+            EquipmentInstanceData equipment = save.inventory.equipments[0];
+            if (progressionService.Equip(equipment.instanceId))
+            {
+                questService?.TrackProgress(QuestObjectiveType.EquipEquipment, equipment.equipmentId, 1);
+                cloudSaveCoordinator?.QueueCloudSync(1f);
+            }
+            selectedEquipmentInstanceId = equipment.instanceId;
             RefreshSaveBackedUi();
         }
 
@@ -858,7 +1016,12 @@ namespace Isekai12Realms.UI
                 screenManager.ToastService?.ShowToast("Select equipment first.");
                 return;
             }
-            equipmentService?.Equip(selectedEquipmentInstanceId);
+            if (equipmentService != null && equipmentService.Equip(selectedEquipmentInstanceId))
+            {
+                EquipmentInstanceData equipment = equipmentService.GetEquipmentByInstanceId(selectedEquipmentInstanceId);
+                questService?.TrackProgress(QuestObjectiveType.EquipEquipment, equipment != null ? equipment.equipmentId : "any", 1);
+                cloudSaveCoordinator?.QueueCloudSync(1f);
+            }
             RefreshSaveBackedUi();
         }
 
@@ -881,7 +1044,15 @@ namespace Isekai12Realms.UI
                 screenManager.ToastService?.ShowToast("Select equipment first.");
                 return;
             }
-            equipmentService?.UpgradeEquipment(selectedEquipmentInstanceId);
+            int goldBefore = progressionService?.CurrentSave?.gold ?? 0;
+            if (equipmentService != null && equipmentService.UpgradeEquipment(selectedEquipmentInstanceId))
+            {
+                EquipmentInstanceData equipment = equipmentService.GetEquipmentByInstanceId(selectedEquipmentInstanceId);
+                questService?.TrackProgress(QuestObjectiveType.UpgradeEquipment, equipment != null ? equipment.equipmentId : "any", 1);
+                int goldSpent = Mathf.Max(0, goldBefore - (progressionService?.CurrentSave?.gold ?? goldBefore));
+                if (goldSpent > 0) questService?.TrackProgress(QuestObjectiveType.SpendGold, "any", goldSpent);
+                cloudSaveCoordinator?.QueueCloudSync(1f);
+            }
             RefreshSaveBackedUi();
         }
 
@@ -909,6 +1080,177 @@ namespace Isekai12Realms.UI
             }
             equipmentService.LockEquipment(equipment.instanceId, !equipment.locked);
             RefreshSaveBackedUi();
+        }
+
+        private void ClaimFirstCompletedQuest()
+        {
+            QuestDefinition quest = FirstCompletedQuest();
+            if (quest == null)
+            {
+                screenManager.ToastService?.ShowToast("No quest reward ready.");
+                return;
+            }
+
+            if (questService.ClaimQuest(quest.id)) cloudSaveCoordinator?.QueueCloudSync(1f);
+            RefreshSaveBackedUi();
+        }
+
+        private void OpenTrackedQuest()
+        {
+            QuestDefinition completed = FirstCompletedQuest();
+            if (completed != null)
+            {
+                screenManager.ShowScreen(GameUIScreen.Quest);
+                return;
+            }
+
+            QuestDefinition quest = questService?.GetTrackerQuest();
+            if (quest == null)
+            {
+                screenManager.ToastService?.ShowToast("No active quest.");
+                return;
+            }
+
+            screenManager.ShowScreen(GameUIScreen.Quest);
+        }
+
+        private QuestDefinition FirstCompletedQuest()
+        {
+            return questService != null ? questService.GetCompletedUnclaimedQuests().Find(q => q != null) : null;
+        }
+
+        private void SelectShopTab(ShopType type)
+        {
+            selectedShopType = type;
+            selectedShopItemId = string.Empty;
+            RefreshShopUi();
+        }
+
+        private void OpenShopPurchaseConfirm(string shopItemId)
+        {
+            ShopItemDefinition item = contentService?.Database?.GetShopItemById(shopItemId);
+            if (item == null)
+            {
+                screenManager.ToastService?.ShowToast("Shop item missing.");
+                return;
+            }
+            string blocker = shopService != null ? shopService.GetPurchaseBlocker(item) : "Shop not ready.";
+            if (!string.IsNullOrEmpty(blocker))
+            {
+                screenManager.ToastService?.ShowToast(blocker);
+                return;
+            }
+
+            selectedShopItemId = shopItemId;
+            Transform popup = popupLayer.Find("ShopPurchaseConfirmPopup");
+            if (popup == null) return;
+            SetPopupText(popup, "Title", item.displayName);
+            SetPopupText(popup, "Body", $"{item.description}\nAmount: {Mathf.Max(1, item.amount)}\nPrice: {item.priceAmount} {ShopService.CurrencyDisplayName(item.priceCurrency)}");
+            SetPopupText(popup, "Warning", item.priceCurrency == CurrencyType.SoulGem ? "Spending Soul Gems. Confirm carefully." : string.Empty);
+            popup.gameObject.SetActive(true);
+        }
+
+        private void ConfirmShopPurchase()
+        {
+            ShopItemDefinition item = contentService?.Database?.GetShopItemById(selectedShopItemId);
+            if (shopService != null && item != null && shopService.Purchase(item))
+            {
+                cloudSaveCoordinator?.QueueCloudSync(1f);
+                CloseShopPurchaseConfirm();
+                RefreshSaveBackedUi();
+            }
+        }
+
+        private void CloseShopPurchaseConfirm()
+        {
+            Transform popup = popupLayer.Find("ShopPurchaseConfirmPopup");
+            if (popup != null) popup.gameObject.SetActive(false);
+        }
+
+        private void SimulateIapPurchase(string productId)
+        {
+            iapPlaceholderService?.SimulatePurchase(productId);
+            cloudSaveCoordinator?.QueueCloudSync(1f);
+            RefreshSaveBackedUi();
+        }
+
+        private async System.Threading.Tasks.Task SignInGuestCloud()
+        {
+            if (cloudSaveCoordinator == null) return;
+            await cloudSaveCoordinator.SignInGuestAsync();
+            RefreshSaveBackedUi();
+        }
+
+        private async System.Threading.Tasks.Task SignInGoogleCloud()
+        {
+            if (cloudSaveCoordinator == null) return;
+            await cloudSaveCoordinator.SignInGoogleAsync();
+            RefreshSaveBackedUi();
+        }
+
+        private async System.Threading.Tasks.Task SyncCloudNow()
+        {
+            if (cloudSaveCoordinator == null) return;
+            await cloudSaveCoordinator.SyncNowAsync();
+            RefreshSaveBackedUi();
+        }
+
+        private async System.Threading.Tasks.Task UploadLocalCloud()
+        {
+            if (cloudSaveCoordinator == null) return;
+            await cloudSaveCoordinator.UploadLocalSaveAsync();
+            RefreshSaveBackedUi();
+        }
+
+        private async System.Threading.Tasks.Task DownloadCloudSave()
+        {
+            if (cloudSaveCoordinator == null) return;
+            await cloudSaveCoordinator.DownloadCloudSaveAsync();
+            progressionService?.LoadOrCreate();
+            RefreshSaveBackedUi();
+        }
+
+        private void SetCloudSyncEnabled(bool enabled)
+        {
+            cloudSaveCoordinator?.SetCloudSyncEnabled(enabled);
+            RefreshSaveBackedUi();
+        }
+
+        private void OnCloudConflictDetected(CloudSaveMeta local, CloudSaveMeta cloud)
+        {
+            Transform popup = popupLayer != null ? popupLayer.Find("CloudConflictPopup") : null;
+            if (popup == null) return;
+            SetPopupText(popup, "Local_Text", BuildCloudMetaText("Local Save", local));
+            SetPopupText(popup, "Cloud_Text", BuildCloudMetaText("Cloud Save", cloud));
+            popup.gameObject.SetActive(true);
+        }
+
+        private async System.Threading.Tasks.Task ResolveCloudUseLocal()
+        {
+            if (cloudSaveCoordinator != null) await cloudSaveCoordinator.ResolveConflictUseLocalAsync();
+            CloseCloudConflictPopup();
+            RefreshSaveBackedUi();
+        }
+
+        private async System.Threading.Tasks.Task ResolveCloudUseCloud()
+        {
+            if (cloudSaveCoordinator != null) await cloudSaveCoordinator.ResolveConflictUseCloudAsync();
+            progressionService?.LoadOrCreate();
+            CloseCloudConflictPopup();
+            RefreshSaveBackedUi();
+        }
+
+        private void CancelCloudConflict()
+        {
+            cloudSaveCoordinator?.CancelConflictForSession();
+            CloseCloudConflictPopup();
+            RefreshSaveBackedUi();
+        }
+
+        private void CloseCloudConflictPopup()
+        {
+            Transform popup = popupLayer != null ? popupLayer.Find("CloudConflictPopup") : null;
+            if (popup != null) popup.gameObject.SetActive(false);
         }
 
         private void OpenDeleteConfirm()
@@ -940,12 +1282,64 @@ namespace Isekai12Realms.UI
         private void DebugAddGold(int amount)
         {
             progressionService?.AddGold(amount);
+            questService?.TrackProgress(QuestObjectiveType.EarnGold, "any", amount);
             RefreshSaveBackedUi();
+        }
+
+        private void DebugAddSoulGem(int amount)
+        {
+            progressionService?.AddSoulGem(amount);
+            RefreshSaveBackedUi();
+        }
+
+        private void DebugResetDailyShop()
+        {
+            shopService?.ResetDailyShop(true);
+            RefreshSaveBackedUi();
+        }
+
+        private void DebugClearPurchaseRecords()
+        {
+            iapPlaceholderService?.ClearPurchaseRecords();
+            RefreshSaveBackedUi();
+        }
+
+        private void DebugForceCloudConflict()
+        {
+            cloudSaveCoordinator?.ForceConflictTest();
+        }
+
+        private void DebugClearFirebaseUid()
+        {
+            cloudSaveCoordinator?.ClearFirebaseUidFromLocalSave();
+            RefreshSaveBackedUi();
+        }
+
+        private void DebugPrintLocalSaveInfo()
+        {
+            if (ServiceLocator.TryResolve<ISaveService>(out ISaveService saveService))
+            {
+                PlayerSaveData save = saveService.CurrentSave;
+                Debug.Log($"[Cloud] Local Save Info\nSave path: {saveService.SaveFilePath}\nBackup path: {saveService.BackupFilePath}\nPlayer: {save?.playerName}\nLevel: {save?.level}\nSaveVersion: {save?.saveVersion}\nUpdatedAt: {save?.updatedAt}\nFirebase UID: {save?.firebaseUid}\nCloud Sync: {save?.cloudSyncEnabled}");
+            }
+        }
+
+        private void DebugExportLocalSaveJson()
+        {
+            if (!ServiceLocator.TryResolve<ISaveService>(out ISaveService saveService)) return;
+            string path = "Assets/_Game/Export/local_save_debug.json";
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, saveService.ExportCurrentSaveJson());
+#if UNITY_EDITOR
+            UnityEditor.AssetDatabase.Refresh();
+#endif
+            screenManager.ToastService?.ShowToast("Local save JSON exported.");
         }
 
         private void DebugAddItem(string itemId, int amount)
         {
             progressionService?.AddItem(itemId, amount);
+            questService?.TrackProgress(QuestObjectiveType.CollectItem, itemId, amount);
             RefreshSaveBackedUi();
         }
 
@@ -953,6 +1347,7 @@ namespace Isekai12Realms.UI
         {
             EquipmentInstanceData equipment = equipmentService != null ? equipmentService.CreateEquipmentInstance(equipmentId) : PrototypeEquipmentFactory.Create(equipmentId);
             progressionService?.AddEquipment(equipment);
+            questService?.TrackProgress(QuestObjectiveType.OwnEquipment, equipment.equipmentId, 1);
             selectedEquipmentInstanceId = equipment.instanceId;
             RefreshSaveBackedUi();
         }
@@ -969,6 +1364,11 @@ namespace Isekai12Realms.UI
             SetText("MainTownUI/Level_Text", $"Lv. {save.level}");
             SetText("MainTownUI/Gold_Text", $"Gold: {save.gold}");
             SetText("MainTownUI/Gems_Text", $"Gems: {save.soulGem}");
+            SetText("TitleScreenUI/AccountStatus_Text", BuildTitleAccountStatus());
+            Transform settings = popupLayer != null ? popupLayer.Find("SettingsPopup") : null;
+            SetPopupText(settings, "AccountStatus", BuildSettingsAccountStatus(save));
+            Toggle cloudToggle = settings != null ? settings.Find("Toggle_CloudSync")?.GetComponent<Toggle>() : null;
+            if (cloudToggle != null) cloudToggle.SetIsOnWithoutNotify(save.cloudSyncEnabled);
 
             PlayerStats stats = progressionService.CalculateTotalStats();
             SetText("HeroUI/Stats_Text", $"Lv. {save.level}\nHP {stats.maxHp}\nMana {stats.mana}\nATK {stats.atk}\nMAG {stats.mag}\nDEF {stats.def}\nSPD {stats.spd}\nLUCK {stats.luck}");
@@ -981,7 +1381,121 @@ namespace Isekai12Realms.UI
             SetText("InventoryUI/InventoryList_Text", BuildInventoryText(save));
             SetText("InventoryUI/ItemDetail_Text", BuildSelectedEquipmentText());
             SetText("EquipmentUI/EquipmentDetail_Text", BuildEquipmentText(save));
+            SetText("QuestUI/QuestList_Text", BuildQuestListText());
+            SetText("MainTownUI/QuestTracker_Text", BuildQuestTrackerText());
+            RefreshShopUi();
             RefreshEquipmentCards(save);
+        }
+
+        private void RefreshShopUi()
+        {
+            Transform root = mainLayer != null ? mainLayer.Find("ShopUI") : null;
+            PlayerSaveData save = progressionService?.CurrentSave;
+            if (root == null || save == null) return;
+            SetText("ShopUI/ShopCurrency_Text", $"Gold: {save.gold}   Soul Gems: {save.soulGem}   Bag: {save.inventory.capacity} slots");
+            for (int i = 0; i < 8; i++)
+            {
+                Transform card = root.Find("ShopItemCard_" + i);
+                if (card != null) card.gameObject.SetActive(false);
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                Transform card = root.Find("IapProductCard_" + i);
+                if (card != null) card.gameObject.SetActive(false);
+            }
+
+            if (selectedShopType == ShopType.IAPPlaceholder)
+            {
+                RefreshIapPlaceholderUi(root);
+                return;
+            }
+
+            ShopDefinition shop = contentService?.Database?.GetShopByType(selectedShopType);
+            SetText("ShopUI/ShopInfo_Text", shop != null ? shop.displayName : "No shop content found. Run Create Prototype Shop Content, then rebuild the content database.");
+            List<ShopItemDefinition> items = shopService != null ? shopService.GetShopItems(selectedShopType) : new List<ShopItemDefinition>();
+            for (int i = 0; i < Mathf.Min(items.Count, 6); i++)
+            {
+                ShopItemDefinition item = items[i];
+                if (item == null) continue;
+                string capturedId = item.id;
+                ShopPurchaseLimitData limit = shopService?.GetPurchaseLimitData(item.id);
+                string limitText = BuildLimitText(item, limit);
+                string blocker = shopService != null ? shopService.GetPurchaseBlocker(item) : "Shop not ready.";
+                bool soldOut = blocker == "Sold out today." || blocker == "Sold out." || !item.enabled;
+                string label = $"{item.displayName}\n{item.description}\nAmount: {Mathf.Max(1, item.amount)}   Price: {item.priceAmount}\n{limitText}";
+                Button card = Button(root, "ShopItemCard_" + i, label, soldOut ? new Color(0.45f, 0.48f, 0.55f, 1f) : primary, Anchor.Center, new Vector2(i % 2 == 0 ? -225f : 225f, 345f - (i / 2) * 190f), new Vector2(420f, 170f), () => OpenShopPurchaseConfirm(capturedId));
+                FormatCardLabel(card, 22);
+                ImageAsset(card.transform, "Icon", string.IsNullOrEmpty(item.iconAssetId) ? item.itemId : item.iconAssetId, Anchor.Center, new Vector2(-170f, 35f), new Vector2(58f, 58f)).raycastTarget = false;
+                ImageAsset(card.transform, "PriceIcon", item.priceCurrency == CurrencyType.SoulGem ? "currency_soul_gem" : "currency_gold", Anchor.Center, new Vector2(115f, -50f), new Vector2(42f, 42f)).raycastTarget = false;
+                SetButtonEnabled(card, !soldOut);
+                card.gameObject.SetActive(true);
+            }
+        }
+
+        private void RefreshIapPlaceholderUi(Transform root)
+        {
+            SetText("ShopUI/ShopInfo_Text", "Soul Gem Packs\nIAP is not connected yet. This screen is a placeholder for Unity IAP.\nIAP will only sell Soul Gem currency.");
+            List<IAPProductDefinition> products = iapPlaceholderService != null ? iapPlaceholderService.GetProducts() : new List<IAPProductDefinition>();
+            for (int i = 0; i < Mathf.Min(products.Count, 6); i++)
+            {
+                IAPProductDefinition product = products[i];
+                if (product == null) continue;
+                string capturedId = product.productId;
+                int total = Mathf.Max(0, product.soulGemAmount) + Mathf.Max(0, product.bonusSoulGemAmount);
+                bool canSimulate = iapPlaceholderService != null && iapPlaceholderService.CanSimulatePurchases();
+                string buttonLabel = canSimulate ? "DEBUG SIMULATE PURCHASE" : "Coming Soon";
+                string label = $"{product.displayName}\nSoul Gems: {product.soulGemAmount}\nBonus: {product.bonusSoulGemAmount}\nTotal: {total}\n{product.priceTextPlaceholder}\n{buttonLabel}";
+                Button card = Button(root, "IapProductCard_" + i, label, canSimulate ? secondary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.Center, new Vector2(i % 2 == 0 ? -225f : 225f, 345f - (i / 2) * 190f), new Vector2(420f, 170f), canSimulate ? () => SimulateIapPurchase(capturedId) : screenManager.ShowDisabledToast);
+                FormatCardLabel(card, 21);
+                ImageAsset(card.transform, "Icon", "currency_soul_gem", Anchor.Center, new Vector2(-170f, 35f), new Vector2(58f, 58f)).raycastTarget = false;
+                SetButtonEnabled(card, canSimulate);
+                card.gameObject.SetActive(true);
+            }
+        }
+
+        private static string BuildLimitText(ShopItemDefinition item, ShopPurchaseLimitData limit)
+        {
+            string text = string.Empty;
+            if (item.purchaseLimitPerDay > 0) text += $"Daily {limit?.dailyCount ?? 0}/{item.purchaseLimitPerDay} ";
+            if (item.purchaseLimitLifetime > 0) text += $"Lifetime {limit?.lifetimeCount ?? 0}/{item.purchaseLimitLifetime}";
+            return string.IsNullOrEmpty(text) ? "No limit" : text.TrimEnd();
+        }
+
+        private string BuildTitleAccountStatus()
+        {
+            PlayerSaveData save = progressionService?.CurrentSave;
+            if (save == null) return "Local Save";
+            if (cloudSaveCoordinator == null || cloudSaveCoordinator.GetStatus() == CloudSaveStatus.LocalOnly) return "Local Save";
+            if (save.authProvider == "Google") return "Google Cloud Save";
+            return "Guest Cloud Save";
+        }
+
+        private string BuildSettingsAccountStatus(PlayerSaveData save)
+        {
+            string status = cloudSaveCoordinator != null ? cloudSaveCoordinator.GetStatus().ToString() : "LocalOnly";
+            string account = string.IsNullOrEmpty(save.firebaseUid) ? "Local Only" : save.authProvider;
+            string uid = ShortId(save.firebaseUid);
+            return $"Status: {status}\nAccount: {account}\nUID: {uid}\nCloud Sync: {(save.cloudSyncEnabled ? "Enabled" : "Disabled")}";
+        }
+
+        private static string BuildCloudMetaText(string title, CloudSaveMeta meta)
+        {
+            if (meta == null) return title + "\nMissing";
+            return $"{title}\n{meta.playerName}\nLv {meta.level}\nGold {meta.gold}\nGems {meta.soulGem}\nRealm {meta.currentRealmId}\nStage {meta.currentStageId}\nUpdated {meta.updatedAt}\nDevice {ShortId(meta.deviceId)}";
+        }
+
+        private static string ShortId(string id)
+        {
+            return string.IsNullOrEmpty(id) ? "-" : id.Substring(0, Mathf.Min(8, id.Length));
+        }
+
+        private static void FormatCardLabel(Button card, int fontSize)
+        {
+            TextMeshProUGUI label = card != null ? card.GetComponentInChildren<TextMeshProUGUI>() : null;
+            if (label == null) return;
+            label.fontSize = fontSize;
+            label.alignment = TextAlignmentOptions.Center;
+            label.margin = new Vector4(68f, 4f, 8f, 4f);
         }
 
         private void RefreshSkillsUi()
@@ -1055,7 +1569,7 @@ namespace Isekai12Realms.UI
 
         private string BuildInventoryText(PlayerSaveData save)
         {
-            string text = "Items:\n";
+            string text = $"Capacity: {save.inventory.capacity} slots (+{save.inventoryExtraSlots} extra)\n\nItems:\n";
             if (save.inventory.items.Count == 0)
             {
                 text += "- None\n";
@@ -1083,6 +1597,64 @@ namespace Isekai12Realms.UI
                 }
             }
             return text;
+        }
+
+        private string BuildQuestListText()
+        {
+            if (questService == null || contentService?.Database?.quests == null || contentService.Database.quests.Count == 0)
+            {
+                return "No quest content found. Run Create Prototype Quests, then rebuild the content database.";
+            }
+
+            string text = string.Empty;
+            List<QuestDefinition> claimable = questService.GetCompletedUnclaimedQuests();
+            if (claimable.Count > 0)
+            {
+                text += "Ready to claim:\n";
+                foreach (QuestDefinition quest in claimable)
+                {
+                    if (quest != null) text += "- " + quest.displayName + "\n";
+                }
+                text += "\n";
+            }
+
+            List<QuestDefinition> active = questService.GetActiveQuests();
+            text += "Active:\n";
+            if (active.Count == 0)
+            {
+                text += "- None\n";
+            }
+            else
+            {
+                foreach (QuestDefinition quest in active)
+                {
+                    if (quest != null) text += questService.BuildQuestProgressText(quest) + "\n\n";
+                }
+            }
+
+            List<QuestDefinition> available = questService.GetAvailableQuests();
+            if (available.Count > 0)
+            {
+                text += "Available:\n";
+                foreach (QuestDefinition quest in available)
+                {
+                    if (quest != null) text += "- " + quest.displayName + "\n";
+                }
+            }
+
+            return text.TrimEnd();
+        }
+
+        private string BuildQuestTrackerText()
+        {
+            QuestDefinition claimable = FirstCompletedQuest();
+            if (claimable != null)
+            {
+                return "Quest reward ready\n" + claimable.displayName;
+            }
+
+            QuestDefinition tracker = questService?.GetTrackerQuest();
+            return tracker != null ? questService.BuildQuestProgressText(tracker) : "No active quest. Visit the Quest Elder.";
         }
 
         private string BuildEquipmentText(PlayerSaveData save)
@@ -1158,6 +1730,13 @@ namespace Isekai12Realms.UI
             {
                 text.text = value;
             }
+        }
+
+        private static void SetPopupText(Transform popup, string path, string value)
+        {
+            Transform target = popup != null ? popup.Find(path) : null;
+            TextMeshProUGUI text = target != null ? target.GetComponent<TextMeshProUGUI>() : null;
+            if (text != null) text.text = value;
         }
 
         private BoardController CreateBoardGrid(RectTransform root)
