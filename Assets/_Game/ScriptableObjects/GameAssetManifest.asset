@@ -76,6 +76,15 @@ MonoBehaviour:
     transparent: 0
     priority: 1
     sprite: {fileID: 21300000, guid: 18a22639a7ab6104191b76a8205bd43d, type: 3}
+  - id: splash_game_main
+    fileName: splash_game_main_1080x1920.png
+    relativePath: Assets/_Game/Art/Generated/Backgrounds/splash_game_main_1080x1920.png
+    width: 1080
+    height: 1920
+    category: 0
+    transparent: 0
+    priority: 1
+    sprite: {fileID: 21300000, guid: 7d9e2f4c8a1b3c609d7f4a2b6e8c9012, type: 3}
   - id: bg_town_meadow
     fileName: bg_town_meadow_1080x1920.png
     relativePath: Assets/_Game/Art/Generated/Backgrounds/bg_town_meadow_1080x1920.png

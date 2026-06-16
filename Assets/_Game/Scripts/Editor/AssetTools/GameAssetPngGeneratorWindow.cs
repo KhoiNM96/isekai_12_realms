@@ -24,6 +24,7 @@ namespace Isekai12Realms.Editor.AssetTools
         private static readonly List<AssetSpec> Priority1Assets = new List<AssetSpec>
         {
             new AssetSpec("bg_title_sky_realm", "bg_title_sky_realm_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "Title sky realm background"),
+            new AssetSpec("splash_game_main", "splash_game_main_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "Game splash screen background"),
             new AssetSpec("bg_town_meadow", "bg_town_meadow_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "Main town meadow background"),
             new AssetSpec("bg_world_map_scroll", "bg_world_map_scroll_1080x1920.png", "Backgrounds", 1080, 1920, GameAssetCategory.Background, false, "World map parchment background"),
             new AssetSpec("bg_battle_meadow", "bg_battle_meadow_1080x960.png", "Backgrounds", 1080, 960, GameAssetCategory.Background, false, "Battle meadow background"),
@@ -592,6 +593,7 @@ namespace Isekai12Realms.Editor.AssetTools
             if (s.id.Contains("town")) { top = new Color(0.52f, 0.95f, 0.82f, 1f); bottom = new Color(0.2f, 0.62f, 0.28f, 1f); }
             if (s.id.Contains("scroll")) { top = new Color(1f, 0.96f, 0.78f, 1f); bottom = new Color(0.74f, 0.54f, 0.28f, 1f); }
             if (s.id.Contains("battle")) { top = new Color(0.35f, 0.76f, 0.98f, 1f); bottom = new Color(0.24f, 0.75f, 0.26f, 1f); }
+            if (s.id.Contains("splash")) { top = new Color(0.96f, 0.84f, 0.45f, 1f); bottom = new Color(0.14f, 0.08f, 0.28f, 1f); }
             if (s.id == "icon_app") { top = new Color(0.22f, 0.75f, 0.95f, 1f); bottom = new Color(0.45f, 0.18f, 0.75f, 1f); }
             for (int y = 0; y < s.height; y++)
             {
@@ -600,6 +602,11 @@ namespace Isekai12Realms.Editor.AssetTools
             }
             FillCircle(p, s.width, s.height, s.width * 0.78f, s.height * 0.78f, s.width * 0.18f, new Color(1f, 0.88f, 0.32f, 0.85f));
             FillCircle(p, s.width, s.height, s.width * 0.25f, s.height * 0.24f, s.width * 0.28f, new Color(1f, 1f, 1f, 0.18f));
+            if (s.id.Contains("splash"))
+            {
+                FillCircle(p, s.width, s.height, s.width * 0.5f, s.height * 0.42f, s.width * 0.24f, new Color(1f, 0.97f, 0.78f, 0.2f));
+                FillCircle(p, s.width, s.height, s.width * 0.5f, s.height * 0.5f, s.width * 0.16f, new Color(1f, 1f, 1f, 0.28f));
+            }
         }
 
         private static void DrawMissing(Color[] p, int w, int h)

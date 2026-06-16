@@ -2589,7 +2589,7 @@ namespace Isekai12Realms.UI
         {
             switch (screenName)
             {
-                case "TitleScreenUI": return "bg_title_sky_realm";
+                case "TitleScreenUI": return "splash_game_main";
                 case "MainTownUI": return "bg_town_meadow";
                 case "WorldMapUI": return "bg_world_map_scroll";
                 case "RealmAdventureMapUI": return "bg_world_map_scroll";

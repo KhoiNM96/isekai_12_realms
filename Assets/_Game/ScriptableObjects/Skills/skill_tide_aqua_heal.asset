@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64c6c70bedd22904b990309eb29a4ed1, type: 3}
+  m_Name: skill_tide_aqua_heal
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Skills.SkillDefinition
+  id: skill_tide_aqua_heal
+  displayName: Aqua Heal
+  description: Aqua Heal prototype skill.
+  classId: tide_acolyte
+  iconAssetId: skill_tide_aqua_heal
+  slotType: 0
+  targetType: 1
+  activationType: 0
+  maxLevel: 5
+  baseManaCost: 25
+  baseCooldown: 1
+  levels:
+  - level: 1
+    manaCost: 25
+    cooldown: 1
+    upgradeGoldCost: 0
+    requiredItemId: 
+    requiredItemAmount: 0
+    descriptionOverride: 
+  - level: 2
+    manaCost: 25
+    cooldown: 1
+    upgradeGoldCost: 100
+    requiredItemId: item_skill_scroll
+    requiredItemAmount: 1
+    descriptionOverride: 
+  - level: 3
+    manaCost: 25
+    cooldown: 1
+    upgradeGoldCost: 250
+    requiredItemId: item_skill_scroll
+    requiredItemAmount: 2
+    descriptionOverride: 
+  - level: 4
+    manaCost: 25
+    cooldown: 1
+    upgradeGoldCost: 500
+    requiredItemId: item_skill_scroll
+    requiredItemAmount: 3
+    descriptionOverride: 
+  - level: 5
+    manaCost: 25
+    cooldown: 1
+    upgradeGoldCost: 900
+    requiredItemId: item_skill_scroll
+    requiredItemAmount: 5
+    descriptionOverride: 
+  effects:
+  - effectType: 1
+    baseValue: 28
+    multiplier: 1
+    tileCount: 0
+    areaSize: 0
+    fromTileType: 0
+    toTileType: 0
+    scalesWithLevel: 1
