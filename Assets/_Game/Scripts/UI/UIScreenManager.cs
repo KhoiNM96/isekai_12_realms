@@ -13,7 +13,8 @@ namespace Isekai12Realms.UI
         CharacterCreation,
         MainTown,
         WorldMap,
-        Adventure,
+        RealmAdventureMap,
+        AdventureMap,
         Battle,
         Hero,
         Skills,
@@ -85,34 +86,76 @@ namespace Isekai12Realms.UI
         {
             GameUIScreen previous = CurrentScreen;
 
-            foreach (KeyValuePair<GameUIScreen, GameObject> entry in screenRoots)
-            {
-                if (entry.Key == screen && entry.Value.activeSelf)
-                {
-                    entry.Value.SetActive(false);
-                }
+            DeactivateAllScreens();
 
-                entry.Value.SetActive(entry.Key == screen);
+            if (screenRoots.TryGetValue(screen, out GameObject activeRoot) && activeRoot != null)
+            {
+                activeRoot.SetActive(true);
             }
 
             if (navigationRoot != null)
             {
-                navigationRoot.SetActive(screen == GameUIScreen.MainTown);
+                navigationRoot.SetActive(IsBottomNavigationVisible(screen));
             }
 
-            if (ServiceLocator.TryResolve<IPopupService>(out IPopupService popupService))
+            EnsureSingleActiveScreen(screen);
+            foreach (KeyValuePair<GameUIScreen, GameObject> entry in screenRoots)
             {
-                popupService.CloseAll();
-            }
-            else
-            {
-                CloseSettings();
-                CloseBattleResult();
+                if (entry.Value != null && entry.Key == screen)
+                {
+                    entry.Value.SetActive(true);
+                }
             }
 
             CurrentScreen = screen;
-            Debug.Log($"[UI] Screen transition: {previous} -> {screen}");
+            Debug.Log($"[UI] ShowScreen {screen}");
             ScreenChanged?.Invoke(previous, screen);
+        }
+
+        private void DeactivateAllScreens()
+        {
+            foreach (KeyValuePair<GameUIScreen, GameObject> entry in screenRoots)
+            {
+                if (entry.Value != null)
+                {
+                    entry.Value.SetActive(false);
+                }
+            }
+        }
+
+        private void EnsureSingleActiveScreen(GameUIScreen current)
+        {
+            List<GameObject> activeScreens = new List<GameObject>();
+            foreach (KeyValuePair<GameUIScreen, GameObject> entry in screenRoots)
+            {
+                if (entry.Value != null && entry.Value.activeSelf)
+                {
+                    activeScreens.Add(entry.Value);
+                }
+            }
+
+            if (activeScreens.Count <= 1)
+            {
+                return;
+            }
+
+            Debug.LogWarning($"[UI] Multiple main screens were active while showing {current}. Auto-correcting.");
+            foreach (KeyValuePair<GameUIScreen, GameObject> entry in screenRoots)
+            {
+                if (entry.Value != null)
+                {
+                    entry.Value.SetActive(entry.Key == current);
+                }
+            }
+        }
+
+        private static bool IsBottomNavigationVisible(GameUIScreen screen)
+        {
+            return screen == GameUIScreen.MainTown ||
+                   screen == GameUIScreen.Hero ||
+                   screen == GameUIScreen.Inventory ||
+                   screen == GameUIScreen.Quest ||
+                   screen == GameUIScreen.Shop;
         }
 
         public void OpenSettings()

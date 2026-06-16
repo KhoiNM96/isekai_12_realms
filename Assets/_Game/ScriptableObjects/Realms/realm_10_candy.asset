@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5e87b4f205f53c4fb2c474edf04fa3c, type: 3}
+  m_Name: realm_10_candy
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Realms.RealmDefinition
+  id: realm_10_candy
+  displayName: Candy Citadel
+  description: Placeholder realm Candy Citadel.
+  order: 10
+  requiredPlayerLevel: 37
+  requiredCompletedRealmId: realm_09_clock
+  rank: 5
+  mapBackgroundAssetId: bg_realm_10_candy
+  mapNodeAssetId: map_node_realm_10_candy
+  battleBackgroundAssetId: bg_battle_candy
+  normalEnemies:
+  - {fileID: 11400000, guid: 095b288f110187e4088d850a8a7b4fb0, type: 2}
+  - {fileID: 11400000, guid: cc26726a39157d942875b03b013f280e, type: 2}
+  - {fileID: 11400000, guid: 4678c035ded030b4a84b6ea2e9dc2385, type: 2}
+  bossEnemy: {fileID: 11400000, guid: 2fad1cf60149b8245878b52789be9ec5, type: 2}
+  monsterSpawnCount: 3
+  unlockedByDefault: 0
+  backgroundAssetId: bg_realm_10_candy
+  stages:
+  - {fileID: 11400000, guid: 28524106f1903004d91dba8f868807c8, type: 2}
+  - {fileID: 11400000, guid: 20b4c1f776526184a96c54bffed4eac8, type: 2}
+  - {fileID: 11400000, guid: cf2b61f96fe229f49b342337e6349682, type: 2}
+  mapWidth: 5760
+  mapHeight: 1440
+  playerSpawnPosition: {x: 180, y: -252}
+  platforms:
+  - position: {x: 2880, y: -360}
+    size: {x: 5760, y: 120}
+    oneWay: 0
+    tierIndex: 1
+  - position: {x: 1542.6667, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 3044, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 4449.3335, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 1542.6667, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 3044, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 4449.3335, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  normalMonsterSpawns:
+  - enemyId: enemy_candy_01
+    spawnPosition: {x: 2856, y: -248}
+    patrolDistance: 2016
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 1
+    platformSegmentIndex: 0
+  - enemyId: enemy_candy_02
+    spawnPosition: {x: 3044, y: -136}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 2
+    platformSegmentIndex: 1
+  - enemyId: enemy_candy_03
+    spawnPosition: {x: 4473.3335, y: 4}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 3
+    platformSegmentIndex: 2
+  bossSpawn:
+    enemyId: boss_candy_placeholder
+    spawnPosition: {x: 4489.3335, y: -136}
+    patrolDistance: 160
+    isBoss: 1
+    initiallyHidden: 1
+    tierIndex: 2
+    platformSegmentIndex: 2
+  mapLayout:
+    viewportWidth: 960
+    totalMapWidth: 5760
+    tier1Y: -360
+    tier2Y: -220
+    tier3Y: -80
+    tier1Segments:
+    - position: {x: 2880, y: -360}
+      size: {x: 5760, y: 120}
+      oneWay: 0
+      tierIndex: 1
+    tier2Segments:
+    - position: {x: 1542.6667, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 3044, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 4449.3335, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    tier3Segments:
+    - position: {x: 1542.6667, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 3044, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 4449.3335, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    playerSpawnPosition: {x: 180, y: -252}
+    monsterSpawns:
+    - enemyId: enemy_candy_01
+      spawnPosition: {x: 2856, y: -248}
+      patrolDistance: 2016
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 1
+      platformSegmentIndex: 0
+    - enemyId: enemy_candy_02
+      spawnPosition: {x: 3044, y: -136}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 2
+      platformSegmentIndex: 1
+    - enemyId: enemy_candy_03
+      spawnPosition: {x: 4473.3335, y: 4}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 3
+      platformSegmentIndex: 2
+    bossSpawn:
+      enemyId: boss_candy_placeholder
+      spawnPosition: {x: 4489.3335, y: -136}
+      patrolDistance: 160
+      isBoss: 1
+      initiallyHidden: 1
+      tierIndex: 2
+      platformSegmentIndex: 2

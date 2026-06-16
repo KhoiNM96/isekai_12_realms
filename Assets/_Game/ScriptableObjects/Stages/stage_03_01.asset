@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de6ff4b0a96707d4b8e8823f9e9ee85f, type: 3}
+  m_Name: stage_03_01
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
+  id: stage_03_01
+  realmId: realm_03_tide
+  displayName: Bubble Trouble
+  description: Bubble Trouble
+  stageNumber: 1
+  recommendedLevel: 7
+  enemy: {fileID: 11400000, guid: c4bfbd86e37add14c9634ca121751e58, type: 2}
+  dropTable: {fileID: 11400000, guid: 20cd94056f2127b48aa337e106eb3fc3, type: 2}
+  baseGoldReward: 90
+  baseExpReward: 130
+  requiredCompletedStageIds:
+  - stage_02_03
+  isBossStage: 0
+  replayable: 1
+  battleBackgroundAssetId: bg_battle_tide

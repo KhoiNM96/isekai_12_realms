@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5e87b4f205f53c4fb2c474edf04fa3c, type: 3}
+  m_Name: realm_05_rootwood
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Realms.RealmDefinition
+  id: realm_05_rootwood
+  displayName: Rootwood Forest
+  description: Placeholder realm Rootwood Forest.
+  order: 5
+  requiredPlayerLevel: 11
+  requiredCompletedRealmId: realm_04_thunder
+  rank: 2
+  mapBackgroundAssetId: bg_realm_05_rootwood
+  mapNodeAssetId: map_node_realm_05_rootwood
+  battleBackgroundAssetId: bg_battle_rootwood
+  normalEnemies:
+  - {fileID: 11400000, guid: ea78e5f3ee216824996a3378cc0b9ac2, type: 2}
+  - {fileID: 11400000, guid: a47626ba51388c14bbde10a1de2c0292, type: 2}
+  - {fileID: 11400000, guid: 49c76db5d806cf6448a5cbe0758d9e62, type: 2}
+  bossEnemy: {fileID: 11400000, guid: 9c2b51ee5627f7946bcc8230d655eb65, type: 2}
+  monsterSpawnCount: 3
+  unlockedByDefault: 0
+  backgroundAssetId: bg_realm_05_rootwood
+  stages:
+  - {fileID: 11400000, guid: a861d741656363643b4ca3085b6f5c1a, type: 2}
+  - {fileID: 11400000, guid: 1a173270112915849a80fbdef5dbe168, type: 2}
+  - {fileID: 11400000, guid: 59e5e988a17285a41b6a64afd0300b65, type: 2}
+  mapWidth: 5760
+  mapHeight: 1440
+  playerSpawnPosition: {x: 180, y: -252}
+  platforms:
+  - position: {x: 2880, y: -360}
+    size: {x: 5760, y: 120}
+    oneWay: 0
+    tierIndex: 1
+  - position: {x: 1542.6667, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 3044, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 4449.3335, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 1542.6667, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 3044, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 4449.3335, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  normalMonsterSpawns:
+  - enemyId: enemy_rootwood_01
+    spawnPosition: {x: 2856, y: -248}
+    patrolDistance: 2016
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 1
+    platformSegmentIndex: 0
+  - enemyId: enemy_rootwood_02
+    spawnPosition: {x: 3044, y: -136}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 2
+    platformSegmentIndex: 1
+  - enemyId: enemy_rootwood_03
+    spawnPosition: {x: 4473.3335, y: 4}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 3
+    platformSegmentIndex: 2
+  bossSpawn:
+    enemyId: boss_rootwood_placeholder
+    spawnPosition: {x: 4489.3335, y: -136}
+    patrolDistance: 160
+    isBoss: 1
+    initiallyHidden: 1
+    tierIndex: 2
+    platformSegmentIndex: 2
+  mapLayout:
+    viewportWidth: 960
+    totalMapWidth: 5760
+    tier1Y: -360
+    tier2Y: -220
+    tier3Y: -80
+    tier1Segments:
+    - position: {x: 2880, y: -360}
+      size: {x: 5760, y: 120}
+      oneWay: 0
+      tierIndex: 1
+    tier2Segments:
+    - position: {x: 1542.6667, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 3044, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 4449.3335, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    tier3Segments:
+    - position: {x: 1542.6667, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 3044, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 4449.3335, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    playerSpawnPosition: {x: 180, y: -252}
+    monsterSpawns:
+    - enemyId: enemy_rootwood_01
+      spawnPosition: {x: 2856, y: -248}
+      patrolDistance: 2016
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 1
+      platformSegmentIndex: 0
+    - enemyId: enemy_rootwood_02
+      spawnPosition: {x: 3044, y: -136}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 2
+      platformSegmentIndex: 1
+    - enemyId: enemy_rootwood_03
+      spawnPosition: {x: 4473.3335, y: 4}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 3
+      platformSegmentIndex: 2
+    bossSpawn:
+      enemyId: boss_rootwood_placeholder
+      spawnPosition: {x: 4489.3335, y: -136}
+      patrolDistance: 160
+      isBoss: 1
+      initiallyHidden: 1
+      tierIndex: 2
+      platformSegmentIndex: 2

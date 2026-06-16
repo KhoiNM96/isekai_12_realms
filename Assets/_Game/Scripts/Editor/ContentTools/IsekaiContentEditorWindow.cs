@@ -97,7 +97,18 @@ namespace Isekai12Realms.Editor.ContentTools
                     realm.displayName = display[i];
                     realm.description = $"Placeholder realm {display[i]}.";
                     realm.order = number;
-                    realm.backgroundAssetId = string.Empty;
+                    realm.requiredPlayerLevel = new[] { 1, 3, 5, 8, 11, 15, 19, 24, 30, 37, 45, 55 }[i];
+                    realm.requiredCompletedRealmId = number == 1 ? string.Empty : $"realm_{number - 1:00}_{names[i - 1]}";
+                    realm.rank = number == 1 ? RealmRank.Beginner : number <= 3 ? RealmRank.Novice : number <= 5 ? RealmRank.Apprentice : number <= 7 ? RealmRank.Adept : number <= 9 ? RealmRank.Expert : number <= 11 ? RealmRank.Master : RealmRank.Mythic;
+                    realm.mapBackgroundAssetId = $"bg_realm_{number:00}_{names[i]}";
+                    realm.mapNodeAssetId = $"map_node_realm_{number:00}_{names[i]}";
+                    realm.battleBackgroundAssetId = $"bg_battle_{names[i]}";
+                    realm.monsterSpawnCount = 3;
+                    realm.unlockedByDefault = number == 1;
+                    realm.backgroundAssetId = realm.mapBackgroundAssetId;
+                    if (realm.normalEnemies == null) realm.normalEnemies = new List<EnemyDefinition>();
+                    realm.normalEnemies.Clear();
+                    realm.bossEnemy = null;
                     if (realm.stages == null) realm.stages = new List<StageDefinition>();
                     realm.stages.Clear();
                     EditorUtility.SetDirty(realm);
@@ -120,6 +131,15 @@ namespace Isekai12Realms.Editor.ContentTools
                         enemy.spriteAssetId = enemyId;
                         enemy.difficulty = boss ? EnemyAIDifficulty.Boss : EnemyAIDifficulty.Normal;
                         EditorUtility.SetDirty(enemy);
+                    }
+
+                    if (boss)
+                    {
+                        realm.bossEnemy = enemy;
+                    }
+                    else if (!realm.normalEnemies.Contains(enemy))
+                    {
+                        realm.normalEnemies.Add(enemy);
                     }
 
                     string dropId = $"drop_stage_{number:00}_{s:00}" + (boss ? "_boss" : string.Empty);
@@ -154,6 +174,32 @@ namespace Isekai12Realms.Editor.ContentTools
                     if (realm.stages == null) realm.stages = new List<StageDefinition>();
                     if (!realm.stages.Contains(stage)) realm.stages.Add(stage);
                 }
+
+                if (realm.normalEnemies != null && realm.normalEnemies.Count < 3)
+                {
+                    string extraEnemyId = $"enemy_{names[i]}_03";
+                    EnemyDefinition extraEnemy = LoadOrCreate<EnemyDefinition>($"{EnemyPath}/{extraEnemyId}.asset");
+                    if (overwrite || string.IsNullOrEmpty(extraEnemy.id))
+                    {
+                        extraEnemy.id = extraEnemyId;
+                        extraEnemy.displayName = $"{display[i]} Variant";
+                        extraEnemy.level = number * 3 + 3;
+                        extraEnemy.maxHp = 90 + number * 18;
+                        extraEnemy.attack = 10 + number;
+                        extraEnemy.defense = number / 3;
+                        extraEnemy.maxMana = 100;
+                        extraEnemy.spriteAssetId = extraEnemyId;
+                        extraEnemy.difficulty = EnemyAIDifficulty.Normal;
+                        EditorUtility.SetDirty(extraEnemy);
+                    }
+
+                    if (!realm.normalEnemies.Contains(extraEnemy))
+                    {
+                        realm.normalEnemies.Add(extraEnemy);
+                    }
+                }
+
+                EditorUtility.SetDirty(realm);
             }
 
             RebuildDatabase();
@@ -349,8 +395,19 @@ namespace Isekai12Realms.Editor.ContentTools
             realm.displayName = EditorGUILayout.TextField("displayName", realm.displayName);
             realm.description = EditorGUILayout.TextField("description", realm.description);
             realm.order = EditorGUILayout.IntField("order", realm.order);
-            realm.backgroundAssetId = EditorGUILayout.TextField("backgroundAssetId", realm.backgroundAssetId);
-            EditorGUILayout.LabelField("Stages", EditorStyles.boldLabel);
+            realm.requiredPlayerLevel = Mathf.Max(1, EditorGUILayout.IntField("requiredPlayerLevel", realm.requiredPlayerLevel));
+            realm.requiredCompletedRealmId = EditorGUILayout.TextField("requiredCompletedRealmId", realm.requiredCompletedRealmId);
+            realm.rank = (RealmRank)EditorGUILayout.EnumPopup("rank", realm.rank);
+            realm.mapBackgroundAssetId = EditorGUILayout.TextField("mapBackgroundAssetId", realm.mapBackgroundAssetId);
+            realm.mapNodeAssetId = EditorGUILayout.TextField("mapNodeAssetId", realm.mapNodeAssetId);
+            realm.battleBackgroundAssetId = EditorGUILayout.TextField("battleBackgroundAssetId", realm.battleBackgroundAssetId);
+            realm.monsterSpawnCount = Mathf.Max(1, EditorGUILayout.IntField("monsterSpawnCount", realm.monsterSpawnCount));
+            realm.unlockedByDefault = EditorGUILayout.Toggle("unlockedByDefault", realm.unlockedByDefault);
+            EditorGUILayout.LabelField("Normal Enemies", EditorStyles.boldLabel);
+            if (realm.normalEnemies == null) realm.normalEnemies = new List<EnemyDefinition>();
+            DrawObjectList(realm.normalEnemies);
+            realm.bossEnemy = (EnemyDefinition)EditorGUILayout.ObjectField("bossEnemy", realm.bossEnemy, typeof(EnemyDefinition), false);
+            EditorGUILayout.LabelField("Stages (legacy)", EditorStyles.boldLabel);
             if (realm.stages == null) realm.stages = new List<StageDefinition>();
             DrawObjectList(realm.stages);
             StageDefinition addStage = (StageDefinition)EditorGUILayout.ObjectField("Add Stage", null, typeof(StageDefinition), false);
@@ -547,7 +604,9 @@ namespace Isekai12Realms.Editor.ContentTools
             HashSet<string> stageIds = new HashSet<string>();
             HashSet<string> enemyIds = new HashSet<string>();
             HashSet<string> dropIds = new HashSet<string>();
-            foreach (RealmDefinition r in (database.realms ?? new List<RealmDefinition>()).Where(r => r != null)) { AddValidation(ValidateRealm(r), errors); if (!realmIds.Add(r.id)) errors.Add("Duplicate realm id: " + r.id); if (r.stages == null || r.stages.Count == 0) errors.Add("Realm has no stages: " + r.id); }
+            foreach (RealmDefinition r in (database.realms ?? new List<RealmDefinition>()).Where(r => r != null)) { AddValidation(ValidateRealm(r), errors); if (!realmIds.Add(r.id)) errors.Add("Duplicate realm id: " + r.id); }
+            foreach (RealmDefinition r in (database.realms ?? new List<RealmDefinition>()).Where(r => r != null)) if (!string.IsNullOrEmpty(r.requiredCompletedRealmId) && !realmIds.Contains(r.requiredCompletedRealmId)) errors.Add($"Realm requiredCompletedRealmId missing: {r.id} -> {r.requiredCompletedRealmId}");
+            foreach (RealmDefinition r in (database.realms ?? new List<RealmDefinition>()).Where(r => r != null)) { if (r.normalEnemies == null || r.normalEnemies.Count == 0) warnings.Add("Realm normalEnemies missing: " + r.id); if (r.bossEnemy == null) warnings.Add("Realm bossEnemy missing: " + r.id); if (string.IsNullOrEmpty(r.mapBackgroundAssetId)) warnings.Add("Realm mapBackgroundAssetId missing: " + r.id); if (string.IsNullOrEmpty(r.mapNodeAssetId)) warnings.Add("Realm mapNodeAssetId missing: " + r.id); if (string.IsNullOrEmpty(r.battleBackgroundAssetId)) warnings.Add("Realm battleBackgroundAssetId missing: " + r.id); }
             foreach (StageDefinition s in (database.stages ?? new List<StageDefinition>()).Where(s => s != null)) { AddValidation(ValidateStage(s), errors); if (!stageIds.Add(s.id)) errors.Add("Duplicate stage id: " + s.id); if (!realmIds.Contains(s.realmId)) errors.Add("Stage realmId missing: " + s.id); }
             foreach (EnemyDefinition e in (database.enemies ?? new List<EnemyDefinition>()).Where(e => e != null)) { AddValidation(ValidateEnemy(e), errors); if (!enemyIds.Add(e.id)) errors.Add("Duplicate enemy id: " + e.id); }
             foreach (DropTableDefinition d in (database.dropTables ?? new List<DropTableDefinition>()).Where(d => d != null)) { AddValidation(ValidateDropTable(d), errors); if (!dropIds.Add(d.id)) errors.Add("Duplicate drop table id: " + d.id); }
@@ -784,7 +843,7 @@ namespace Isekai12Realms.Editor.ContentTools
         private static void AddMissing<T>(List<T> list, T asset) where T : UnityEngine.Object { if (asset != null && !list.Contains(asset)) list.Add(asset); }
         private static string UniqueId(string baseId, IEnumerable<string> existingIds) { HashSet<string> existing = new HashSet<string>(existingIds.Where(id => !string.IsNullOrEmpty(id))); string id = baseId; int suffix = 2; while (existing.Contains(id)) id = baseId + "_" + suffix++; return id; }
         private static void AddValidation(List<string> src, List<string> dst) { foreach (string s in src) dst.Add(s); }
-        private List<string> ValidateRealm(RealmDefinition r) { List<string> e = new List<string>(); if (!ValidId(r.id)) e.Add("Invalid realm id: " + r.id); if (string.IsNullOrEmpty(r.displayName)) e.Add("Realm displayName missing: " + r.id); if (r.order <= 0) e.Add("Realm order <= 0: " + r.id); if (database.realms.Count(x => x != null && x.id == r.id) > 1) e.Add("Duplicate realm id: " + r.id); return e; }
+        private List<string> ValidateRealm(RealmDefinition r) { List<string> e = new List<string>(); if (!ValidId(r.id)) e.Add("Invalid realm id: " + r.id); if (string.IsNullOrEmpty(r.displayName)) e.Add("Realm displayName missing: " + r.id); if (r.order <= 0) e.Add("Realm order <= 0: " + r.id); if (r.requiredPlayerLevel < 1) e.Add("Realm requiredPlayerLevel < 1: " + r.id); if (r.order > 1 && string.IsNullOrEmpty(r.requiredCompletedRealmId) && !r.unlockedByDefault) e.Add("Realm requires requiredCompletedRealmId: " + r.id); if (database.realms.Count(x => x != null && x.id == r.id) > 1) e.Add("Duplicate realm id: " + r.id); return e; }
         private List<string> ValidateStage(StageDefinition s) { List<string> e = new List<string>(); if (!ValidId(s.id)) e.Add("Invalid stage id: " + s.id); if (string.IsNullOrEmpty(s.realmId)) e.Add("Stage realmId missing: " + s.id); if (s.enemy == null) e.Add("Stage enemy missing: " + s.id); if (s.dropTable == null) e.Add("Stage dropTable missing: " + s.id); if (s.recommendedLevel < 1) e.Add("Stage recommendedLevel < 1: " + s.id); if (s.baseGoldReward < 0) e.Add("Stage gold < 0: " + s.id); if (s.baseExpReward < 0) e.Add("Stage exp < 0: " + s.id); if (database.stages.Count(x => x != null && x.id == s.id) > 1) e.Add("Duplicate stage id: " + s.id); HashSet<string> stageIds = new HashSet<string>(database.stages.Where(x => x != null).Select(x => x.id)); foreach (string required in s.requiredCompletedStageIds ?? new List<string>()) if (!stageIds.Contains(required)) e.Add($"{s.id} requires missing stage {required}"); return e; }
         private List<string> ValidateEnemy(EnemyDefinition eDef) { List<string> e = new List<string>(); if (!ValidId(eDef.id)) e.Add("Invalid enemy id: " + eDef.id); if (string.IsNullOrEmpty(eDef.displayName)) e.Add("Enemy displayName missing: " + eDef.id); if (eDef.level < 1) e.Add("Enemy level < 1: " + eDef.id); if (eDef.maxHp <= 0) e.Add("Enemy maxHp <= 0: " + eDef.id); if (eDef.attack < 0) e.Add("Enemy attack < 0: " + eDef.id); if (eDef.defense < 0) e.Add("Enemy defense < 0: " + eDef.id); if (database.enemies.Count(x => x != null && x.id == eDef.id) > 1) e.Add("Duplicate enemy id: " + eDef.id); return e; }
         private List<string> ValidateDropTable(DropTableDefinition d) { List<string> e = new List<string>(); if (!ValidId(d.id)) e.Add("Invalid drop table id: " + d.id); foreach (DropEntry drop in d.drops ?? new List<DropEntry>()) { if (drop.chance < 0 || drop.chance > 1) e.Add("Invalid chance in " + d.id); if (drop.minAmount < 1) e.Add("minAmount < 1 in " + d.id); if (drop.maxAmount < drop.minAmount) e.Add("maxAmount < minAmount in " + d.id); if (drop.isEquipment && string.IsNullOrEmpty(drop.equipmentId)) e.Add("Equipment drop missing equipmentId in " + d.id); if (!drop.isEquipment && string.IsNullOrEmpty(drop.itemId)) e.Add("Item drop missing itemId in " + d.id); } if (database.dropTables.Count(x => x != null && x.id == d.id) > 1) e.Add("Duplicate drop table id: " + d.id); return e; }
@@ -804,7 +863,7 @@ namespace Isekai12Realms.Editor.ContentTools
         private void DuplicateAsset<T>(T source, string folder, Action<T> onCreated) where T : ScriptableObject { string path = AssetDatabase.GetAssetPath(source); string newPath = AssetDatabase.GenerateUniqueAssetPath($"{folder}/{source.name}_copy.asset"); if (!AssetDatabase.CopyAsset(path, newPath)) { Debug.LogError("[Content] Could not duplicate asset: " + path); return; } T copy = AssetDatabase.LoadAssetAtPath<T>(newPath); if (copy == null) { Debug.LogError("[Content] Could not load duplicated asset: " + newPath); return; } onCreated(copy); SaveAsset(copy); SaveAsset(database); }
 
         [Serializable] public class ContentExportDto { public List<RealmDto> realms; public List<StageDto> stages; public List<EnemyDto> enemies; public List<DropTableDto> dropTables; }
-        [Serializable] public class RealmDto { public string id, displayName, description, backgroundAssetId; public int order; public List<string> stageIds; public static RealmDto From(RealmDefinition r) => new RealmDto { id = r.id, displayName = r.displayName, description = r.description, order = r.order, backgroundAssetId = r.backgroundAssetId, stageIds = (r.stages ?? new List<StageDefinition>()).Where(s => s != null).Select(s => s.id).ToList() }; public void Apply(RealmDefinition r, Dictionary<string, StageDefinition> stages) { r.id = id; r.displayName = displayName; r.description = description; r.order = order; r.backgroundAssetId = backgroundAssetId; r.stages = (stageIds ?? new List<string>()).Where(stages.ContainsKey).Select(x => stages[x]).ToList(); } }
+        [Serializable] public class RealmDto { public string id, displayName, description, backgroundAssetId, mapBackgroundAssetId, mapNodeAssetId, battleBackgroundAssetId, requiredCompletedRealmId; public int order, requiredPlayerLevel, monsterSpawnCount; public string rank; public bool unlockedByDefault; public List<string> stageIds; public static RealmDto From(RealmDefinition r) => new RealmDto { id = r.id, displayName = r.displayName, description = r.description, order = r.order, backgroundAssetId = r.backgroundAssetId, mapBackgroundAssetId = r.mapBackgroundAssetId, mapNodeAssetId = r.mapNodeAssetId, battleBackgroundAssetId = r.battleBackgroundAssetId, requiredCompletedRealmId = r.requiredCompletedRealmId, requiredPlayerLevel = r.requiredPlayerLevel, monsterSpawnCount = r.monsterSpawnCount, rank = r.rank.ToString(), unlockedByDefault = r.unlockedByDefault, stageIds = (r.stages ?? new List<StageDefinition>()).Where(s => s != null).Select(s => s.id).ToList() }; public void Apply(RealmDefinition r, Dictionary<string, StageDefinition> stages) { r.id = id; r.displayName = displayName; r.description = description; r.order = order; r.backgroundAssetId = backgroundAssetId; r.mapBackgroundAssetId = mapBackgroundAssetId; r.mapNodeAssetId = mapNodeAssetId; r.battleBackgroundAssetId = battleBackgroundAssetId; r.requiredCompletedRealmId = requiredCompletedRealmId; r.requiredPlayerLevel = requiredPlayerLevel; r.monsterSpawnCount = monsterSpawnCount; r.unlockedByDefault = unlockedByDefault; if (Enum.TryParse(rank, out RealmRank parsedRank)) r.rank = parsedRank; r.stages = (stageIds ?? new List<string>()).Where(stages.ContainsKey).Select(x => stages[x]).ToList(); } }
         [Serializable] public class StageDto { public string id, realmId, displayName, description, enemyId, dropTableId, battleBackgroundAssetId; public int stageNumber, recommendedLevel, baseGoldReward, baseExpReward; public List<string> requiredCompletedStageIds; public bool isBossStage, replayable; public static StageDto From(StageDefinition s) => new StageDto { id = s.id, realmId = s.realmId, displayName = s.displayName, description = s.description, stageNumber = s.stageNumber, recommendedLevel = s.recommendedLevel, enemyId = s.enemy != null ? s.enemy.id : string.Empty, dropTableId = s.dropTable != null ? s.dropTable.id : string.Empty, baseGoldReward = s.baseGoldReward, baseExpReward = s.baseExpReward, requiredCompletedStageIds = s.requiredCompletedStageIds, isBossStage = s.isBossStage, replayable = s.replayable, battleBackgroundAssetId = s.battleBackgroundAssetId }; public void Apply(StageDefinition s, Dictionary<string, EnemyDefinition> enemies, Dictionary<string, DropTableDefinition> drops) { s.id = id; s.realmId = realmId; s.displayName = displayName; s.description = description; s.stageNumber = stageNumber; s.recommendedLevel = recommendedLevel; s.enemy = enemies.ContainsKey(enemyId) ? enemies[enemyId] : null; s.dropTable = drops.ContainsKey(dropTableId) ? drops[dropTableId] : null; s.baseGoldReward = baseGoldReward; s.baseExpReward = baseExpReward; s.requiredCompletedStageIds = requiredCompletedStageIds ?? new List<string>(); s.isBossStage = isBossStage; s.replayable = replayable; s.battleBackgroundAssetId = battleBackgroundAssetId; } }
         [Serializable] public class EnemyDto { public string id, displayName, spriteAssetId; public int level, maxHp, attack, defense, maxMana; public EnemyAIDifficulty difficulty; public static EnemyDto From(EnemyDefinition e) => new EnemyDto { id = e.id, displayName = e.displayName, level = e.level, maxHp = e.maxHp, attack = e.attack, defense = e.defense, maxMana = e.maxMana, spriteAssetId = e.spriteAssetId, difficulty = e.difficulty }; public void Apply(EnemyDefinition e) { e.id = id; e.displayName = displayName; e.level = level; e.maxHp = maxHp; e.attack = attack; e.defense = defense; e.maxMana = maxMana; e.spriteAssetId = spriteAssetId; e.difficulty = difficulty; } }
         [Serializable] public class DropTableDto { public string id; public List<DropEntryDto> drops; public static DropTableDto From(DropTableDefinition d) => new DropTableDto { id = d.id, drops = (d.drops ?? new List<DropEntry>()).Select(DropEntryDto.From).ToList() }; public void Apply(DropTableDefinition d) { d.id = id; d.drops = (drops ?? new List<DropEntryDto>()).Select(x => x.ToDropEntry()).ToList(); } }

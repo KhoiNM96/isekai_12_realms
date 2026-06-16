@@ -1,0 +1,12 @@
+# ninja log v5
+80	763	8032212417831214	FramePacing/CMakeFiles/swappywrapper.dir/UnitySwappyWrapper.cpp.o	2d5e1af08b9db0ef
+764	1878	8032212428150555	D:/unity/project/Isekai 12 Realms/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2s2l65i6/obj/arm64-v8a/libswappywrapper.so	ad30fb84c349e730
+1	2273	8032212433585928	GameActivity/CMakeFiles/game.dir/UGAConfiguration.cpp.o	755fb2aaa9c9654b
+16	2280	8032212433695923	GameActivity/CMakeFiles/game.dir/UGAEntry.cpp.o	11f9004b8d97b8b4
+43	2337	8032212434446543	GameActivity/CMakeFiles/game.dir/UGAInputMotionEvent.cpp.o	139f2666184e5636
+34	2363	8032212434677051	GameActivity/CMakeFiles/game.dir/UGADebug.cpp.o	2b69671570c9ed02
+63	2399	8032212435190967	GameActivity/CMakeFiles/game.dir/UGAInputKeyEvent.cpp.o	b61bc6fe706eff5b
+73	2628	8032212437474606	GameActivity/CMakeFiles/game.dir/UGASoftKeyboard.cpp.o	358a122f912b5414
+24	2678	8032212437973834	GameActivity/CMakeFiles/game.dir/UGAInput.cpp.o	9c868ab9a2619599
+9	2904	8032212440165737	GameActivity/CMakeFiles/game.dir/UGAApplication.cpp.o	90a791deb8cb2bb9
+2904	3026	8032212441488744	D:/unity/project/Isekai 12 Realms/Library/Bee/Android/Prj/IL2CPP/Gradle/unityLibrary/build/intermediates/cxx/RelWithDebInfo/2s2l65i6/obj/arm64-v8a/libgame.so	ca9c0aeeb8e12727

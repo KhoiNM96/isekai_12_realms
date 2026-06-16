@@ -20,7 +20,7 @@ MonoBehaviour:
     height: 1920
     category: 0
     transparent: 0
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 624baefa545190c2746d2d6d359afec8, type: 3}
   - id: bg_adventure_meadow
     fileName: bg_adventure_meadow_1080x1920.png
@@ -29,7 +29,7 @@ MonoBehaviour:
     height: 1920
     category: 0
     transparent: 0
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 8aa72576ef084eaef7663edaf0f5af3e, type: 3}
   - id: bg_adventure_tide
     fileName: bg_adventure_tide_1080x1920.png
@@ -38,7 +38,7 @@ MonoBehaviour:
     height: 1920
     category: 0
     transparent: 0
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 4c2038836868390805e18cbce714cfb6, type: 3}
   - id: bg_battle_ember
     fileName: bg_battle_ember_1080x960.png
@@ -47,7 +47,7 @@ MonoBehaviour:
     height: 960
     category: 0
     transparent: 0
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: d74153dcfb8a403b09ceda0fb54ec67e, type: 3}
   - id: bg_battle_meadow
     fileName: bg_battle_meadow_1080x960.png
@@ -56,7 +56,7 @@ MonoBehaviour:
     height: 960
     category: 0
     transparent: 0
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 84488de4598f8bc48b0b2c051b0f51a9, type: 3}
   - id: bg_battle_tide
     fileName: bg_battle_tide_1080x960.png
@@ -65,7 +65,7 @@ MonoBehaviour:
     height: 960
     category: 0
     transparent: 0
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 7e2977526454226074075cbabedb8980, type: 3}
   - id: bg_title_sky_realm
     fileName: bg_title_sky_realm_1080x1920.png
@@ -74,7 +74,7 @@ MonoBehaviour:
     height: 1920
     category: 0
     transparent: 0
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 18a22639a7ab6104191b76a8205bd43d, type: 3}
   - id: bg_town_meadow
     fileName: bg_town_meadow_1080x1920.png
@@ -83,7 +83,7 @@ MonoBehaviour:
     height: 1920
     category: 0
     transparent: 0
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 4afb8e883de12754290e2c880224b557, type: 3}
   - id: bg_world_map_scroll
     fileName: bg_world_map_scroll_1080x1920.png
@@ -92,7 +92,7 @@ MonoBehaviour:
     height: 1920
     category: 0
     transparent: 0
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 557982688e8f9d94eb74c2580d849705, type: 3}
   - id: char_hero_flame_attack
     fileName: char_hero_flame_attack_512x512.png
@@ -101,7 +101,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 6c433b402b087734395838045cb38646, type: 3}
   - id: char_hero_flame_cast
     fileName: char_hero_flame_cast_512x512.png
@@ -110,7 +110,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 073af1d6c15b0bc40a288a6a618c37f2, type: 3}
   - id: char_hero_flame_hurt
     fileName: char_hero_flame_hurt_512x512.png
@@ -119,7 +119,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 605a8b7e818fdd44c9b7231c68d1431d, type: 3}
   - id: char_hero_flame_idle
     fileName: char_hero_flame_idle_512x512.png
@@ -128,7 +128,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 1e6faa3a57f3d804984cdf53dfed3c7b, type: 3}
   - id: char_hero_storm_attack
     fileName: char_hero_storm_attack_512x512.png
@@ -137,7 +137,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 398f5b028cbf0d76f0c14b658190ebf3, type: 3}
   - id: char_hero_storm_cast
     fileName: char_hero_storm_cast_512x512.png
@@ -146,7 +146,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 428ce6b146ba6ebecd114657d0658408, type: 3}
   - id: char_hero_storm_hurt
     fileName: char_hero_storm_hurt_512x512.png
@@ -155,7 +155,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 5602266faf4d079f94ada44b236d88c4, type: 3}
   - id: char_hero_storm_idle
     fileName: char_hero_storm_idle_512x512.png
@@ -164,7 +164,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 8da15758fa46d0d7c2a1a85d64a00b1c, type: 3}
   - id: char_hero_tide_attack
     fileName: char_hero_tide_attack_512x512.png
@@ -173,7 +173,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: d9dce5ff26dad3913ef89b6a4b66f8d3, type: 3}
   - id: char_hero_tide_cast
     fileName: char_hero_tide_cast_512x512.png
@@ -182,7 +182,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 467546ed474fdc47b4f4a7949df07824, type: 3}
   - id: char_hero_tide_hurt
     fileName: char_hero_tide_hurt_512x512.png
@@ -191,7 +191,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 0e11d5797007507cf6bede668f436de9, type: 3}
   - id: char_hero_tide_idle
     fileName: char_hero_tide_idle_512x512.png
@@ -200,7 +200,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 13ace29a6dbfc793b4872ce300341d7e, type: 3}
   - id: portrait_hero_flame
     fileName: portrait_hero_flame_512x512.png
@@ -209,7 +209,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 35bcb059bce0d52aebad6e007b0921f2, type: 3}
   - id: portrait_hero_storm
     fileName: portrait_hero_storm_512x512.png
@@ -218,7 +218,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: c6c0816d6209a806ef6bf1aa26c319a9, type: 3}
   - id: portrait_hero_tide
     fileName: portrait_hero_tide_512x512.png
@@ -227,7 +227,7 @@ MonoBehaviour:
     height: 512
     category: 1
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 8ef509031b1ac03bdd146124ec749d2d, type: 3}
   - id: boss_bubble_serpent
     fileName: boss_bubble_serpent_768x768.png
@@ -236,7 +236,7 @@ MonoBehaviour:
     height: 768
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 08d84e01105b3bfa669515f1d11564a1, type: 3}
   - id: boss_cinder_boar
     fileName: boss_cinder_boar_768x768.png
@@ -245,7 +245,7 @@ MonoBehaviour:
     height: 768
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 197c8b45b02582e5f7f9c23820901270, type: 3}
   - id: boss_slime_king
     fileName: boss_slime_king_768x768.png
@@ -254,7 +254,7 @@ MonoBehaviour:
     height: 768
     category: 2
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 195adce7a1e44164fa84dd77687664ff, type: 3}
   - id: enemy_ember_piglet
     fileName: enemy_ember_piglet_512x512.png
@@ -263,7 +263,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: c21fc20bcf9bc5f69fc88aa37d343d69, type: 3}
   - id: enemy_ember_pumpkin
     fileName: enemy_ember_pumpkin_512x512.png
@@ -272,7 +272,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 7c588e3818f10308c73f24a73da4b9ca, type: 3}
   - id: enemy_ember_sprite
     fileName: enemy_ember_sprite_512x512.png
@@ -281,7 +281,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 4cc06bb5204c9944a9ec314ca4e605e3, type: 3}
   - id: enemy_meadow_leaf_bug
     fileName: enemy_meadow_leaf_bug_512x512.png
@@ -290,7 +290,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 16b9762a574af6357af88de498b19af1, type: 3}
   - id: enemy_meadow_mushroom
     fileName: enemy_meadow_mushroom_512x512.png
@@ -299,7 +299,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 87e4879956b250d2747a5f46f5c79075, type: 3}
   - id: enemy_meadow_slime
     fileName: enemy_meadow_slime_512x512.png
@@ -308,7 +308,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: efdbd962a1d536945a95c1f976162dd3, type: 3}
   - id: enemy_tide_bubble
     fileName: enemy_tide_bubble_512x512.png
@@ -317,7 +317,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 75197e3f060c2bc4da138e2e9a14de33, type: 3}
   - id: enemy_tide_crab
     fileName: enemy_tide_crab_512x512.png
@@ -326,7 +326,7 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 7e8b75089872a8afa7b732562c5e8471, type: 3}
   - id: enemy_tide_jelly
     fileName: enemy_tide_jelly_512x512.png
@@ -335,350 +335,8 @@ MonoBehaviour:
     height: 512
     category: 2
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 28927ba1315cee1e1d48081c68232b89, type: 3}
-  - id: equip_armor_crystal_mail
-    fileName: equip_armor_crystal_mail_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_armor_crystal_mail_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 47b0e3905b53faaa5ae577ef4e89b60c, type: 3}
-  - id: equip_armor_leaf_vest
-    fileName: equip_armor_leaf_vest_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_armor_leaf_vest_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 1c8df421c16f87583192cf909483ac16, type: 3}
-  - id: equip_armor_traveler_coat
-    fileName: equip_armor_traveler_coat_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_armor_traveler_coat_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 14206114cba716ef2d2c8015d8249aa5, type: 3}
-  - id: equip_boots_traveler
-    fileName: equip_boots_traveler_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_boots_traveler_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 1bdd2ae2c3440f5bf04c45f7c59a807a, type: 3}
-  - id: equip_charm_realm
-    fileName: equip_charm_realm_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_charm_realm_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 1bf1e77677edf0e4006c00760b13dfec, type: 3}
-  - id: equip_head_leaf_hood
-    fileName: equip_head_leaf_hood_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_head_leaf_hood_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: c581683fe7565a0a9cbf34dbc770ae14, type: 3}
-  - id: equip_ring_lucky
-    fileName: equip_ring_lucky_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_ring_lucky_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 9d3918bb374fc871ba4d501c2dd98f74, type: 3}
-  - id: equip_weapon_flame_sword
-    fileName: equip_weapon_flame_sword_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_flame_sword_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: f4a9c33c995c1dc03b9d7e89d9810d9c, type: 3}
-  - id: equip_weapon_storm_dagger
-    fileName: equip_weapon_storm_dagger_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_storm_dagger_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: a4667420563a236b633830ca99441546, type: 3}
-  - id: equip_weapon_tide_wand
-    fileName: equip_weapon_tide_wand_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_tide_wand_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 2b641ed765e79e0bd4953ddaeeec318a, type: 3}
-  - id: equip_weapon_wooden_sword
-    fileName: equip_weapon_wooden_sword_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_wooden_sword_128x128.png
-    width: 128
-    height: 128
-    category: 6
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 74ce8cd68416607b70b8148f4b9f0bbf, type: 3}
-  - id: currency_gold
-    fileName: currency_gold_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/currency_gold_128x128.png
-    width: 128
-    height: 128
-    category: 13
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 2746f6056e7e9ad48a81304dbb133b09, type: 3}
-  - id: currency_realm_token
-    fileName: currency_realm_token_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/currency_realm_token_128x128.png
-    width: 128
-    height: 128
-    category: 13
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 046efb389e62dd4a69e435bf2679d416, type: 3}
-  - id: currency_soul_gem
-    fileName: currency_soul_gem_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/currency_soul_gem_128x128.png
-    width: 128
-    height: 128
-    category: 13
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 74d359ca1b8c031408631f5b180ec679, type: 3}
-  - id: item_food_basket
-    fileName: item_food_basket_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/item_food_basket_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 6b4c693a0fb806b3b2a0ac91fb95dac5, type: 3}
-  - id: item_lucky_cookie
-    fileName: item_lucky_cookie_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/item_lucky_cookie_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: e5f92a4d4ffc5e7f6c097e3454a4d398, type: 3}
-  - id: item_potion_medium
-    fileName: item_potion_medium_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/item_potion_medium_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: b5b3ecacbf23a3baf4e6a49cedfd56a0, type: 3}
-  - id: item_potion_small
-    fileName: item_potion_small_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/item_potion_small_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: fb760ae94587d9e140dd6e6638e49cd0, type: 3}
-  - id: item_shuffle_bell
-    fileName: item_shuffle_bell_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/item_shuffle_bell_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: cbd7f17c891ba84645bc7b82ac8eca10, type: 3}
-  - id: item_skill_scroll
-    fileName: item_skill_scroll_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/item_skill_scroll_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 432b6db5361f7dfb1c7dbfc88fe9ea84, type: 3}
-  - id: mat_crystal_shard
-    fileName: mat_crystal_shard_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/mat_crystal_shard_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 9f1f941120fc1b05924997ef4f6a0f5e, type: 3}
-  - id: mat_ember_dust
-    fileName: mat_ember_dust_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/mat_ember_dust_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 0b8ab8688eab14b148f29d13724da3b0, type: 3}
-  - id: mat_slime_jelly
-    fileName: mat_slime_jelly_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/mat_slime_jelly_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 7881f12a7df5fe3ea86a6c5fadf5acba, type: 3}
-  - id: mat_thunder_feather
-    fileName: mat_thunder_feather_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/mat_thunder_feather_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: e65f7a09b029a85071c957ac1e655e60, type: 3}
-  - id: mat_tide_pearl
-    fileName: mat_tide_pearl_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Items/mat_tide_pearl_128x128.png
-    width: 128
-    height: 128
-    category: 7
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 36738afec2062e3ed855e47dc729f325, type: 3}
-  - id: icon_app
-    fileName: icon_app_1024x1024.png
-    relativePath: Assets/_Game/Art/Generated/Loading/icon_app_1024x1024.png
-    width: 1024
-    height: 1024
-    category: 12
-    transparent: 0
-    priority: 2
-    sprite: {fileID: 21300000, guid: c460a7b19bf7c3542900bddac75c4a6a, type: 3}
-  - id: loading_bar_fill
-    fileName: loading_bar_fill_768x96.png
-    relativePath: Assets/_Game/Art/Generated/Loading/loading_bar_fill_768x96.png
-    width: 768
-    height: 96
-    category: 12
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 033fe7907b0a4e94f8fd27c5336bda01, type: 3}
-  - id: loading_bar_frame
-    fileName: loading_bar_frame_768x96.png
-    relativePath: Assets/_Game/Art/Generated/Loading/loading_bar_frame_768x96.png
-    width: 768
-    height: 96
-    category: 12
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 0e04b99067f20f349906cf2b8ed0d8f4, type: 3}
-  - id: logo_game_main
-    fileName: logo_game_main_768x384.png
-    relativePath: Assets/_Game/Art/Generated/Loading/logo_game_main_768x384.png
-    width: 768
-    height: 384
-    category: 12
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 9681af654572930489a76db27ea74a9c, type: 3}
-  - id: map_node_realm_01_meadow
-    fileName: map_node_realm_01_meadow_192x192.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_node_realm_01_meadow_192x192.png
-    width: 192
-    height: 192
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 276199b636e202f75204484d5f8b2bb9, type: 3}
-  - id: map_node_realm_02_ember
-    fileName: map_node_realm_02_ember_192x192.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_node_realm_02_ember_192x192.png
-    width: 192
-    height: 192
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: a457da0a3e2d41ae8396071a0c0fdf41, type: 3}
-  - id: map_node_realm_03_tide
-    fileName: map_node_realm_03_tide_192x192.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_node_realm_03_tide_192x192.png
-    width: 192
-    height: 192
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 4cd3914397e74f91896dd60d3752e328, type: 3}
-  - id: map_stage_available
-    fileName: map_stage_available_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_available_128x128.png
-    width: 128
-    height: 128
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: b6d98eb707039856bd4641377fba843f, type: 3}
-  - id: map_stage_boss
-    fileName: map_stage_boss_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_boss_128x128.png
-    width: 128
-    height: 128
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: e38fac8e20eff7b654325424b14f3f08, type: 3}
-  - id: map_stage_chest
-    fileName: map_stage_chest_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_chest_128x128.png
-    width: 128
-    height: 128
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 253bccdb7b7d0a49042aa7fe4feb5544, type: 3}
-  - id: map_stage_completed
-    fileName: map_stage_completed_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_completed_128x128.png
-    width: 128
-    height: 128
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 80c4ffd3ca6b6d30257a7aeeeaebe561, type: 3}
-  - id: map_stage_farm
-    fileName: map_stage_farm_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_farm_128x128.png
-    width: 128
-    height: 128
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 1bfc1f3e8449e9be5203896e8269cc32, type: 3}
-  - id: map_stage_locked
-    fileName: map_stage_locked_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_locked_128x128.png
-    width: 128
-    height: 128
-    category: 11
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: ef47a36c280e834dde66790e0205d3a6, type: 3}
   - id: npc_brann_blacksmith
     fileName: npc_brann_blacksmith_512x512.png
     relativePath: Assets/_Game/Art/Generated/NPCs/npc_brann_blacksmith_512x512.png
@@ -686,7 +344,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 14d3ca170f858497c193f319359913ed, type: 3}
   - id: npc_mira_mail_cat
     fileName: npc_mira_mail_cat_512x512.png
@@ -695,7 +353,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 6c2c1bee20d99a0b79b2aec4e1252557, type: 3}
   - id: npc_nami_healer
     fileName: npc_nami_healer_512x512.png
@@ -704,7 +362,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: fd58f8d9813712fcd1101cfa48c1523e, type: 3}
   - id: npc_quest_elder
     fileName: npc_quest_elder_512x512.png
@@ -713,7 +371,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 701683a43d1817f5eea5b77033005bc4, type: 3}
   - id: npc_shop_keeper
     fileName: npc_shop_keeper_512x512.png
@@ -722,7 +380,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: b4d3a0c62f6ba47b6efb492152004106, type: 3}
   - id: npc_skill_librarian
     fileName: npc_skill_librarian_512x512.png
@@ -731,7 +389,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 59e2d3e9e413e17554874fff94b109a1, type: 3}
   - id: portrait_npc_brann_blacksmith
     fileName: portrait_npc_brann_blacksmith_512x512.png
@@ -740,7 +398,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 424ad97fafd26ed3ab90a8de8ef9c3e7, type: 3}
   - id: portrait_npc_mira_mail_cat
     fileName: portrait_npc_mira_mail_cat_512x512.png
@@ -749,7 +407,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: fe2b7a8ad979cfb866e4ad2d8fda5b93, type: 3}
   - id: portrait_npc_nami_healer
     fileName: portrait_npc_nami_healer_512x512.png
@@ -758,7 +416,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: ac5bf326551a36c10451d3dc2c6086d9, type: 3}
   - id: portrait_npc_quest_elder
     fileName: portrait_npc_quest_elder_512x512.png
@@ -767,7 +425,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 33716aaa293b17bc34a6def9627bd9ba, type: 3}
   - id: portrait_npc_shop_keeper
     fileName: portrait_npc_shop_keeper_512x512.png
@@ -776,7 +434,7 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 6e9276179c393c7d44198e2744b391dd, type: 3}
   - id: portrait_npc_skill_librarian
     fileName: portrait_npc_skill_librarian_512x512.png
@@ -785,170 +443,8 @@ MonoBehaviour:
     height: 512
     category: 3
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: f62df13f1ae35c95e0ea3a143e7c4855, type: 3}
-  - id: skill_flame_burst
-    fileName: skill_flame_burst_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_burst_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 8e84a1b56fd027697c83e7f142471262, type: 3}
-  - id: skill_flame_ember_combo
-    fileName: skill_flame_ember_combo_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_ember_combo_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 1d29811cd8d794f24575d94b7ca2071c, type: 3}
-  - id: skill_flame_realm_burst
-    fileName: skill_flame_realm_burst_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_realm_burst_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: ec38151cf583a830146a552bd986b2a4, type: 3}
-  - id: skill_flame_shuffle_bell
-    fileName: skill_flame_shuffle_bell_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_shuffle_bell_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: ec548d3ea88869677968b52c3dc14330, type: 3}
-  - id: skill_flame_spark_slash
-    fileName: skill_flame_spark_slash_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_spark_slash_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: cce1948eed096e379782ab11cfd3f6cc, type: 3}
-  - id: skill_flame_warm_heart
-    fileName: skill_flame_warm_heart_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_warm_heart_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 689e1d9a87a3a17511e370a3753f3340, type: 3}
-  - id: skill_storm_extra_turn
-    fileName: skill_storm_extra_turn_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_extra_turn_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 3e4fd51e5d6e98b91368d0c46cbfd522, type: 3}
-  - id: skill_storm_lucky_spark
-    fileName: skill_storm_lucky_spark_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_lucky_spark_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 5af48f6bb1c9ec687636628a8d06a1ca, type: 3}
-  - id: skill_storm_quick_jab
-    fileName: skill_storm_quick_jab_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_quick_jab_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 7b47a3bd0178efba905153a4dfb5174b, type: 3}
-  - id: skill_storm_static_step
-    fileName: skill_storm_static_step_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_static_step_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 5bd2dab4546c72942b647f081a919ce6, type: 3}
-  - id: skill_storm_thunder_chain
-    fileName: skill_storm_thunder_chain_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_thunder_chain_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 92803283351ccf857bfde962c407b55f, type: 3}
-  - id: skill_storm_tile_swap
-    fileName: skill_storm_tile_swap_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_tile_swap_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 89576c4057d87c569818d63b5f665ec5, type: 3}
-  - id: skill_tide_aqua_heal
-    fileName: skill_tide_aqua_heal_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_aqua_heal_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: ffad3f02795f95665afd8dc54e100aa1, type: 3}
-  - id: skill_tide_bubble_guard
-    fileName: skill_tide_bubble_guard_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_bubble_guard_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 74530fdbf096a6428ce6f443edb9af63, type: 3}
-  - id: skill_tide_cleanse_wave
-    fileName: skill_tide_cleanse_wave_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_cleanse_wave_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: be186e421686db75c21505da3a7d4bc3, type: 3}
-  - id: skill_tide_gentle_flow
-    fileName: skill_tide_gentle_flow_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_gentle_flow_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 3efcae57873a80cd623be35b03fc10dc, type: 3}
-  - id: skill_tide_moon_tide
-    fileName: skill_tide_moon_tide_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_moon_tide_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 7a95618422f9bb4062062670ca1ec104, type: 3}
-  - id: skill_tide_shield_rain
-    fileName: skill_tide_shield_rain_128x128.png
-    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_shield_rain_128x128.png
-    width: 128
-    height: 128
-    category: 5
-    transparent: 1
-    priority: 2
-    sprite: {fileID: 21300000, guid: 02377a26c37cecd2d29f07c0561f4266, type: 3}
   - id: icon_token_book
     fileName: icon_token_book_128x128.png
     relativePath: Assets/_Game/Art/Generated/Tokens/icon_token_book_128x128.png
@@ -956,7 +452,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 3de529698f21a5040b3311d0386dabb9, type: 3}
   - id: icon_token_coin
     fileName: icon_token_coin_128x128.png
@@ -965,7 +461,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: d9339a12f511eee4e86a63e48466281e, type: 3}
   - id: icon_token_food
     fileName: icon_token_food_128x128.png
@@ -974,7 +470,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 0ebd91da347c79c4f83c9f0f7a42e5a7, type: 3}
   - id: icon_token_heart
     fileName: icon_token_heart_128x128.png
@@ -983,7 +479,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: cd2613808c6226847b3008a38034b031, type: 3}
   - id: icon_token_mana
     fileName: icon_token_mana_128x128.png
@@ -992,7 +488,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: f98f12868613f8542bf698b0010c42df, type: 3}
   - id: icon_token_shield
     fileName: icon_token_shield_128x128.png
@@ -1001,7 +497,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: f3072dee92e8393498f89a678774f7df, type: 3}
   - id: icon_token_star
     fileName: icon_token_star_128x128.png
@@ -1010,7 +506,7 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 3dc208c8ad2325e4c8f5ffc13b9601f7, type: 3}
   - id: icon_token_sword
     fileName: icon_token_sword_128x128.png
@@ -1019,8 +515,368 @@ MonoBehaviour:
     height: 128
     category: 4
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 33b5c0541456bf742aa94b6eab6c9387, type: 3}
+  - id: skill_flame_burst
+    fileName: skill_flame_burst_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_burst_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 8e84a1b56fd027697c83e7f142471262, type: 3}
+  - id: skill_flame_ember_combo
+    fileName: skill_flame_ember_combo_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_ember_combo_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 1d29811cd8d794f24575d94b7ca2071c, type: 3}
+  - id: skill_flame_realm_burst
+    fileName: skill_flame_realm_burst_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_realm_burst_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: ec38151cf583a830146a552bd986b2a4, type: 3}
+  - id: skill_flame_shuffle_bell
+    fileName: skill_flame_shuffle_bell_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_shuffle_bell_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: ec548d3ea88869677968b52c3dc14330, type: 3}
+  - id: skill_flame_spark_slash
+    fileName: skill_flame_spark_slash_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_spark_slash_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: cce1948eed096e379782ab11cfd3f6cc, type: 3}
+  - id: skill_flame_warm_heart
+    fileName: skill_flame_warm_heart_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_flame_warm_heart_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 689e1d9a87a3a17511e370a3753f3340, type: 3}
+  - id: skill_storm_extra_turn
+    fileName: skill_storm_extra_turn_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_extra_turn_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 3e4fd51e5d6e98b91368d0c46cbfd522, type: 3}
+  - id: skill_storm_lucky_spark
+    fileName: skill_storm_lucky_spark_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_lucky_spark_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 5af48f6bb1c9ec687636628a8d06a1ca, type: 3}
+  - id: skill_storm_quick_jab
+    fileName: skill_storm_quick_jab_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_quick_jab_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 7b47a3bd0178efba905153a4dfb5174b, type: 3}
+  - id: skill_storm_static_step
+    fileName: skill_storm_static_step_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_static_step_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 5bd2dab4546c72942b647f081a919ce6, type: 3}
+  - id: skill_storm_thunder_chain
+    fileName: skill_storm_thunder_chain_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_thunder_chain_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 92803283351ccf857bfde962c407b55f, type: 3}
+  - id: skill_storm_tile_swap
+    fileName: skill_storm_tile_swap_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_storm_tile_swap_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 89576c4057d87c569818d63b5f665ec5, type: 3}
+  - id: skill_tide_aqua_heal
+    fileName: skill_tide_aqua_heal_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_aqua_heal_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: ffad3f02795f95665afd8dc54e100aa1, type: 3}
+  - id: skill_tide_bubble_guard
+    fileName: skill_tide_bubble_guard_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_bubble_guard_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 74530fdbf096a6428ce6f443edb9af63, type: 3}
+  - id: skill_tide_cleanse_wave
+    fileName: skill_tide_cleanse_wave_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_cleanse_wave_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: be186e421686db75c21505da3a7d4bc3, type: 3}
+  - id: skill_tide_gentle_flow
+    fileName: skill_tide_gentle_flow_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_gentle_flow_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 3efcae57873a80cd623be35b03fc10dc, type: 3}
+  - id: skill_tide_moon_tide
+    fileName: skill_tide_moon_tide_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_moon_tide_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 7a95618422f9bb4062062670ca1ec104, type: 3}
+  - id: skill_tide_shield_rain
+    fileName: skill_tide_shield_rain_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Skills/skill_tide_shield_rain_128x128.png
+    width: 128
+    height: 128
+    category: 5
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 02377a26c37cecd2d29f07c0561f4266, type: 3}
+  - id: equip_armor_crystal_mail
+    fileName: equip_armor_crystal_mail_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_armor_crystal_mail_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 47b0e3905b53faaa5ae577ef4e89b60c, type: 3}
+  - id: equip_armor_leaf_vest
+    fileName: equip_armor_leaf_vest_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_armor_leaf_vest_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 1c8df421c16f87583192cf909483ac16, type: 3}
+  - id: equip_armor_traveler_coat
+    fileName: equip_armor_traveler_coat_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_armor_traveler_coat_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 14206114cba716ef2d2c8015d8249aa5, type: 3}
+  - id: equip_boots_traveler
+    fileName: equip_boots_traveler_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_boots_traveler_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 1bdd2ae2c3440f5bf04c45f7c59a807a, type: 3}
+  - id: equip_charm_realm
+    fileName: equip_charm_realm_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_charm_realm_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 1bf1e77677edf0e4006c00760b13dfec, type: 3}
+  - id: equip_head_leaf_hood
+    fileName: equip_head_leaf_hood_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_head_leaf_hood_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: c581683fe7565a0a9cbf34dbc770ae14, type: 3}
+  - id: equip_ring_lucky
+    fileName: equip_ring_lucky_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_ring_lucky_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 9d3918bb374fc871ba4d501c2dd98f74, type: 3}
+  - id: equip_weapon_flame_sword
+    fileName: equip_weapon_flame_sword_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_flame_sword_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: f4a9c33c995c1dc03b9d7e89d9810d9c, type: 3}
+  - id: equip_weapon_storm_dagger
+    fileName: equip_weapon_storm_dagger_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_storm_dagger_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: a4667420563a236b633830ca99441546, type: 3}
+  - id: equip_weapon_tide_wand
+    fileName: equip_weapon_tide_wand_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_tide_wand_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 2b641ed765e79e0bd4953ddaeeec318a, type: 3}
+  - id: equip_weapon_wooden_sword
+    fileName: equip_weapon_wooden_sword_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Equipment/equip_weapon_wooden_sword_128x128.png
+    width: 128
+    height: 128
+    category: 6
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 74ce8cd68416607b70b8148f4b9f0bbf, type: 3}
+  - id: item_food_basket
+    fileName: item_food_basket_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/item_food_basket_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 6b4c693a0fb806b3b2a0ac91fb95dac5, type: 3}
+  - id: item_lucky_cookie
+    fileName: item_lucky_cookie_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/item_lucky_cookie_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: e5f92a4d4ffc5e7f6c097e3454a4d398, type: 3}
+  - id: item_potion_medium
+    fileName: item_potion_medium_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/item_potion_medium_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: b5b3ecacbf23a3baf4e6a49cedfd56a0, type: 3}
+  - id: item_potion_small
+    fileName: item_potion_small_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/item_potion_small_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: fb760ae94587d9e140dd6e6638e49cd0, type: 3}
+  - id: item_shuffle_bell
+    fileName: item_shuffle_bell_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/item_shuffle_bell_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: cbd7f17c891ba84645bc7b82ac8eca10, type: 3}
+  - id: item_skill_scroll
+    fileName: item_skill_scroll_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/item_skill_scroll_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 432b6db5361f7dfb1c7dbfc88fe9ea84, type: 3}
+  - id: mat_crystal_shard
+    fileName: mat_crystal_shard_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/mat_crystal_shard_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 9f1f941120fc1b05924997ef4f6a0f5e, type: 3}
+  - id: mat_ember_dust
+    fileName: mat_ember_dust_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/mat_ember_dust_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 0b8ab8688eab14b148f29d13724da3b0, type: 3}
+  - id: mat_slime_jelly
+    fileName: mat_slime_jelly_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/mat_slime_jelly_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 7881f12a7df5fe3ea86a6c5fadf5acba, type: 3}
+  - id: mat_thunder_feather
+    fileName: mat_thunder_feather_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/mat_thunder_feather_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: e65f7a09b029a85071c957ac1e655e60, type: 3}
+  - id: mat_tide_pearl
+    fileName: mat_tide_pearl_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/mat_tide_pearl_128x128.png
+    width: 128
+    height: 128
+    category: 7
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 36738afec2062e3ed855e47dc729f325, type: 3}
   - id: missing_sprite
     fileName: missing_sprite_128x128.png
     relativePath: Assets/_Game/Art/Generated/UI/missing_sprite_128x128.png
@@ -1028,7 +884,7 @@ MonoBehaviour:
     height: 128
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 0a59ad2727ae07b428184fc4161e597f, type: 3}
   - id: ui_bar_hp_bg
     fileName: ui_bar_hp_bg_512x64.png
@@ -1037,7 +893,7 @@ MonoBehaviour:
     height: 64
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 6b1920d01986b1b4789cefee1382e72b, type: 3}
   - id: ui_bar_hp_fill
     fileName: ui_bar_hp_fill_512x64.png
@@ -1046,7 +902,7 @@ MonoBehaviour:
     height: 64
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: ad8a0d26c63bb1f4cb2c370161d88d5f, type: 3}
   - id: ui_bar_mana_bg
     fileName: ui_bar_mana_bg_512x64.png
@@ -1055,7 +911,7 @@ MonoBehaviour:
     height: 64
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: e5899966a2c337d489187c21f558aeb1, type: 3}
   - id: ui_bar_mana_fill
     fileName: ui_bar_mana_fill_512x64.png
@@ -1064,7 +920,7 @@ MonoBehaviour:
     height: 64
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 09daee05c64f8db4bb21916aa5843d20, type: 3}
   - id: ui_btn_close
     fileName: ui_btn_close_128x128.png
@@ -1073,7 +929,7 @@ MonoBehaviour:
     height: 128
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 1b85ab25bdf836846bb48a30874787c3, type: 3}
   - id: ui_btn_primary
     fileName: ui_btn_primary_384x128.png
@@ -1082,7 +938,7 @@ MonoBehaviour:
     height: 128
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 020c044493d77c44d87a1efc5ec406d8, type: 3}
   - id: ui_btn_secondary
     fileName: ui_btn_secondary_384x128.png
@@ -1091,7 +947,7 @@ MonoBehaviour:
     height: 128
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: 20b536a76c95ca8419c57789771eee8b, type: 3}
   - id: ui_panel_main
     fileName: ui_panel_main_768x512.png
@@ -1100,7 +956,7 @@ MonoBehaviour:
     height: 512
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: c8b344701a9bdce4f98a7981eaaaadfc, type: 3}
   - id: ui_panel_popup
     fileName: ui_panel_popup_768x512.png
@@ -1109,7 +965,7 @@ MonoBehaviour:
     height: 512
     category: 8
     transparent: 1
-    priority: 2
+    priority: 1
     sprite: {fileID: 21300000, guid: e961732059ff9424592c0a1a81765754, type: 3}
   - id: vfx_attack_slash
     fileName: vfx_attack_slash_256x256.png
@@ -1118,7 +974,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 91eba5d8ae7b6e56f17aa5530321fe31, type: 3}
   - id: vfx_coin_pop
     fileName: vfx_coin_pop_256x256.png
@@ -1127,7 +983,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 8ff32fe195b9e36638cd4bfa6f5a521c, type: 3}
   - id: vfx_combo_burst
     fileName: vfx_combo_burst_256x256.png
@@ -1136,7 +992,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: ff5b7af4e381bf345c83365888e1b6f7, type: 3}
   - id: vfx_exp_book
     fileName: vfx_exp_book_256x256.png
@@ -1145,7 +1001,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 5cd91c94f3f4e8357d8af6b004b47032, type: 3}
   - id: vfx_food_pop
     fileName: vfx_food_pop_256x256.png
@@ -1154,7 +1010,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 5e41272526e65da779fb7fc060c16124, type: 3}
   - id: vfx_heal_heart
     fileName: vfx_heal_heart_256x256.png
@@ -1163,7 +1019,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 637133c4c7cc019a182c180ac7bb4619, type: 3}
   - id: vfx_mana_glow
     fileName: vfx_mana_glow_256x256.png
@@ -1172,7 +1028,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: cc0c140343f81abeb31fa37b8ae14b41, type: 3}
   - id: vfx_match_pop
     fileName: vfx_match_pop_256x256.png
@@ -1181,7 +1037,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 7080d08b2a601b465cec6c65e71e2bb9, type: 3}
   - id: vfx_match_sparkle
     fileName: vfx_match_sparkle_256x256.png
@@ -1190,7 +1046,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 8e2e99fe79d31a71f66ad871fb801934, type: 3}
   - id: vfx_shield_bubble
     fileName: vfx_shield_bubble_256x256.png
@@ -1199,7 +1055,7 @@ MonoBehaviour:
     height: 256
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: d80d2275a6c82c03c797cc5e3ef54db3, type: 3}
   - id: vfx_skill_flame_burst
     fileName: vfx_skill_flame_burst_512x512.png
@@ -1208,7 +1064,7 @@ MonoBehaviour:
     height: 512
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 52062237f0f4621f446a6456cf82a9ef, type: 3}
   - id: vfx_skill_storm_chain
     fileName: vfx_skill_storm_chain_512x512.png
@@ -1217,7 +1073,7 @@ MonoBehaviour:
     height: 512
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 15f48263c5888b20c84f49b86b615067, type: 3}
   - id: vfx_skill_tide_wave
     fileName: vfx_skill_tide_wave_512x512.png
@@ -1226,6 +1082,150 @@ MonoBehaviour:
     height: 512
     category: 10
     transparent: 1
-    priority: 2
+    priority: 5
     sprite: {fileID: 21300000, guid: 49ec64651252c42dd41b07a7ebc14bdb, type: 3}
+  - id: map_node_realm_01_meadow
+    fileName: map_node_realm_01_meadow_192x192.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_node_realm_01_meadow_192x192.png
+    width: 192
+    height: 192
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 276199b636e202f75204484d5f8b2bb9, type: 3}
+  - id: map_node_realm_02_ember
+    fileName: map_node_realm_02_ember_192x192.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_node_realm_02_ember_192x192.png
+    width: 192
+    height: 192
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: a457da0a3e2d41ae8396071a0c0fdf41, type: 3}
+  - id: map_node_realm_03_tide
+    fileName: map_node_realm_03_tide_192x192.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_node_realm_03_tide_192x192.png
+    width: 192
+    height: 192
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 4cd3914397e74f91896dd60d3752e328, type: 3}
+  - id: map_stage_available
+    fileName: map_stage_available_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_available_128x128.png
+    width: 128
+    height: 128
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: b6d98eb707039856bd4641377fba843f, type: 3}
+  - id: map_stage_boss
+    fileName: map_stage_boss_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_boss_128x128.png
+    width: 128
+    height: 128
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: e38fac8e20eff7b654325424b14f3f08, type: 3}
+  - id: map_stage_chest
+    fileName: map_stage_chest_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_chest_128x128.png
+    width: 128
+    height: 128
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 253bccdb7b7d0a49042aa7fe4feb5544, type: 3}
+  - id: map_stage_completed
+    fileName: map_stage_completed_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_completed_128x128.png
+    width: 128
+    height: 128
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 80c4ffd3ca6b6d30257a7aeeeaebe561, type: 3}
+  - id: map_stage_farm
+    fileName: map_stage_farm_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_farm_128x128.png
+    width: 128
+    height: 128
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 1bfc1f3e8449e9be5203896e8269cc32, type: 3}
+  - id: map_stage_locked
+    fileName: map_stage_locked_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Maps/map_stage_locked_128x128.png
+    width: 128
+    height: 128
+    category: 11
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: ef47a36c280e834dde66790e0205d3a6, type: 3}
+  - id: icon_app
+    fileName: icon_app_1024x1024.png
+    relativePath: Assets/_Game/Art/Generated/Loading/icon_app_1024x1024.png
+    width: 1024
+    height: 1024
+    category: 12
+    transparent: 0
+    priority: 1
+    sprite: {fileID: 21300000, guid: c460a7b19bf7c3542900bddac75c4a6a, type: 3}
+  - id: loading_bar_fill
+    fileName: loading_bar_fill_768x96.png
+    relativePath: Assets/_Game/Art/Generated/Loading/loading_bar_fill_768x96.png
+    width: 768
+    height: 96
+    category: 12
+    transparent: 1
+    priority: 1
+    sprite: {fileID: 21300000, guid: 033fe7907b0a4e94f8fd27c5336bda01, type: 3}
+  - id: loading_bar_frame
+    fileName: loading_bar_frame_768x96.png
+    relativePath: Assets/_Game/Art/Generated/Loading/loading_bar_frame_768x96.png
+    width: 768
+    height: 96
+    category: 12
+    transparent: 1
+    priority: 1
+    sprite: {fileID: 21300000, guid: 0e04b99067f20f349906cf2b8ed0d8f4, type: 3}
+  - id: logo_game_main
+    fileName: logo_game_main_768x384.png
+    relativePath: Assets/_Game/Art/Generated/Loading/logo_game_main_768x384.png
+    width: 768
+    height: 384
+    category: 12
+    transparent: 1
+    priority: 1
+    sprite: {fileID: 21300000, guid: 9681af654572930489a76db27ea74a9c, type: 3}
+  - id: currency_gold
+    fileName: currency_gold_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/currency_gold_128x128.png
+    width: 128
+    height: 128
+    category: 13
+    transparent: 1
+    priority: 1
+    sprite: {fileID: 21300000, guid: 2746f6056e7e9ad48a81304dbb133b09, type: 3}
+  - id: currency_realm_token
+    fileName: currency_realm_token_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/currency_realm_token_128x128.png
+    width: 128
+    height: 128
+    category: 13
+    transparent: 1
+    priority: 5
+    sprite: {fileID: 21300000, guid: 046efb389e62dd4a69e435bf2679d416, type: 3}
+  - id: currency_soul_gem
+    fileName: currency_soul_gem_128x128.png
+    relativePath: Assets/_Game/Art/Generated/Items/currency_soul_gem_128x128.png
+    width: 128
+    height: 128
+    category: 13
+    transparent: 1
+    priority: 1
+    sprite: {fileID: 21300000, guid: 74d359ca1b8c031408631f5b180ec679, type: 3}
   missingSprite: {fileID: 21300000, guid: 0a59ad2727ae07b428184fc4161e597f, type: 3}

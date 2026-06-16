@@ -1,14 +1,11 @@
-﻿{
-    "id":  "ui_bar_mana_bg",
-    "file":  "ui_bar_mana_bg_512x64.png",
-    "size":  [
-                 512,
-                 64
-             ],
-    "category":  "UI",
-    "usage":  "Mana bar frame background",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Original cute fantasy UI asset, scalable-looking, transparent background, no text except close X where applicable."
+{
+  "id": "ui_bar_mana_bg",
+  "file": "ui_bar_mana_bg_512x64.png",
+  "size": [512, 64],
+  "category": "ui",
+  "usage": "Mana bar background",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Mana bar background, no copied art, no watermark"
 }

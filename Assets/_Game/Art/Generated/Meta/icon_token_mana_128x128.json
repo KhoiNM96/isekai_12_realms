@@ -1,14 +1,11 @@
-﻿{
-    "id":  "icon_token_mana",
-    "file":  "icon_token_mana_128x128.png",
-    "size":  [
-                 128,
-                 128
-             ],
-    "category":  "Token",
-    "usage":  "match-3 mana token",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Create an original readable mana token icon for a cute chibi isekai match-3 game, transparent background, no text, no watermark."
+{
+  "id": "icon_token_mana",
+  "file": "icon_token_mana_128x128.png",
+  "size": [128, 128],
+  "category": "token",
+  "usage": "Mana token icon",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Mana token icon, no copied art, no watermark"
 }

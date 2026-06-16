@@ -238,6 +238,16 @@ namespace Isekai12Realms.Services
                 data.stageProgress = new System.Collections.Generic.List<Isekai12Realms.Stages.StageProgressData>();
             }
 
+            if (data.completedRealmIds == null)
+            {
+                data.completedRealmIds = new System.Collections.Generic.List<string>();
+            }
+
+            if (data.realmProgress == null)
+            {
+                data.realmProgress = new System.Collections.Generic.List<Isekai12Realms.Realms.RealmProgressData>();
+            }
+
             if (data.skills == null)
             {
                 data.skills = new System.Collections.Generic.List<PlayerSkillData>();

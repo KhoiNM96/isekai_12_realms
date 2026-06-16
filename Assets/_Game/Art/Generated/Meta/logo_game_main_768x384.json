@@ -1,14 +1,11 @@
-﻿{
-    "id":  "logo_game_main",
-    "file":  "logo_game_main_768x384.png",
-    "size":  [
-                 768,
-                 384
-             ],
-    "category":  "Loading",
-    "usage":  "main game logo",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Original game logo text ISEKAI 12 REALMS, cute fantasy logo, readable, transparent, no watermark."
+{
+  "id": "logo_game_main",
+  "file": "logo_game_main_768x384.png",
+  "size": [768, 384],
+  "category": "loading",
+  "usage": "Game logo placeholder",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Game logo placeholder, no copied art, no watermark"
 }

@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5e87b4f205f53c4fb2c474edf04fa3c, type: 3}
+  m_Name: realm_03_tide
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Realms.RealmDefinition
+  id: realm_03_tide
+  displayName: Tide Shrine
+  description: A calm shrine washed by healing moonlit water.
+  order: 3
+  requiredPlayerLevel: 5
+  requiredCompletedRealmId: realm_02_ember
+  rank: 1
+  mapBackgroundAssetId: bg_realm_03_tide
+  mapNodeAssetId: map_node_realm_03_tide
+  battleBackgroundAssetId: bg_battle_tide
+  normalEnemies:
+  - {fileID: 11400000, guid: b58defb84f0631c4da56cca463284cab, type: 2}
+  - {fileID: 11400000, guid: e6cce30a101d0a54cb38ac26766b0524, type: 2}
+  - {fileID: 11400000, guid: 4105181008a8f734e80c4e8a52b940d8, type: 2}
+  bossEnemy: {fileID: 11400000, guid: 10c26f5ab31acb54bba42b0470a98204, type: 2}
+  monsterSpawnCount: 3
+  unlockedByDefault: 0
+  backgroundAssetId: map_node_realm_03_tide
+  stages:
+  - {fileID: 11400000, guid: 41fd4c06c83dadd408c2128b55eac105, type: 2}
+  - {fileID: 11400000, guid: 4e788702bb31da847b75446c6d9d1094, type: 2}
+  - {fileID: 11400000, guid: 657d7b284d89b974b92f693d2df10daf, type: 2}
+  mapWidth: 5760
+  mapHeight: 1440
+  playerSpawnPosition: {x: 180, y: -252}
+  platforms:
+  - position: {x: 2880, y: -360}
+    size: {x: 5760, y: 120}
+    oneWay: 0
+    tierIndex: 1
+  - position: {x: 1612.6667, y: -216}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 3094, y: -216}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 4479.3335, y: -216}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 1612.6667, y: -88}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 3094, y: -88}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 4479.3335, y: -88}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  normalMonsterSpawns:
+  - enemyId: enemy_tide_01
+    spawnPosition: {x: 2856, y: -248}
+    patrolDistance: 2016
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 1
+    platformSegmentIndex: 0
+  - enemyId: enemy_tide_02
+    spawnPosition: {x: 3094, y: -132}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 2
+    platformSegmentIndex: 1
+  - enemyId: enemy_tide_03
+    spawnPosition: {x: 4503.3335, y: -4}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 3
+    platformSegmentIndex: 2
+  bossSpawn:
+    enemyId: boss_tide_placeholder
+    spawnPosition: {x: 4519.3335, y: -132}
+    patrolDistance: 160
+    isBoss: 1
+    initiallyHidden: 1
+    tierIndex: 2
+    platformSegmentIndex: 2
+  mapLayout:
+    viewportWidth: 960
+    totalMapWidth: 5760
+    tier1Y: -360
+    tier2Y: -220
+    tier3Y: -80
+    tier1Segments:
+    - position: {x: 2880, y: -360}
+      size: {x: 5760, y: 120}
+      oneWay: 0
+      tierIndex: 1
+    tier2Segments:
+    - position: {x: 1612.6667, y: -216}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 3094, y: -216}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 4479.3335, y: -216}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    tier3Segments:
+    - position: {x: 1612.6667, y: -88}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 3094, y: -88}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 4479.3335, y: -88}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    playerSpawnPosition: {x: 180, y: -252}
+    monsterSpawns:
+    - enemyId: enemy_tide_01
+      spawnPosition: {x: 2856, y: -248}
+      patrolDistance: 2016
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 1
+      platformSegmentIndex: 0
+    - enemyId: enemy_tide_02
+      spawnPosition: {x: 3094, y: -132}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 2
+      platformSegmentIndex: 1
+    - enemyId: enemy_tide_03
+      spawnPosition: {x: 4503.3335, y: -4}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 3
+      platformSegmentIndex: 2
+    bossSpawn:
+      enemyId: boss_tide_placeholder
+      spawnPosition: {x: 4519.3335, y: -132}
+      patrolDistance: 160
+      isBoss: 1
+      initiallyHidden: 1
+      tierIndex: 2
+      platformSegmentIndex: 2

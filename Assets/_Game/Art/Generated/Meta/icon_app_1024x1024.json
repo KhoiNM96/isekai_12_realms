@@ -1,14 +1,11 @@
-﻿{
-    "id":  "icon_app",
-    "file":  "icon_app_1024x1024.png",
-    "size":  [
-                 1024,
-                 1024
-             ],
-    "category":  "Loading",
-    "usage":  "app icon",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  false,
-    "replaceable":  true,
-    "prompt":  "Original full app icon with cute isekai portal and star crystal, no tiny text, no watermark."
+{
+  "id": "icon_app",
+  "file": "icon_app_1024x1024.png",
+  "size": [1024, 1024],
+  "category": "loading",
+  "usage": "App icon placeholder",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for App icon placeholder, no copied art, no watermark"
 }

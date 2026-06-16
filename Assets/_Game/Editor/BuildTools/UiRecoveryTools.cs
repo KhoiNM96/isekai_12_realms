@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Isekai12Realms.Adventure;
 using Isekai12Realms.Build;
+using Isekai12Realms.Character;
 using Isekai12Realms.Core;
+using Isekai12Realms.Realms;
 using Isekai12Realms.UI;
+using Isekai12Realms.Stages;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using TMPro;
 
 namespace Isekai12Realms.Editor.BuildTools
 {
@@ -39,11 +44,26 @@ namespace Isekai12Realms.Editor.BuildTools
             "Button_WinTest",
             "Button_LoseTest",
             "BattleDebugPanel",
-            "QADebugPanelUI"
+            "QADebugPanelUI",
+            "Button_StartBattle",
+            "Button_EnterBattle",
+            "DebugStageSelector"
         };
 
         [MenuItem("Tools/Isekai 12 Realms/UI/Emergency Restore Visible UI")]
         public static void EmergencyRestoreVisibleUi()
+        {
+            FixScreenOverlap();
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/UI/Fix Screen Overlap")]
+        public static void FixScreenOverlap()
+        {
+            RebuildCleanWorldMapUi();
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/UI/Rebuild Clean World Map UI")]
+        public static void RebuildCleanWorldMapUi()
         {
             if (!OpenGameScene())
             {
@@ -71,15 +91,53 @@ namespace Isekai12Realms.Editor.BuildTools
             bootstrapper.RepairSceneUi();
             TagKnownDebugOnlyObjects();
             DisableDebugOnlyObjects();
-            RestoreCoreUiRoots();
+            RestoreTitleOnlyUi();
+            RebuildWorldMapAndAdventureUi();
             DeactivatePopupRoots();
+            DeactivateModalBlocker();
 
             EditorUtility.SetDirty(gameManagerObject);
             EditorSceneManager.MarkSceneDirty(gameManagerObject.scene);
             EditorSceneManager.SaveScene(gameManagerObject.scene, GameScenePath);
             AssetDatabase.Refresh();
 
-            Debug.Log("[UI] Emergency restore complete.");
+            Debug.Log("[UI] Clean World Map UI rebuilt.");
+        }
+
+        [MenuItem("Tools/Isekai 12 Realms/UI/Validate Screen Overlap")]
+        public static void ValidateScreenOverlap()
+        {
+            if (!OpenGameScene())
+            {
+                return;
+            }
+
+            List<string> errors = new List<string>();
+            List<string> warnings = new List<string>();
+
+            ValidateDefaultScreenState(errors, warnings);
+            ValidateWorldMapLayout(errors, warnings);
+            ValidateAdventureMapLayout(errors, warnings);
+            ValidatePopupLayer(errors, warnings);
+
+            foreach (string warning in warnings)
+            {
+                Debug.LogWarning("[UI] " + warning);
+            }
+
+            if (errors.Count > 0)
+            {
+                foreach (string error in errors)
+                {
+                    Debug.LogError("[UI] " + error);
+                }
+
+                Debug.LogError("[UI] Validate Screen Overlap failed.");
+            }
+            else
+            {
+                Debug.Log("[UI] Validate Screen Overlap passed.");
+            }
         }
 
         [MenuItem("Tools/Isekai 12 Realms/UI/Print Core UI Status")]
@@ -126,21 +184,22 @@ namespace Isekai12Realms.Editor.BuildTools
             return true;
         }
 
-        private static void RestoreCoreUiRoots()
+        private static void RestoreTitleOnlyUi()
         {
             SetActive("RootCanvas", true);
             SetActive("RootCanvas/SafeAreaRoot", true);
             SetActive("RootCanvas/SafeAreaRoot/BackgroundLayer", true);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer", true);
-            SetActive("RootCanvas/SafeAreaRoot/HudLayer", true);
-            SetActive("RootCanvas/SafeAreaRoot/NavigationLayer", true);
+            SetActive("RootCanvas/SafeAreaRoot/HudLayer", false);
+            SetActive("RootCanvas/SafeAreaRoot/NavigationLayer", false);
             SetActive("RootCanvas/SafeAreaRoot/PopupLayer", true);
-            SetActive("RootCanvas/SafeAreaRoot/ToastLayer", true);
-            SetActive("RootCanvas/SafeAreaRoot/LoadingLayer", true);
+            SetActive("RootCanvas/SafeAreaRoot/ToastLayer", false);
+            SetActive("RootCanvas/SafeAreaRoot/LoadingLayer", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/TitleScreenUI", true);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/MainTownUI", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI", false);
-            SetActive("RootCanvas/SafeAreaRoot/MainLayer/AdventureUI", false);
+            SetActive("RootCanvas/SafeAreaRoot/MainLayer/RealmAdventureMapUI", false);
+            SetActive("RootCanvas/SafeAreaRoot/MainLayer/AdventureMapUI", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/BattleUI", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/HeroUI", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/SkillsUI", false);
@@ -148,8 +207,257 @@ namespace Isekai12Realms.Editor.BuildTools
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/InventoryUI", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/QuestUI", false);
             SetActive("RootCanvas/SafeAreaRoot/MainLayer/ShopUI", false);
+            SetActive("RootCanvas/SafeAreaRoot/NavigationLayer/BottomNavigation", false);
             SetActive("GameManager", true);
             SetActive("EventSystem", true);
+        }
+
+        private static void RebuildWorldMapAndAdventureUi()
+        {
+            GameObject gameManagerObject = GameObject.Find("GameManager");
+            UIScreenManager ui = gameManagerObject != null ? gameManagerObject.GetComponent<UIScreenManager>() : null;
+            AdventureMapService adventureService = gameManagerObject != null ? gameManagerObject.GetComponent<AdventureMapService>() : null;
+            ContentDatabaseService contentService = gameManagerObject != null ? gameManagerObject.GetComponent<ContentDatabaseService>() : null;
+            RealmProgressionService realmProgressionService = gameManagerObject != null ? gameManagerObject.GetComponent<RealmProgressionService>() : null;
+            PlayerProgressionService progressionService = gameManagerObject != null ? gameManagerObject.GetComponent<PlayerProgressionService>() : null;
+
+            GameObject worldMap = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI");
+            WorldMapUIController worldMapController = worldMap != null ? worldMap.GetComponent<WorldMapUIController>() : null;
+            if (worldMapController == null && worldMap != null)
+            {
+                worldMapController = worldMap.AddComponent<WorldMapUIController>();
+            }
+            if (worldMapController != null)
+            {
+                worldMapController.Initialize(ui, adventureService, contentService, realmProgressionService, progressionService);
+                worldMapController.RefreshView();
+            }
+
+            GameObject adventureMap = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/RealmAdventureMapUI");
+            RealmAdventureMapUIController adventureController = adventureMap != null ? adventureMap.GetComponent<RealmAdventureMapUIController>() : null;
+            if (adventureController == null && adventureMap != null)
+            {
+                adventureController = adventureMap.AddComponent<RealmAdventureMapUIController>();
+            }
+            if (adventureController != null)
+            {
+                adventureController.Initialize(ui, adventureService, contentService, realmProgressionService, progressionService);
+                adventureController.RefreshMap();
+            }
+        }
+
+        private static void ValidateDefaultScreenState(List<string> errors, List<string> warnings)
+        {
+            GameObject title = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/TitleScreenUI");
+            GameObject mainTown = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/MainTownUI");
+            GameObject worldMap = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI");
+            GameObject adventureMap = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/RealmAdventureMapUI");
+            GameObject battle = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/BattleUI");
+            GameObject hero = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/HeroUI");
+            GameObject skills = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/SkillsUI");
+            GameObject equipment = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/EquipmentUI");
+            GameObject inventory = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/InventoryUI");
+            GameObject quest = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/QuestUI");
+            GameObject shop = FindGameObject("RootCanvas/SafeAreaRoot/MainLayer/ShopUI");
+
+            if (title == null || !title.activeSelf)
+            {
+                errors.Add("TitleScreenUI must be active by default.");
+            }
+
+            if (mainTown != null && mainTown.activeSelf)
+            {
+                errors.Add("MainTownUI must be inactive by default.");
+            }
+
+            if (worldMap != null && worldMap.activeSelf)
+            {
+                errors.Add("WorldMapUI must be inactive by default.");
+            }
+
+            if (adventureMap != null && adventureMap.activeSelf)
+            {
+                errors.Add("RealmAdventureMapUI must be inactive by default.");
+            }
+
+            if (battle != null && battle.activeSelf) errors.Add("BattleUI must be inactive by default.");
+            if (hero != null && hero.activeSelf) errors.Add("HeroUI must be inactive by default.");
+            if (skills != null && skills.activeSelf) errors.Add("SkillsUI must be inactive by default.");
+            if (equipment != null && equipment.activeSelf) errors.Add("EquipmentUI must be inactive by default.");
+            if (inventory != null && inventory.activeSelf) errors.Add("InventoryUI must be inactive by default.");
+            if (quest != null && quest.activeSelf) errors.Add("QuestUI must be inactive by default.");
+            if (shop != null && shop.activeSelf) errors.Add("ShopUI must be inactive by default.");
+
+            int activeCount = 0;
+            foreach (GameObject screen in new[] { title, mainTown, worldMap, adventureMap, battle, hero, skills, equipment, inventory, quest, shop })
+            {
+                if (screen != null && screen.activeSelf)
+                {
+                    activeCount++;
+                }
+            }
+
+            if (activeCount > 1)
+            {
+                warnings.Add("More than one main screen is active in the scene.");
+            }
+        }
+
+        private static void ValidateWorldMapLayout(List<string> errors, List<string> warnings)
+        {
+            Transform worldMap = FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI");
+            if (worldMap == null)
+            {
+                errors.Add("WorldMapUI is missing.");
+                return;
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/RealmScrollView") == null)
+            {
+                errors.Add("WorldMapUI missing RealmScrollView.");
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/RealmDetailPanel") == null)
+            {
+                errors.Add("WorldMapUI missing RealmDetailPanel.");
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/Header/Button_Back") == null)
+            {
+                warnings.Add("WorldMapUI missing header back button.");
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/Header/Button_Settings") == null)
+            {
+                warnings.Add("WorldMapUI missing header settings button.");
+            }
+
+            string[] forbidden = { "StageList", "StageListPanel", "StageNodes", "StageDetail", "StageDetailCard", "SelectStage", "StagePath", "OldWorldMap", "DebugStageSelector", "BattleTest", "EnterBattle", "WinTest", "LoseTest", "Placeholder_Text" };
+            for (int i = 0; i < forbidden.Length; i++)
+            {
+                if (ContainsDescendantNamed(worldMap, forbidden[i]))
+                {
+                    errors.Add("WorldMapUI still contains legacy object: " + forbidden[i]);
+                }
+            }
+
+            string[] forbiddenTexts = { "Stage nodes and realm paths will appear here", "Select a stage", "Available: First Slime" };
+            foreach (TextMeshProUGUI label in Resources.FindObjectsOfTypeAll<TextMeshProUGUI>())
+            {
+                if (label == null || !label.gameObject.scene.IsValid())
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < forbiddenTexts.Length; i++)
+                {
+                    if (string.Equals(label.text, forbiddenTexts[i], StringComparison.Ordinal))
+                    {
+                        errors.Add("Legacy WorldMap text still present: " + forbiddenTexts[i]);
+                    }
+                }
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/RealmDetailPanel/Button_EnterRealm") == null)
+            {
+                errors.Add("WorldMapUI missing Button_EnterRealm.");
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/RealmScrollView/Viewport/Content/RealmCard_01") == null)
+            {
+                warnings.Add("WorldMapUI missing realm cards.");
+            }
+
+            if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/WorldMapUI/RealmScrollView/Viewport/Content/RealmCard_12") == null)
+            {
+                warnings.Add("WorldMapUI is missing RealmCard_12.");
+            }
+        }
+
+        private static void ValidateAdventureMapLayout(List<string> errors, List<string> warnings)
+        {
+            Transform adventureMap = FindTransform("RootCanvas/SafeAreaRoot/MainLayer/RealmAdventureMapUI");
+            if (adventureMap == null)
+            {
+                errors.Add("RealmAdventureMapUI is missing.");
+                return;
+            }
+
+            string[] required =
+            {
+                "Background",
+                "Header",
+                "Header/Button_BackToWorldMap",
+                "Header/RealmName_Text",
+                "Header/RealmProgress_Text",
+                "MapViewport",
+                "MapViewport/MapContent",
+                "MapViewport/MapContent/Background",
+                "MapViewport/MapContent/PlatformRoot",
+                "MapViewport/MapContent/MonsterRoot",
+                "MapViewport/MapContent/PlayerRoot",
+                "MapViewport/MapContent/FXRoot",
+                "MobileControls",
+                "MobileControls/Button_Left",
+                "MobileControls/Button_Right",
+                "MobileControls/Button_Jump",
+                "MobileControls/Button_Down",
+                "FooterHint_Text"
+            };
+
+            for (int i = 0; i < required.Length; i++)
+            {
+                if (FindTransform("RootCanvas/SafeAreaRoot/MainLayer/RealmAdventureMapUI/" + required[i]) == null)
+                {
+                    warnings.Add("RealmAdventureMapUI missing expected child: " + required[i]);
+                }
+            }
+        }
+
+        private static void ValidatePopupLayer(List<string> errors, List<string> warnings)
+        {
+            Transform popupLayer = FindTransform("RootCanvas/SafeAreaRoot/PopupLayer");
+            if (popupLayer == null)
+            {
+                errors.Add("PopupLayer is missing.");
+                return;
+            }
+
+            for (int i = 0; i < popupLayer.childCount; i++)
+            {
+                Transform child = popupLayer.GetChild(i);
+                if (child != null && child.gameObject.activeSelf)
+                {
+                    warnings.Add("Popup active by default: " + child.name);
+                }
+            }
+        }
+
+        private static bool ContainsDescendantNamed(Transform root, string childName)
+        {
+            if (root == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                if (child != null)
+                {
+                    if (child.name == childName)
+                    {
+                        return true;
+                    }
+
+                    if (ContainsDescendantNamed(child, childName))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static void DeactivatePopupRoots()
@@ -165,6 +473,15 @@ namespace Isekai12Realms.Editor.BuildTools
                 Transform child = popupLayer.GetChild(i);
                 if (child == null) continue;
                 child.gameObject.SetActive(false);
+            }
+        }
+
+        private static void DeactivateModalBlocker()
+        {
+            Transform blocker = FindTransform("RootCanvas/SafeAreaRoot/PopupLayer/ModalBlocker");
+            if (blocker != null)
+            {
+                blocker.gameObject.SetActive(false);
             }
         }
 

@@ -125,7 +125,8 @@ namespace Isekai12Realms.Character
             }
 
             stack.amount += amount;
-            Toast($"Item gained: {PrototypeItemDatabase.Get(itemId).displayName} x{amount}");
+            var itemDef = PrototypeItemDatabase.Get(itemId);
+            Toast($"Item gained: {(itemDef != null ? itemDef.displayName : itemId)} x{amount}");
             SaveAndNotify();
         }
 

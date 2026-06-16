@@ -1,4 +1,5 @@
 using Isekai12Realms.Data;
+using Isekai12Realms.Realms;
 using Isekai12Realms.Stages;
 
 namespace Isekai12Realms.Battle
@@ -6,6 +7,8 @@ namespace Isekai12Realms.Battle
     public class BattleState
     {
         public StageDefinition stage;
+        public BattleEncounterData encounter;
+        public RealmDefinition realm;
         public string playerName = "Guest Hero";
         public int playerLevel = 1;
         public int maxHp = 100;

@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5e87b4f205f53c4fb2c474edf04fa3c, type: 3}
+  m_Name: realm_11_library
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Realms.RealmDefinition
+  id: realm_11_library
+  displayName: Sky Library
+  description: Placeholder realm Sky Library.
+  order: 11
+  requiredPlayerLevel: 45
+  requiredCompletedRealmId: realm_10_candy
+  rank: 5
+  mapBackgroundAssetId: bg_realm_11_library
+  mapNodeAssetId: map_node_realm_11_library
+  battleBackgroundAssetId: bg_battle_library
+  normalEnemies:
+  - {fileID: 11400000, guid: d7f1a1916f1e7bc4685afac20924facc, type: 2}
+  - {fileID: 11400000, guid: 05e305ac94855064788d3187930941c4, type: 2}
+  - {fileID: 11400000, guid: d71a2f5ffe5094c4ca17e8954aede46d, type: 2}
+  bossEnemy: {fileID: 11400000, guid: 913bc2d5d9d941d468230b452f214d91, type: 2}
+  monsterSpawnCount: 3
+  unlockedByDefault: 0
+  backgroundAssetId: bg_realm_11_library
+  stages:
+  - {fileID: 11400000, guid: d988e86c5c0f4c2449e7e6d2b863a251, type: 2}
+  - {fileID: 11400000, guid: 6d84cba5357b1ff4f99aaac2f7168887, type: 2}
+  - {fileID: 11400000, guid: b4261201cab2be24391e64f51f54b83d, type: 2}
+  mapWidth: 5760
+  mapHeight: 1440
+  playerSpawnPosition: {x: 180, y: -252}
+  platforms:
+  - position: {x: 2880, y: -360}
+    size: {x: 5760, y: 120}
+    oneWay: 0
+    tierIndex: 1
+  - position: {x: 1596, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 3076, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 4460, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 1596, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 3076, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 4460, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  normalMonsterSpawns:
+  - enemyId: enemy_library_01
+    spawnPosition: {x: 2856, y: -248}
+    patrolDistance: 2016
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 1
+    platformSegmentIndex: 0
+  - enemyId: enemy_library_02
+    spawnPosition: {x: 3076, y: -136}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 2
+    platformSegmentIndex: 1
+  - enemyId: enemy_library_03
+    spawnPosition: {x: 4484, y: 4}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 3
+    platformSegmentIndex: 2
+  bossSpawn:
+    enemyId: boss_library_placeholder
+    spawnPosition: {x: 4500, y: -136}
+    patrolDistance: 160
+    isBoss: 1
+    initiallyHidden: 1
+    tierIndex: 2
+    platformSegmentIndex: 2
+  mapLayout:
+    viewportWidth: 960
+    totalMapWidth: 5760
+    tier1Y: -360
+    tier2Y: -220
+    tier3Y: -80
+    tier1Segments:
+    - position: {x: 2880, y: -360}
+      size: {x: 5760, y: 120}
+      oneWay: 0
+      tierIndex: 1
+    tier2Segments:
+    - position: {x: 1596, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 3076, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 4460, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    tier3Segments:
+    - position: {x: 1596, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 3076, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 4460, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    playerSpawnPosition: {x: 180, y: -252}
+    monsterSpawns:
+    - enemyId: enemy_library_01
+      spawnPosition: {x: 2856, y: -248}
+      patrolDistance: 2016
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 1
+      platformSegmentIndex: 0
+    - enemyId: enemy_library_02
+      spawnPosition: {x: 3076, y: -136}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 2
+      platformSegmentIndex: 1
+    - enemyId: enemy_library_03
+      spawnPosition: {x: 4484, y: 4}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 3
+      platformSegmentIndex: 2
+    bossSpawn:
+      enemyId: boss_library_placeholder
+      spawnPosition: {x: 4500, y: -136}
+      patrolDistance: 160
+      isBoss: 1
+      initiallyHidden: 1
+      tierIndex: 2
+      platformSegmentIndex: 2

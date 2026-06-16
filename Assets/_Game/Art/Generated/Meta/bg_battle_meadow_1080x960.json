@@ -1,14 +1,11 @@
 {
-    "id":  "bg_battle_meadow",
-    "file":  "bg_battle_meadow_1080x960.png",
-    "size":  [
-                 1080,
-                 960
-             ],
-    "category":  "Background",
-    "usage":  "Cute meadow battle arena, floating grass, blue sky, soft crystals, no text.",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  false,
-    "replaceable":  true,
-    "prompt":  "Cute meadow battle arena, floating grass, blue sky, soft crystals, no text."
+  "id": "bg_battle_meadow",
+  "file": "bg_battle_meadow_1080x960.png",
+  "size": [1080, 960],
+  "category": "background",
+  "usage": "Battle meadow background",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Battle meadow background, no copied art, no watermark"
 }

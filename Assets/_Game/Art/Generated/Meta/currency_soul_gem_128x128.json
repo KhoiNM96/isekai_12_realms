@@ -1,14 +1,11 @@
 {
-    "id":  "currency_soul_gem",
-    "file":  "currency_soul_gem_128x128.png",
-    "size":  [
-                 128,
-                 128
-             ],
-    "category":  "Currency",
-    "usage":  "currency_soul_gem item icon",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Original readable fantasy item or currency icon currency_soul_gem, transparent background, no text."
+  "id": "currency_soul_gem",
+  "file": "currency_soul_gem_128x128.png",
+  "size": [128, 128],
+  "category": "currency",
+  "usage": "Soul gem currency icon",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Soul gem currency icon, no copied art, no watermark"
 }

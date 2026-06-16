@@ -1,14 +1,11 @@
-﻿{
-    "id":  "missing_sprite",
-    "file":  "missing_sprite_128x128.png",
-    "size":  [
-                 128,
-                 128
-             ],
-    "category":  "ui",
-    "usage":  "missing_sprite placeholder",
-    "style":  "bright chibi fantasy placeholder 2D",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "original procedural placeholder for missing_sprite, no copied art, no watermark"
+{
+  "id": "missing_sprite",
+  "file": "missing_sprite_128x128.png",
+  "size": [128, 128],
+  "category": "ui",
+  "usage": "Missing sprite fallback",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Missing sprite fallback, no copied art, no watermark"
 }

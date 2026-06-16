@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de6ff4b0a96707d4b8e8823f9e9ee85f, type: 3}
+  m_Name: stage_09_01
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
+  id: stage_09_01
+  realmId: realm_09_clock
+  displayName: Clock Ruin Stage 1
+  description: Skeleton placeholder stage.
+  stageNumber: 1
+  recommendedLevel: 28
+  enemy: {fileID: 11400000, guid: c14fc4c1722c43747a513c1f2aff3bc8, type: 2}
+  dropTable: {fileID: 11400000, guid: e67cbffbe1b9c0248be6adf8ce9d8cf8, type: 2}
+  baseGoldReward: 120
+  baseExpReward: 217
+  requiredCompletedStageIds: []
+  isBossStage: 0
+  replayable: 1
+  battleBackgroundAssetId: 

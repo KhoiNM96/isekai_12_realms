@@ -8,6 +8,7 @@ using Isekai12Realms.Build;
 using Isekai12Realms.Character;
 using Isekai12Realms.CloudSave;
 using Isekai12Realms.Addressables;
+using Isekai12Realms.Adventure;
 using Isekai12Realms.ContentPacks;
 using Isekai12Realms.Core;
 using Isekai12Realms.Crafting;
@@ -16,6 +17,7 @@ using Isekai12Realms.Diagnostics;
 using Isekai12Realms.Audio;
 using Isekai12Realms.Economy;
 using Isekai12Realms.Equipment;
+using Isekai12Realms.Enemies;
 using Isekai12Realms.Inventory;
 using Isekai12Realms.IAP;
 using Isekai12Realms.Purchases;
@@ -46,6 +48,7 @@ namespace Isekai12Realms.UI
         private PlayerProgressionService progressionService;
         private ContentDatabaseService contentService;
         private StageProgressionService stageProgressionService;
+        private RealmProgressionService realmProgressionService;
         private SkillService skillService;
         private EquipmentService equipmentService;
         private CraftingService craftingService;
@@ -59,6 +62,9 @@ namespace Isekai12Realms.UI
         private CloudSaveCoordinator cloudSaveCoordinator;
         private IAssetLoadService assetLoadService;
         private ContentPackService contentPackService;
+        private AdventureMapService adventureMapService;
+        private RealmAdventureMapUIController realmAdventureMapController;
+        private WorldMapUIController worldMapController;
         private GameConfigService gameConfigService;
         private BuildConfigService buildConfigService;
         private DiagnosticsService diagnosticsService;
@@ -223,6 +229,12 @@ namespace Isekai12Realms.UI
             {
                 progressionService.Initialize(saveService, screenManager.ToastService, gameConfigService);
                 stageProgressionService.Initialize(saveService, contentService);
+                realmProgressionService = GetComponent<RealmProgressionService>();
+                if (realmProgressionService == null)
+                {
+                    realmProgressionService = gameObject.AddComponent<RealmProgressionService>();
+                }
+                realmProgressionService.Initialize(saveService, contentService, progressionService);
                 equipmentService = GetComponent<EquipmentService>();
                 if (equipmentService == null)
                 {
@@ -308,6 +320,20 @@ namespace Isekai12Realms.UI
                 cloudSaveCoordinator.ConflictDetected += OnCloudConflictDetected;
                 progressionService.Changed -= RefreshSaveBackedUi;
                 progressionService.Changed += RefreshSaveBackedUi;
+
+                adventureMapService = GetComponent<AdventureMapService>();
+                if (adventureMapService == null)
+                {
+                    adventureMapService = gameObject.AddComponent<AdventureMapService>();
+                }
+
+                BattleUIController battleController = mainLayer != null ? mainLayer.Find("BattleUI")?.GetComponent<BattleUIController>() : null;
+                RealmAdventureMapUIController adventureController = mainLayer != null ? mainLayer.Find("RealmAdventureMapUI")?.GetComponent<RealmAdventureMapUIController>() : null;
+                worldMapController = mainLayer != null ? mainLayer.Find("WorldMapUI")?.GetComponent<WorldMapUIController>() : null;
+                realmAdventureMapController = adventureController;
+                adventureMapService.Initialize(screenManager, contentService, realmProgressionService, progressionService, battleController, adventureController);
+                adventureController?.Initialize(screenManager, adventureMapService, contentService, realmProgressionService, progressionService);
+                worldMapController?.Initialize(screenManager, adventureMapService, contentService, realmProgressionService, progressionService);
             }
 
             screenManager.ScreenChanged -= OnScreenChanged;
@@ -324,6 +350,10 @@ namespace Isekai12Realms.UI
             if (current == GameUIScreen.WorldMap)
             {
                 RefreshWorldMapState();
+            }
+            if (current == GameUIScreen.RealmAdventureMap)
+            {
+                RefreshAdventureMapState();
             }
         }
 
@@ -460,7 +490,7 @@ namespace Isekai12Realms.UI
             screenManager.RegisterScreen(GameUIScreen.CharacterCreation, CreateCharacterCreation());
             screenManager.RegisterScreen(GameUIScreen.MainTown, CreateMainTown());
             screenManager.RegisterScreen(GameUIScreen.WorldMap, CreateWorldMap());
-            screenManager.RegisterScreen(GameUIScreen.Adventure, CreateAdventure());
+            screenManager.RegisterScreen(GameUIScreen.RealmAdventureMap, CreateAdventure());
             screenManager.RegisterScreen(GameUIScreen.Battle, CreateBattle());
             screenManager.RegisterScreen(GameUIScreen.Hero, CreateHero());
             screenManager.RegisterScreen(GameUIScreen.Skills, CreateSkills());
@@ -479,7 +509,8 @@ namespace Isekai12Realms.UI
                                      child.name == "CharacterCreationUI" ||
                                      child.name == "MainTownUI" ||
                                      child.name == "WorldMapUI" ||
-                                     child.name == "AdventureUI" ||
+                                      child.name == "RealmAdventureMapUI" ||
+                                      child.name == "AdventureMapUI" ||
                                      child.name == "BattleUI" ||
                                      child.name == "HeroUI" ||
                                      child.name == "SkillsUI" ||
@@ -552,124 +583,125 @@ namespace Isekai12Realms.UI
         private GameObject CreateWorldMap()
         {
             RectTransform root = CreateScreenRoot("WorldMapUI", new Color(0.14f, 0.1f, 0.05f, 0.35f));
-            Header(root, "World Map", () => screenManager.ShowScreen(GameUIScreen.MainTown));
-            Panel(root, "RealmListPanel", panelCream, Anchor.TopCenter, new Vector2(-260f, -520f), new Vector2(380f, 760f));
-            Panel(root, "StageListPanel", panelCream, Anchor.TopCenter, new Vector2(210f, -520f), new Vector2(520f, 760f));
+            WorldMapUIController controller = root.GetComponent<WorldMapUIController>();
+            if (controller == null)
+            {
+                controller = root.gameObject.AddComponent<WorldMapUIController>();
+            }
 
-            Panel(root, "StageCard", panelDark, Anchor.BottomCenter, new Vector2(0f, 180f), new Vector2(850f, 260f));
-            Text(root, "Stage_Title", "Select a stage", 34, Color.white, Anchor.BottomCenter, new Vector2(-190f, 255f), new Vector2(440f, 54f));
-            Text(root, "Stage_Detail", "Stage details", 26, Color.white, Anchor.BottomCenter, new Vector2(-190f, 175f), new Vector2(470f, 110f));
-            Button(root, "Button_EnterBattle", "Enter Battle", danger, Anchor.BottomCenter, new Vector2(250f, 200f), new Vector2(300f, 100f), EnterSelectedStage);
-            BuildWorldMapContent(root);
+            worldMapController = controller;
             return root.gameObject;
         }
 
         private void BuildWorldMapContent(RectTransform root)
         {
-            if (contentService == null || contentService.Database == null) return;
+            if (contentService == null || contentService.Realms == null || contentService.Realms.Count == 0) return;
             for (int i = 0; i < contentService.Realms.Count; i++)
             {
                 RealmDefinition realm = contentService.Realms[i];
-                bool unlocked = RealmUnlocked(realm);
-                Button button = Button(root, "Button_Realm_" + realm.id, realm.displayName, unlocked ? primary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.TopCenter, new Vector2(-260f, -210f - i * 96f), new Vector2(320f, 76f), unlocked ? () => SelectRealm(realm.id) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
-                AddButtonIcon(button, string.IsNullOrEmpty(realm.backgroundAssetId) ? MapNodeAssetId(realm.id) : realm.backgroundAssetId);
+                if (realm == null) continue;
+                bool unlocked = realmProgressionService == null || realmProgressionService.IsRealmUnlocked(realm);
+                RealmProgressData progress = realmProgressionService != null ? realmProgressionService.GetCurrentRealmProgress(realm.id) : null;
+                string progressText = progress != null ? $"{progress.normalMonstersDefeated}/3" : "0/3";
+                string lockState = unlocked ? (progress != null && progress.bossDefeated ? "Cleared" : "Open") : "Locked";
+                string label = $"{realm.displayName}\n{realm.rank} Lv {realm.requiredPlayerLevel}\nProgress {progressText}  {lockState}";
+                Color color = unlocked ? (progress != null && progress.bossDefeated ? secondary : primary) : new Color(0.45f, 0.48f, 0.55f, 1f);
+                string capturedRealmId = realm.id;
+                Button button = Button(root, "Button_Realm_" + realm.id, label, color, Anchor.TopCenter, new Vector2(-255f, -210f - i * 96f), new Vector2(390f, 82f), () => SelectRealm(capturedRealmId));
+                AddButtonIcon(button, !string.IsNullOrEmpty(realm.mapNodeAssetId) ? realm.mapNodeAssetId : !string.IsNullOrEmpty(realm.backgroundAssetId) ? realm.backgroundAssetId : MapNodeAssetId(realm.id));
             }
 
-            if (contentService.Realms.Count > 0)
+            if (contentService.Realms.Count > 0 && string.IsNullOrEmpty(selectedRealmId))
             {
                 SelectRealm(contentService.Realms[0].id);
             }
         }
 
-        private bool RealmUnlocked(RealmDefinition realm)
-        {
-            if (realm == null || realm.order <= 1) return true;
-            if (realm.id == "realm_02_ember") return stageProgressionService != null && stageProgressionService.IsStageCompleted("stage_01_03");
-            if (realm.id == "realm_03_tide") return stageProgressionService != null && stageProgressionService.IsStageCompleted("stage_02_03");
-            return false;
-        }
-
         private void SelectRealm(string realmId)
         {
-            ContentPackDefinition pack = contentService?.Database?.GetPackForRealm(realmId);
-            if (pack != null && contentPackService != null && !contentPackService.IsPackAvailable(pack.id))
-            {
-                selectedRealmId = realmId;
-                OpenContentDownloadPopup(pack);
-                return;
-            }
             selectedRealmId = realmId;
-            RectTransform root = mainLayer.Find("WorldMapUI") as RectTransform;
-            if (root == null || contentService == null) return;
-            foreach (StageDefinition stage in contentService.GetStagesForRealm(realmId))
-            {
-                int index = stage.stageNumber - 1;
-                bool unlocked = stageProgressionService == null || stageProgressionService.IsStageUnlocked(stage);
-                bool completed = stageProgressionService != null && stageProgressionService.IsStageCompleted(stage.id);
-                Color color = !unlocked ? new Color(0.42f, 0.42f, 0.46f, 1f) : stage.isBossStage ? danger : completed ? secondary : primary;
-                string label = (completed ? "Completed: " : unlocked ? "Available: " : "Locked: ") + stage.displayName;
-                Button(root, "Button_Stage_" + stage.id, label, color, Anchor.TopCenter, new Vector2(210f, -210f - index * 96f), new Vector2(470f, 76f), unlocked ? () => SelectStage(stage) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
-            }
+            RefreshWorldMapState();
         }
 
-        private void SelectStage(StageDefinition stage)
+        private void EnterSelectedRealm()
         {
-            selectedStage = stage;
-            int replayCount = stageProgressionService != null ? stageProgressionService.GetStageClearCount(stage.id) : 0;
-            SetText("WorldMapUI/Stage_Title", stage.displayName);
-            SetText("WorldMapUI/Stage_Detail", $"Recommended Lv. {stage.recommendedLevel}\nEnemy: {(stage.enemy != null ? stage.enemy.displayName : "Missing")}\nEXP {stage.baseExpReward}  Gold {stage.baseGoldReward}\nReplay Count: {replayCount}");
-        }
+            RealmDefinition realm = GetSelectedRealm();
+            if (realm == null)
+            {
+                return;
+            }
 
-        private void EnterSelectedStage()
-        {
-            if (selectedStage == null)
+            if (realmProgressionService != null && !realmProgressionService.CanEnterRealm(realm))
             {
-                screenManager.ToastService?.ShowToast("Select a stage first.");
+                screenManager.ToastService?.ShowToast(realmProgressionService.GetRealmLockReason(realm));
                 return;
             }
-            ContentPackDefinition pack = contentService?.Database?.GetPackForRealm(selectedStage.realmId);
-            if (pack != null && contentPackService != null && !contentPackService.IsPackAvailable(pack.id))
+
+            if (adventureMapService != null && adventureMapService.EnterRealm(realm.id))
             {
-                OpenContentDownloadPopup(pack);
-                return;
+                screenManager.ShowScreen(GameUIScreen.RealmAdventureMap);
             }
-            Transform battleRoot = mainLayer.Find("BattleUI");
-            BattleUIController controller = battleRoot != null ? battleRoot.GetComponent<BattleUIController>() : null;
-            if (controller != null)
-            {
-                controller.SetStage(selectedStage);
-            }
-            screenManager.ShowScreen(GameUIScreen.Battle);
         }
 
         private void RefreshWorldMapState()
         {
-            if (contentService == null || contentService.Realms.Count == 0) return;
-            RectTransform root = mainLayer.Find("WorldMapUI") as RectTransform;
-            if (root != null)
+            worldMapController?.RefreshView();
+        }
+
+        private void RefreshAdventureMapState()
+        {
+            adventureMapService?.RefreshMap();
+        }
+
+        private RealmDefinition GetSelectedRealm()
+        {
+            if (contentService == null || contentService.Realms == null || contentService.Realms.Count == 0)
             {
-                for (int i = 0; i < contentService.Realms.Count; i++)
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(selectedRealmId))
+            {
+                RealmDefinition selected = contentService.Realms.Find(r => r != null && r.id == selectedRealmId);
+                if (selected != null)
                 {
-                    RealmDefinition realm = contentService.Realms[i];
-                    bool unlocked = RealmUnlocked(realm);
-                    Button button = Button(root, "Button_Realm_" + realm.id, realm.displayName, unlocked ? primary : new Color(0.45f, 0.48f, 0.55f, 1f), Anchor.TopCenter, new Vector2(-260f, -210f - i * 96f), new Vector2(320f, 76f), unlocked ? () => SelectRealm(realm.id) : () => screenManager.ToastService?.ShowToast("Complete previous stages first."));
-                    AddButtonIcon(button, string.IsNullOrEmpty(realm.backgroundAssetId) ? MapNodeAssetId(realm.id) : realm.backgroundAssetId);
+                    return selected;
                 }
             }
-            SelectRealm(string.IsNullOrEmpty(selectedRealmId) ? contentService.Realms[0].id : selectedRealmId);
+
+            return contentService.Realms[0];
+        }
+
+        private static string BuildRealmMonsterPreview(RealmDefinition realm)
+        {
+            if (realm == null || realm.normalEnemies == null || realm.normalEnemies.Count == 0)
+            {
+                return "None";
+            }
+
+            List<string> names = new List<string>();
+            for (int i = 0; i < Mathf.Min(3, realm.normalEnemies.Count); i++)
+            {
+                EnemyDefinition enemy = realm.normalEnemies[i];
+                if (enemy != null)
+                {
+                    names.Add(enemy.displayName);
+                }
+            }
+
+            return names.Count > 0 ? string.Join(", ", names) : "None";
         }
 
         private GameObject CreateAdventure()
         {
-            RectTransform root = CreateScreenRoot("AdventureUI", new Color(0.05f, 0.16f, 0.14f, 0.35f));
-            Header(root, "Adventure", () => screenManager.ShowScreen(GameUIScreen.MainTown));
-            Panel(root, "MapPanel", panelCream, Anchor.Center, new Vector2(0f, 80f), new Vector2(900f, 1020f));
-            Text(root, "Map_Text", "2D Map", 46, textDark, Anchor.Center, new Vector2(0f, 240f), new Vector2(680f, 90f));
-            Panel(root, "PlayerPlaceholder", primary, Anchor.Center, new Vector2(-180f, 20f), new Vector2(140f, 180f));
-            Text(root, "Player_Text", "Player", 28, Color.white, Anchor.Center, new Vector2(-180f, 20f), new Vector2(140f, 80f));
-            Panel(root, "NpcPlaceholder", secondary, Anchor.Center, new Vector2(210f, 30f), new Vector2(150f, 180f));
-            Text(root, "Npc_Text", "NPC", 28, textDark, Anchor.Center, new Vector2(210f, 30f), new Vector2(140f, 80f));
-            Button(root, "Button_StartBattle", "Start Battle", danger, Anchor.BottomCenter, new Vector2(0f, 185f), new Vector2(520f, 110f), () => screenManager.ShowScreen(GameUIScreen.Battle));
+            RectTransform root = CreateScreenRoot("RealmAdventureMapUI", new Color(0.05f, 0.16f, 0.14f, 0.35f));
+            RealmAdventureMapUIController controller = root.GetComponent<RealmAdventureMapUIController>();
+            if (controller == null)
+            {
+                controller = root.gameObject.AddComponent<RealmAdventureMapUIController>();
+            }
+
+            controller.Initialize(screenManager, adventureMapService, contentService, realmProgressionService, progressionService);
             return root.gameObject;
         }
 
@@ -704,7 +736,7 @@ namespace Isekai12Realms.UI
             Button(root, "Button_Ultimate", "Realm Burst", primary, Anchor.BottomCenter, new Vector2(105f, 220f), new Vector2(185f, 88f), controller.UseUltimate);
             Button(root, "Button_Item", "Item", primary, Anchor.BottomCenter, new Vector2(315f, 220f), new Vector2(185f, 88f), screenManager.ShowDisabledToast);
             Button(root, "Button_RestartBattle", "Restart Battle", secondary, Anchor.BottomCenter, new Vector2(-340f, 90f), new Vector2(250f, 90f), controller.StartBattle);
-            Button(root, "Button_BackWorldMap", "World Map", primary, Anchor.BottomCenter, new Vector2(-70f, 90f), new Vector2(230f, 90f), controller.BackToWorldMap);
+            Button(root, "Button_BackWorldMap", "Back", primary, Anchor.BottomCenter, new Vector2(-70f, 90f), new Vector2(230f, 90f), controller.BackToWorldMap);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             Button(root, "Button_WinTest", "Win Test", new Color(0.5f, 0.85f, 0.34f, 1f), Anchor.BottomCenter, new Vector2(170f, 90f), new Vector2(190f, 90f), controller.WinTest);
             Button(root, "Button_LoseTest", "Lose Test", danger, Anchor.BottomCenter, new Vector2(385f, 90f), new Vector2(190f, 90f), controller.LoseTest);
@@ -932,50 +964,7 @@ namespace Isekai12Realms.UI
             Button(cloudSection, "Button_SyncNow", "Sync Now", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = SyncCloudNow());
             Button(cloudSection, "Button_UploadLocal", "Upload Local", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = UploadLocalCloud());
             Button(cloudSection, "Button_DownloadCloud", "Download Cloud", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), () => _ = DownloadCloudSave());
-
-            RectTransform contentSection = CreateSettingsSection(content, "Section_Content", "Content");
-            Text(contentSection, "CurrentContentVersion", "Current Content Version: 0.1.0", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 52f));
-            Text(contentSection, "ContentStatus", "Content is stored locally.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 88f));
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Button(contentSection, "Button_ManageDownloads", "Manage Downloads", primary, Anchor.Center, Vector2.zero, new Vector2(710f, 58f), OpenManageDownloads);
-            Button(contentSection, "Button_ClearOptionalCache", "Clear Optional Cache", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 58f), ClearOptionalCache);
-#endif
-
-            RectTransform privacySection = CreateSettingsSection(content, "Section_Privacy", "Privacy");
-            Text(privacySection, "Privacy_Text", "Privacy controls will be added here.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 64f));
-
-            RectTransform restoreSection = CreateSettingsSection(content, "Section_RestorePurchases", "Restore Purchases");
-            Text(restoreSection, "RestorePurchases_Text", "Restore consumed purchases tied to this account.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 64f));
-            Button(restoreSection, "Button_RestorePurchases", "Restore Purchases", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 60f), RestorePurchases);
-
-            RectTransform supportSection = CreateSettingsSection(content, "Section_Support", "Support");
-            Text(supportSection, "Support_Text", "Support is available through the store listing and game page.", 24, textDark, Anchor.Center, Vector2.zero, new Vector2(720f, 64f));
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            bool debugMode = buildConfigService == null || buildConfigService.EnableDebugPanel;
-            RectTransform debugSection = CreateSettingsSection(content, "Section_Debug", "Debug");
-            debugSection.gameObject.SetActive(debugMode);
-            if (debugMode)
-            {
-                SetDebugButton(Button(debugSection, "Button_DebugGold", "DEBUG +500 Gold", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddGold(500)));
-                SetDebugButton(Button(debugSection, "Button_DebugSoulGem", "DEBUG +500 SoulGem", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddSoulGem(500)));
-                SetDebugButton(Button(debugSection, "Button_DebugTinyIap", "DEBUG Add Tiny Gem Purchase", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => PurchaseIapProduct("gems_tiny")));
-                SetDebugButton(Button(debugSection, "Button_DebugPrintLedger", "DEBUG Print Purchase Ledger", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugPrintPurchaseLedger));
-                SetDebugButton(Button(debugSection, "Button_DebugClearDebugPurchases", "DEBUG Clear Debug Purchases", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugClearPurchaseRecords));
-                SetDebugButton(Button(debugSection, "Button_DebugResetDailyShop", "DEBUG Reset Daily Shop", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugResetDailyShop));
-                SetDebugButton(Button(debugSection, "Button_DebugConflict", "DEBUG Force Cloud Conflict Test", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugForceCloudConflict));
-                SetDebugButton(Button(debugSection, "Button_DebugClearFirebase", "DEBUG Clear Firebase UID", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugClearFirebaseUid));
-                SetDebugButton(Button(debugSection, "Button_DebugPrintSave", "DEBUG Print Local Save Info", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugPrintLocalSaveInfo));
-                SetDebugButton(Button(debugSection, "Button_DebugExportSave", "DEBUG Export Local Save JSON", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), DebugExportLocalSaveJson));
-                SetDebugButton(Button(debugSection, "Button_DebugSword", "DEBUG Wooden Sword", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddEquipment("equip_weapon_wooden_sword")));
-                SetDebugButton(Button(debugSection, "Button_DebugCoat", "DEBUG Traveler Coat", secondary, Anchor.Center, Vector2.zero, new Vector2(710f, 52f), () => DebugAddEquipment("equip_armor_traveler_coat")));
-            }
-#endif
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            Button(modalPanel, "Button_DeleteSave", "Delete Local Save", danger, Anchor.BottomLeft, new Vector2(170f, 58f), new Vector2(320f, 68f), OpenDeleteConfirm);
-#endif
-            Button(modalPanel, "Button_CloseFooter", "Close", primary, Anchor.BottomRight, new Vector2(-170f, 58f), new Vector2(260f, 68f), screenManager.CloseSettings);
+            Button(modalPanel, "Button_CloseFooter", "Close", primary, Anchor.BottomCenter, new Vector2(0f, 58f), new Vector2(260f, 68f), screenManager.CloseSettings);
             header.SetAsLastSibling();
             root.gameObject.SetActive(false);
             return root.gameObject;
@@ -1223,7 +1212,7 @@ namespace Isekai12Realms.UI
 
             victoryButtons = EnsureChildRect(root, "VictoryButtons").gameObject;
             Stretch(victoryButtons.GetComponent<RectTransform>());
-            Button(victoryButtons.transform, "Button_Continue", "Continue", primary, Anchor.Center, new Vector2(0f, -60f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
+            Button(victoryButtons.transform, "Button_Continue", "Continue", primary, Anchor.Center, new Vector2(0f, -60f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.RealmAdventureMap));
             Button(victoryButtons.transform, "Button_Replay", "Replay", secondary, Anchor.Center, new Vector2(0f, -165f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.Battle));
             Button(victoryButtons.transform, "Button_Town", "Town", danger, Anchor.Center, new Vector2(0f, -270f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.MainTown));
 
@@ -1231,7 +1220,7 @@ namespace Isekai12Realms.UI
             Stretch(defeatButtons.GetComponent<RectTransform>());
             Button(defeatButtons.transform, "Button_Retry", "Retry", primary, Anchor.Center, new Vector2(0f, -60f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.Battle));
             Button(defeatButtons.transform, "Button_Upgrade", "Upgrade", secondary, Anchor.Center, new Vector2(0f, -165f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.Hero));
-            Button(defeatButtons.transform, "Button_Town", "Town", danger, Anchor.Center, new Vector2(0f, -270f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.MainTown));
+            Button(defeatButtons.transform, "Button_Town", "Realm", danger, Anchor.Center, new Vector2(0f, -270f), new Vector2(420f, 92f), () => screenManager.ShowScreen(GameUIScreen.RealmAdventureMap));
 
             root.gameObject.SetActive(false);
             return root.gameObject;
@@ -2603,6 +2592,8 @@ namespace Isekai12Realms.UI
                 case "TitleScreenUI": return "bg_title_sky_realm";
                 case "MainTownUI": return "bg_town_meadow";
                 case "WorldMapUI": return "bg_world_map_scroll";
+                case "RealmAdventureMapUI": return "bg_world_map_scroll";
+                case "AdventureMapUI": return "bg_world_map_scroll";
                 case "BattleUI": return "bg_battle_meadow";
                 default: return string.Empty;
             }

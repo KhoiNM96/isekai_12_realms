@@ -92227,9 +92227,51 @@ MonoBehaviour:
   displayName: Meadow Gate
   description: A peaceful floating meadow where the reborn hero begins the journey.
   order: 1
+  requiredPlayerLevel: 1
+  requiredCompletedRealmId: 
+  rank: 0
+  mapBackgroundAssetId: 
+  mapNodeAssetId: 
+  battleBackgroundAssetId: 
+  normalEnemies: []
+  bossEnemy: {fileID: 0}
+  monsterSpawnCount: 3
+  unlockedByDefault: 0
   backgroundAssetId: 
   stages:
   - {fileID: 1709762643}
+  mapWidth: 2400
+  mapHeight: 1400
+  playerSpawnPosition: {x: -720, y: -360}
+  platforms: []
+  normalMonsterSpawns: []
+  bossSpawn:
+    enemyId: 
+    spawnPosition: {x: 0, y: 0}
+    patrolDistance: 220
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 1
+    platformSegmentIndex: -1
+  mapLayout:
+    viewportWidth: 960
+    totalMapWidth: 5760
+    tier1Y: -360
+    tier2Y: -220
+    tier3Y: -80
+    tier1Segments: []
+    tier2Segments: []
+    tier3Segments: []
+    playerSpawnPosition: {x: 160, y: -300}
+    monsterSpawns: []
+    bossSpawn:
+      enemyId: 
+      spawnPosition: {x: 0, y: 0}
+      patrolDistance: 220
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 1
+      platformSegmentIndex: -1
 --- !u!1 &1731309634
 GameObject:
   m_ObjectHideFlags: 0

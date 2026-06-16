@@ -1,0 +1,166 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5e87b4f205f53c4fb2c474edf04fa3c, type: 3}
+  m_Name: realm_01_meadow
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Realms.RealmDefinition
+  id: realm_01_meadow
+  displayName: Meadow Gate
+  description: A peaceful floating meadow where the reborn hero begins the journey.
+  order: 1
+  requiredPlayerLevel: 1
+  requiredCompletedRealmId: 
+  rank: 0
+  mapBackgroundAssetId: bg_realm_01_meadow
+  mapNodeAssetId: map_node_realm_01_meadow
+  battleBackgroundAssetId: bg_battle_meadow
+  normalEnemies:
+  - {fileID: 11400000, guid: ddc8d206845a8df4ab05dfe88a961180, type: 2}
+  - {fileID: 11400000, guid: 6c7ca759a6b9be44f815cefc9f5ea343, type: 2}
+  - {fileID: 11400000, guid: 473be0f34cc618745b2dd1563d4817b2, type: 2}
+  bossEnemy: {fileID: 11400000, guid: c4eb0383a60bbd9478398ed1af4f0384, type: 2}
+  monsterSpawnCount: 3
+  unlockedByDefault: 1
+  backgroundAssetId: map_node_realm_01_meadow
+  stages:
+  - {fileID: 11400000, guid: 959be752ae3548443bef840bdfb5ae9d, type: 2}
+  - {fileID: 11400000, guid: 80b5ca0e875c42947a7f55e8ea1c4eda, type: 2}
+  - {fileID: 11400000, guid: 0fdda77fd8f723148b9651d0aa02477a, type: 2}
+  mapWidth: 5760
+  mapHeight: 1440
+  playerSpawnPosition: {x: 180, y: -252}
+  platforms:
+  - position: {x: 2880, y: -360}
+    size: {x: 5760, y: 120}
+    oneWay: 0
+    tierIndex: 1
+  - position: {x: 1612.6667, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 3094, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 4479.3335, y: -220}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 2
+  - position: {x: 1612.6667, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 3094, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  - position: {x: 4479.3335, y: -80}
+    size: {x: 192, y: 64}
+    oneWay: 1
+    tierIndex: 3
+  normalMonsterSpawns:
+  - enemyId: enemy_meadow_01
+    spawnPosition: {x: 2856, y: -248}
+    patrolDistance: 2016
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 1
+    platformSegmentIndex: 0
+  - enemyId: enemy_meadow_02
+    spawnPosition: {x: 3094, y: -136}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 2
+    platformSegmentIndex: 1
+  - enemyId: enemy_meadow_03
+    spawnPosition: {x: 4503.3335, y: 4}
+    patrolDistance: 120
+    isBoss: 0
+    initiallyHidden: 0
+    tierIndex: 3
+    platformSegmentIndex: 2
+  bossSpawn:
+    enemyId: boss_meadow_placeholder
+    spawnPosition: {x: 4519.3335, y: -136}
+    patrolDistance: 160
+    isBoss: 1
+    initiallyHidden: 1
+    tierIndex: 2
+    platformSegmentIndex: 2
+  mapLayout:
+    viewportWidth: 960
+    totalMapWidth: 5760
+    tier1Y: -360
+    tier2Y: -220
+    tier3Y: -80
+    tier1Segments:
+    - position: {x: 2880, y: -360}
+      size: {x: 5760, y: 120}
+      oneWay: 0
+      tierIndex: 1
+    tier2Segments:
+    - position: {x: 1612.6667, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 3094, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    - position: {x: 4479.3335, y: -220}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 2
+    tier3Segments:
+    - position: {x: 1612.6667, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 3094, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    - position: {x: 4479.3335, y: -80}
+      size: {x: 192, y: 64}
+      oneWay: 1
+      tierIndex: 3
+    playerSpawnPosition: {x: 180, y: -252}
+    monsterSpawns:
+    - enemyId: enemy_meadow_01
+      spawnPosition: {x: 2856, y: -248}
+      patrolDistance: 2016
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 1
+      platformSegmentIndex: 0
+    - enemyId: enemy_meadow_02
+      spawnPosition: {x: 3094, y: -136}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 2
+      platformSegmentIndex: 1
+    - enemyId: enemy_meadow_03
+      spawnPosition: {x: 4503.3335, y: 4}
+      patrolDistance: 120
+      isBoss: 0
+      initiallyHidden: 0
+      tierIndex: 3
+      platformSegmentIndex: 2
+    bossSpawn:
+      enemyId: boss_meadow_placeholder
+      spawnPosition: {x: 4519.3335, y: -136}
+      patrolDistance: 160
+      isBoss: 1
+      initiallyHidden: 1
+      tierIndex: 2
+      platformSegmentIndex: 2

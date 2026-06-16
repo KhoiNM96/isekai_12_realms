@@ -1,14 +1,11 @@
-﻿{
-    "id":  "ui_panel_main",
-    "file":  "ui_panel_main_768x512.png",
-    "size":  [
-                 768,
-                 512
-             ],
-    "category":  "UI",
-    "usage":  "main fantasy UI panel",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Original cute fantasy UI asset, scalable-looking, transparent background, no text except close X where applicable."
+{
+  "id": "ui_panel_main",
+  "file": "ui_panel_main_768x512.png",
+  "size": [768, 512],
+  "category": "ui",
+  "usage": "Main UI panel",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Main UI panel, no copied art, no watermark"
 }

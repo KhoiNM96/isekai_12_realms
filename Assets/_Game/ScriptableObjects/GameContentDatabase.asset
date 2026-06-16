@@ -12,9 +12,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74fe3045b076dd2458daff1e97739d7a, type: 3}
   m_Name: GameContentDatabase
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Data.GameContentDatabase
-  realms: []
-  stages: []
-  enemies: []
+  realms:
+  - {fileID: 11400000, guid: 72305e83d3343ca4eb091934f0da3570, type: 2}
+  - {fileID: 11400000, guid: 6e2cbfa9c9af74143a4ec745d9987d4c, type: 2}
+  - {fileID: 11400000, guid: 639bf6cdc3ac86043a614509e1520621, type: 2}
+  stages:
+  - {fileID: 11400000, guid: 959be752ae3548443bef840bdfb5ae9d, type: 2}
+  - {fileID: 11400000, guid: 80b5ca0e875c42947a7f55e8ea1c4eda, type: 2}
+  - {fileID: 11400000, guid: 0fdda77fd8f723148b9651d0aa02477a, type: 2}
+  - {fileID: 11400000, guid: 19e1e9d64908d3441ae04f3b9713625a, type: 2}
+  - {fileID: 11400000, guid: 39a9ff7fbe25b6f4e95e1a80177a68d3, type: 2}
+  - {fileID: 11400000, guid: bea79f5aa0f7fda48ac3abb3679698a0, type: 2}
+  - {fileID: 11400000, guid: 41fd4c06c83dadd408c2128b55eac105, type: 2}
+  - {fileID: 11400000, guid: 4e788702bb31da847b75446c6d9d1094, type: 2}
+  - {fileID: 11400000, guid: 657d7b284d89b974b92f693d2df10daf, type: 2}
+  enemies:
+  - {fileID: 11400000, guid: 86f923636e108dc4096d4117c27fa77f, type: 2}
+  - {fileID: 11400000, guid: dacbd545a026bfb4394f34c9c70f40ad, type: 2}
+  - {fileID: 11400000, guid: 62d2e427a42863f4fb63029757253983, type: 2}
+  - {fileID: 11400000, guid: 5759e57d2e172a74e80aa260565341d6, type: 2}
+  - {fileID: 11400000, guid: 762a388ac41684c4fb623be8eebe4324, type: 2}
+  - {fileID: 11400000, guid: deb36f4a2d413074e9985e587215f677, type: 2}
+  - {fileID: 11400000, guid: c4bfbd86e37add14c9634ca121751e58, type: 2}
+  - {fileID: 11400000, guid: 4f92cbf3960f6884d9a5b687291ded9a, type: 2}
+  - {fileID: 11400000, guid: 280b452d27a2f1a419d985253f05f174, type: 2}
   dropTables:
-  - {fileID: 11400000, guid: f3965b20214fd684bb865f86610b0678, type: 2}
-  - {fileID: 11400000, guid: 71524e39826161649ac15e636943732d, type: 2}
+  - {fileID: 11400000, guid: 80bcf45acdf0a144ab7d70469cb1d4a0, type: 2}
+  - {fileID: 11400000, guid: 8e8bd0995e5fb3a49991f60b20547cb0, type: 2}
+  - {fileID: 11400000, guid: cd3565453cea87b4c9f9eead0c57a97c, type: 2}
+  - {fileID: 11400000, guid: deac0011d3203a34a81cb01341b0e4c1, type: 2}
+  - {fileID: 11400000, guid: 643c5fdf85935c64693c11e6130a67b8, type: 2}
+  - {fileID: 11400000, guid: 4682e0fa43101574b873fb9bc83138c0, type: 2}
+  - {fileID: 11400000, guid: 20cd94056f2127b48aa337e106eb3fc3, type: 2}
+  - {fileID: 11400000, guid: b44e4ccf92e31084d9ad5eda87c6a6a8, type: 2}
+  - {fileID: 11400000, guid: c35990adf9d364945a08842844004340, type: 2}
+  skills: []
+  equipmentDefinitions: []
+  craftingRecipes: []
+  quests: []
+  tutorials: []
+  shops: []
+  iapProducts: []
+  contentPacks: []

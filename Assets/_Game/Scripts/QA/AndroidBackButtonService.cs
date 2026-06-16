@@ -1,4 +1,5 @@
 using Isekai12Realms.Core;
+using Isekai12Realms.Battle;
 using Isekai12Realms.UI;
 using Isekai12Realms.Services;
 using TMPro;
@@ -91,7 +92,18 @@ namespace Isekai12Realms.QA
                 Application.Quit();
 #endif
             });
-            battlePausePopup = CreatePopup("BattlePausePopup", "Leave battle?", "Rewards are only granted after victory.", "Leave Battle", () => screenManager?.ShowScreen(GameUIScreen.WorldMap));
+            battlePausePopup = CreatePopup("BattlePausePopup", "Leave battle?", "Rewards are only granted after victory.", "Leave Battle", () =>
+            {
+                BattleUIController battle = FindObjectOfType<BattleUIController>();
+                if (battle != null)
+                {
+                    battle.BackToWorldMap();
+                }
+                else
+                {
+                    screenManager?.ShowScreen(GameUIScreen.RealmAdventureMap);
+                }
+            });
         }
 
         private GameObject CreatePopup(string name, string title, string body, string confirmLabel, UnityEngine.Events.UnityAction confirm)

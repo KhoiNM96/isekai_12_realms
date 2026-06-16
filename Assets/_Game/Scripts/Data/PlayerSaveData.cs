@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.Inventory;
 using Isekai12Realms.Quests;
+using Isekai12Realms.Realms;
 using Isekai12Realms.Shop;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
@@ -32,6 +33,8 @@ namespace Isekai12Realms.Data
         public string currentStageId = "stage_01_01";
         public List<string> completedStageIds = new List<string>();
         public List<StageProgressData> stageProgress = new List<StageProgressData>();
+        public List<string> completedRealmIds = new List<string>();
+        public List<RealmProgressData> realmProgress = new List<RealmProgressData>();
         public InventorySaveData inventory = new InventorySaveData();
         public EquipmentLoadoutData equipment = new EquipmentLoadoutData();
         public List<PlayerSkillData> skills = new List<PlayerSkillData>();

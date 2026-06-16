@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using Isekai12Realms.Board;
 using Isekai12Realms.Data;
+using Isekai12Realms.Enemies;
+using Isekai12Realms.Realms;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 using UnityEngine;
@@ -50,27 +52,49 @@ namespace Isekai12Realms.Battle
 
         public void StartBattle(BoardController boardController)
         {
-            StartBattle(boardController, null);
+            StartBattle(boardController, (StageDefinition)null);
         }
 
         public void StartBattle(BoardController boardController, StageDefinition stage)
         {
+            StartBattle(boardController, CreateEncounterFromStage(stage));
+        }
+
+        public void StartBattle(BoardController boardController, BattleEncounterData encounter)
+        {
             board = boardController;
             State = new BattleState();
-            State.stage = stage;
-            if (stage != null && stage.enemy != null)
+            State.encounter = encounter;
+            State.stage = null;
+            State.realm = encounter != null ? encounter.realm : null;
+            if (encounter != null && encounter.enemy != null)
             {
-                State.enemyName = stage.enemy.displayName;
-                State.enemyLevel = stage.enemy.level;
-                State.enemyMaxHp = stage.enemy.maxHp;
-                State.enemyHp = stage.enemy.maxHp;
-                State.enemyMaxMana = stage.enemy.maxMana;
-                State.enemyMana = 0;
+                ApplyEnemyData(encounter.enemy, encounter.displayName, encounter.baseGoldReward, encounter.baseExpReward);
             }
             Debug.Log("[Battle] StartBattle");
             board.Initialize(8, 8);
             BeginPlayerTurn();
             StateChanged?.Invoke();
+        }
+
+        public void StartBattleFromRealm(RealmDefinition realm, EnemyDefinition enemy, bool isBoss)
+        {
+            if (realm == null || enemy == null)
+            {
+                return;
+            }
+
+            BattleEncounterData encounter = CreateEncounterFromRealm(realm, enemy, isBoss);
+            if (board == null)
+            {
+                State = new BattleState();
+                State.encounter = encounter;
+                State.realm = realm;
+                ApplyEnemyData(enemy, encounter.displayName, encounter.baseGoldReward, encounter.baseExpReward);
+                return;
+            }
+
+            StartBattle(board, encounter);
         }
 
         public void EndBattle()
@@ -289,6 +313,66 @@ namespace Isekai12Realms.Battle
             {
                 resolver.DamagePlayer(State, Mathf.Max(1, Mathf.RoundToInt(State.maxHp * 0.05f)));
             }
+        }
+
+        private void ApplyEnemyData(EnemyDefinition enemy, string displayName, int goldReward, int expReward)
+        {
+            State.enemyName = !string.IsNullOrEmpty(displayName) ? displayName : enemy.displayName;
+            State.enemyLevel = enemy.level;
+            State.enemyMaxHp = enemy.maxHp;
+            State.enemyHp = enemy.maxHp;
+            State.enemyMaxMana = enemy.maxMana;
+            State.enemyMana = 0;
+            State.goldReward = goldReward;
+            State.expReward = expReward;
+        }
+
+        private static BattleEncounterData CreateEncounterFromStage(StageDefinition stage)
+        {
+            if (stage == null)
+            {
+                return null;
+            }
+
+            return new BattleEncounterData
+            {
+                encounterId = stage.id,
+                realmId = stage.realmId,
+                enemyId = stage.enemy != null ? stage.enemy.id : string.Empty,
+                displayName = stage.displayName,
+                enemy = stage.enemy,
+                isBoss = stage.isBossStage,
+                baseGoldReward = stage.baseGoldReward,
+                baseExpReward = stage.baseExpReward,
+                dropTable = stage.dropTable,
+                battleBackgroundAssetId = stage.battleBackgroundAssetId
+            };
+        }
+
+        private static BattleEncounterData CreateEncounterFromRealm(RealmDefinition realm, EnemyDefinition enemy, bool isBoss)
+        {
+            if (realm == null || enemy == null)
+            {
+                return null;
+            }
+
+            int realmOrder = Mathf.Max(1, realm.order);
+            int enemyLevel = Mathf.Max(1, enemy.level);
+            int normalExp = 30 + realmOrder * 20 + enemyLevel * 10;
+            int normalGold = 20 + realmOrder * 15 + enemyLevel * 5;
+            return new BattleEncounterData
+            {
+                encounterId = $"{realm.id}_{enemy.id}_{(isBoss ? "boss" : "normal")}",
+                realmId = realm.id,
+                enemyId = enemy.id,
+                displayName = enemy.displayName,
+                enemy = enemy,
+                isBoss = isBoss,
+                baseGoldReward = isBoss ? normalGold * 3 : normalGold,
+                baseExpReward = isBoss ? normalExp * 3 : normalExp,
+                battleBackgroundAssetId = realm.battleBackgroundAssetId,
+                realm = realm
+            };
         }
     }
 }

@@ -1,14 +1,11 @@
-﻿{
-    "id":  "ui_btn_secondary",
-    "file":  "ui_btn_secondary_384x128.png",
-    "size":  [
-                 384,
-                 128
-             ],
-    "category":  "UI",
-    "usage":  "secondary fantasy button background",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Original cute fantasy UI asset, scalable-looking, transparent background, no text except close X where applicable."
+{
+  "id": "ui_btn_secondary",
+  "file": "ui_btn_secondary_384x128.png",
+  "size": [384, 128],
+  "category": "ui",
+  "usage": "Secondary button",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Secondary button, no copied art, no watermark"
 }

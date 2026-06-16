@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de6ff4b0a96707d4b8e8823f9e9ee85f, type: 3}
+  m_Name: stage_01_01
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
+  id: stage_01_01
+  realmId: realm_01_meadow
+  displayName: First Slime
+  description: First Slime
+  stageNumber: 1
+  recommendedLevel: 1
+  enemy: {fileID: 11400000, guid: 86f923636e108dc4096d4117c27fa77f, type: 2}
+  dropTable: {fileID: 11400000, guid: 80bcf45acdf0a144ab7d70469cb1d4a0, type: 2}
+  baseGoldReward: 30
+  baseExpReward: 50
+  requiredCompletedStageIds: []
+  isBossStage: 0
+  replayable: 1
+  battleBackgroundAssetId: bg_battle_meadow

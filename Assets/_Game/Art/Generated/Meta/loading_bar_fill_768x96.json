@@ -1,14 +1,11 @@
-﻿{
-    "id":  "loading_bar_fill",
-    "file":  "loading_bar_fill_768x96.png",
-    "size":  [
-                 768,
-                 96
-             ],
-    "category":  "Loading",
-    "usage":  "loading bar magical fill",
-    "style":  "cute chibi isekai fantasy, bright, clean, mobile readable",
-    "transparent":  true,
-    "replaceable":  true,
-    "prompt":  "Original magical loading bar fill, transparent background, no text."
+{
+  "id": "loading_bar_fill",
+  "file": "loading_bar_fill_768x96.png",
+  "size": [768, 96],
+  "category": "loading",
+  "usage": "Loading bar fill",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": true,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Loading bar fill, no copied art, no watermark"
 }

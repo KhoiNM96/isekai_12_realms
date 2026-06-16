@@ -4,12 +4,14 @@ using Isekai12Realms.CloudSave;
 using Isekai12Realms.Core;
 using Isekai12Realms.Data;
 using Isekai12Realms.Audio;
+using Isekai12Realms.Adventure;
 using Isekai12Realms.Equipment;
 using Isekai12Realms.DropTables;
 using Isekai12Realms.Inventory;
 using Isekai12Realms.Quests;
 using Isekai12Realms.Performance;
 using Isekai12Realms.RemoteConfig;
+using Isekai12Realms.Realms;
 using Isekai12Realms.Skills;
 using Isekai12Realms.Stages;
 using Isekai12Realms.Tutorial;
@@ -59,6 +61,8 @@ namespace Isekai12Realms.Battle
         private QuestService questService;
         private TutorialService tutorialService;
         private CloudSaveCoordinator cloudSaveCoordinator;
+        private AdventureMapService adventureMapService;
+        private RealmProgressionService realmProgressionService;
         private BattleAnimationSettings animationSettings;
         private Button skill1Button;
         private Button skill2Button;
@@ -73,11 +77,20 @@ namespace Isekai12Realms.Battle
         private int previousFood = -1;
         private int previousCombo = -1;
         private StageDefinition selectedStage;
+        private BattleEncounterData selectedEncounter;
+        private readonly RealmRewardService rewardService = new RealmRewardService();
         private readonly EnemyBoardAI enemyBoardAI = new EnemyBoardAI();
 
         public void SetStage(StageDefinition stage)
         {
             selectedStage = stage;
+            selectedEncounter = null;
+        }
+
+        public void SetEncounter(BattleEncounterData encounter)
+        {
+            selectedEncounter = encounter;
+            selectedStage = null;
         }
 
         public void Initialize(UIScreenManager manager, BoardController board)
@@ -93,6 +106,8 @@ namespace Isekai12Realms.Battle
             questService = FindObjectOfType<QuestService>();
             tutorialService = FindObjectOfType<TutorialService>();
             cloudSaveCoordinator = FindObjectOfType<CloudSaveCoordinator>();
+            adventureMapService = FindObjectOfType<AdventureMapService>();
+            realmProgressionService = FindObjectOfType<RealmProgressionService>();
             battleService.SetSkillService(skillService);
             animationSettings = BattleAnimationSettings.CreateDefault();
             CacheReferences();
@@ -147,7 +162,7 @@ namespace Isekai12Realms.Battle
             if (debugPanel != null && debugPanel.activeSelf && debugText != null)
             {
                 BattleState state = battleService.State;
-                debugText.text = $"Player HP: {state.hp}/{state.maxHp}\nEnemy HP: {state.enemyHp}/{state.enemyMaxHp}\nMana: {state.mana}/{state.maxMana}\nFood: {state.food}\nTurn: {state.currentTurnOwner}\nTime: {Mathf.CeilToInt(Mathf.Max(0f, state.remainingTurnTime))}s\nResolving: {(boardController != null && boardController.IsResolving)}\nTurn Resolving: {state.isResolvingTurn}\nLast Player Move: {state.lastPlayerMove}\nLast Enemy Move: {state.lastEnemyMove}\nLast Extra: {state.lastMoveGrantedExtraTurn}\nLast Max Match: {state.lastMaxMatchSize}\nStage: {(selectedStage != null ? selectedStage.id : "fallback")}";
+                debugText.text = $"Player HP: {state.hp}/{state.maxHp}\nEnemy HP: {state.enemyHp}/{state.enemyMaxHp}\nMana: {state.mana}/{state.maxMana}\nFood: {state.food}\nTurn: {state.currentTurnOwner}\nTime: {Mathf.CeilToInt(Mathf.Max(0f, state.remainingTurnTime))}s\nResolving: {(boardController != null && boardController.IsResolving)}\nTurn Resolving: {state.isResolvingTurn}\nLast Player Move: {state.lastPlayerMove}\nLast Enemy Move: {state.lastEnemyMove}\nLast Extra: {state.lastMoveGrantedExtraTurn}\nLast Max Match: {state.lastMaxMatchSize}\nEncounter: {(state.encounter != null ? state.encounter.encounterId : selectedStage != null ? selectedStage.id : "fallback")}";
             }
 #endif
 
@@ -190,7 +205,14 @@ namespace Isekai12Realms.Battle
                 battleService.SetSkillService(skillService);
             }
 
-            battleService.StartBattle(boardController, selectedStage);
+            if (selectedEncounter != null)
+            {
+                battleService.StartBattle(boardController, selectedEncounter);
+            }
+            else
+            {
+                battleService.StartBattle(boardController, selectedStage);
+            }
             tutorialService?.HandleBattleStarted();
             if (progressionService != null)
             {
@@ -206,7 +228,8 @@ namespace Isekai12Realms.Battle
         public void BackToWorldMap()
         {
             battleService.EndBattle();
-            screenManager?.ShowScreen(GameUIScreen.WorldMap);
+            adventureMapService?.OnEncounterDefeat();
+            screenManager?.ShowScreen(GameUIScreen.RealmAdventureMap);
         }
 
         public void UseSkill1()
@@ -243,11 +266,13 @@ namespace Isekai12Realms.Battle
             if (result == BattleResultType.Victory)
             {
                 GrantVictoryRewards();
+                adventureMapService?.OnEncounterVictory();
             }
             else if (result == BattleResultType.Defeat)
             {
                 audioService?.PlaySfx("sfx_defeat");
                 playerView?.PlayDefeat();
+                adventureMapService?.OnEncounterDefeat();
                 StartCoroutine(OpenResultAfterDelay(false, 0, 0, string.Empty, false));
             }
         }
@@ -266,18 +291,10 @@ namespace Isekai12Realms.Battle
                 progressionService = FindObjectOfType<PlayerProgressionService>();
             }
 
-            int exp = 50 + battleService.State.expReward;
-            int gold = 30 + battleService.State.goldReward;
-            bool firstClear = selectedStage == null || progressionService == null || !progressionService.CurrentSave.completedStageIds.Contains(selectedStage.id);
-            bool replay = !firstClear;
-            if (selectedStage != null)
-            {
-                exp = selectedStage.baseExpReward;
-                if (replay) exp = Mathf.FloorToInt(exp * 0.7f);
-                gold = selectedStage.baseGoldReward;
-            }
-            exp += battleService.State.expReward;
-            gold += battleService.State.goldReward;
+            BattleEncounterData encounter = GetCurrentEncounter();
+            bool firstClearBoss = encounter != null && encounter.isBoss && realmProgressionService != null && !realmProgressionService.IsRealmCompleted(encounter.realmId);
+            int exp = battleService.State.expReward > 0 ? battleService.State.expReward : 50;
+            int gold = battleService.State.goldReward > 0 ? battleService.State.goldReward : 30;
             if (ServiceLocator.TryResolve<GameConfigService>(out GameConfigService config))
             {
                 exp = Mathf.FloorToInt(exp * config.ExpRewardMultiplier);
@@ -290,55 +307,63 @@ namespace Isekai12Realms.Battle
             {
                 progressionService.AddGold(gold);
                 leveledUp = progressionService.AddExp(exp);
-                drops += RollDrops();
-                string stageId = selectedStage != null ? selectedStage.id : "stage_01_01";
-                progressionService.MarkStageCompleted(stageId);
+                drops += RollDrops(encounter);
+                if (firstClearBoss && encounter != null && encounter.realm != null)
+                {
+                    int soulGemBonus = rewardService.GetSoulGemFirstClearBonus(encounter.realm.order);
+                    progressionService.AddSoulGem(soulGemBonus);
+                }
                 questService?.TrackProgress(QuestObjectiveType.WinBattle, "any", 1);
-                questService?.TrackProgress(QuestObjectiveType.CompleteStage, stageId, 1);
                 questService?.TrackProgress(QuestObjectiveType.EarnGold, "any", gold);
                 if (leveledUp) questService?.TrackProgress(QuestObjectiveType.ReachLevel, "any", progressionService.CurrentSave.level);
-                if (selectedStage != null && selectedStage.enemy != null) questService?.TrackProgress(QuestObjectiveType.DefeatEnemy, selectedStage.enemy.id, 1);
-                StageProgressionService stageProgression = FindObjectOfType<StageProgressionService>();
-                stageProgression?.IncrementStageClearCount(stageId);
+                if (encounter != null)
+                {
+                    questService?.TrackProgress(QuestObjectiveType.DefeatEnemy, encounter.enemyId, 1);
+                }
+                else if (selectedStage != null && selectedStage.enemy != null)
+                {
+                    string stageId = selectedStage.id;
+                    progressionService.MarkStageCompleted(stageId);
+                    questService?.TrackProgress(QuestObjectiveType.CompleteStage, stageId, 1);
+                    questService?.TrackProgress(QuestObjectiveType.DefeatEnemy, selectedStage.enemy.id, 1);
+                    StageProgressionService stageProgression = FindObjectOfType<StageProgressionService>();
+                    stageProgression?.IncrementStageClearCount(stageId);
+                }
                 cloudSaveCoordinator?.QueueCloudSync(1f);
             }
 
-            string stageName = selectedStage != null ? selectedStage.displayName : "First Slime";
-            string enemyName = selectedStage != null && selectedStage.enemy != null ? selectedStage.enemy.displayName : battleService.State.enemyName;
+            string stageName = encounter != null ? encounter.displayName : selectedStage != null ? selectedStage.displayName : "First Slime";
+            string enemyName = encounter != null && encounter.enemy != null ? encounter.enemy.displayName : selectedStage != null && selectedStage.enemy != null ? selectedStage.enemy.displayName : battleService.State.enemyName;
             audioService?.PlaySfx("sfx_victory");
             playerView?.PlayVictory();
-            StartCoroutine(OpenResultAfterDelay(true, exp, gold, $"Stage: {stageName}\nEnemy defeated: {enemyName}\n{(firstClear ? "First Clear!\n" : string.Empty)}{drops}", leveledUp));
+            StartCoroutine(OpenResultAfterDelay(true, exp, gold, $"Realm: {stageName}\nEnemy defeated: {enemyName}\n{drops}", leveledUp));
         }
 
-        private string RollDrops()
+        private string RollDrops(BattleEncounterData encounter)
         {
-            DropTableDefinition table = selectedStage != null ? selectedStage.dropTable : null;
-            if (table == null)
+            List<DropRollResult> drops = rewardService.RollDrops(encounter, battleService.State.luck * 0.005f, battleService.State.dropRateBonus);
+            if (drops == null || drops.Count == 0)
             {
-                progressionService.AddItem("mat_slime_jelly", 2);
-                questService?.TrackProgress(QuestObjectiveType.CollectItem, "mat_slime_jelly", 2);
-                return "\nSlime Jelly x2";
+                return "\nNone";
             }
 
             string text = string.Empty;
-            foreach (DropEntry drop in table.drops)
+            foreach (DropRollResult drop in drops)
             {
-                float effectiveChance = drop.chance >= 1f ? drop.chance : Mathf.Min(0.95f, drop.chance * (1f + battleService.State.luck * 0.005f + battleService.State.dropRateBonus));
-                if (UnityEngine.Random.value > effectiveChance) continue;
-                int amount = UnityEngine.Random.Range(drop.minAmount, drop.maxAmount + 1);
                 if (drop.isEquipment)
                 {
                     if (equipmentService == null) equipmentService = FindObjectOfType<EquipmentService>();
-                    EquipmentInstanceData equipment = equipmentService != null ? equipmentService.CreateEquipmentInstance(drop.equipmentId) : PrototypeEquipmentFactory.Create(drop.equipmentId);
+                    EquipmentInstanceData equipment = equipmentService != null ? equipmentService.CreateEquipmentInstance(drop.itemId) : PrototypeEquipmentFactory.Create(drop.itemId);
                     progressionService.AddEquipment(equipment);
                     questService?.TrackProgress(QuestObjectiveType.OwnEquipment, equipment.equipmentId, 1);
                     text += $"\n{equipment.displayName}";
                 }
                 else
                 {
-                    progressionService.AddItem(drop.itemId, amount);
-                    questService?.TrackProgress(QuestObjectiveType.CollectItem, drop.itemId, amount);
-                    text += $"\n{PrototypeItemDatabase.Get(drop.itemId).displayName} x{amount}";
+                    progressionService.AddItem(drop.itemId, drop.amount);
+                    questService?.TrackProgress(QuestObjectiveType.CollectItem, drop.itemId, drop.amount);
+                    string itemName = PrototypeItemDatabase.Get(drop.itemId) != null ? PrototypeItemDatabase.Get(drop.itemId).displayName : drop.itemId;
+                    text += $"\n{itemName} x{drop.amount}";
                 }
             }
 
@@ -378,8 +403,18 @@ namespace Isekai12Realms.Battle
             enemyView?.SetLevel(state.enemyLevel);
             enemyView?.SetHp(state.enemyHp, state.enemyMaxHp);
             enemyView?.SetShield(state.enemyShield);
-            enemyView?.SetSprite(selectedStage != null && selectedStage.enemy != null && !string.IsNullOrEmpty(selectedStage.enemy.spriteAssetId) ? selectedStage.enemy.spriteAssetId : "enemy_meadow_slime");
-            SetBattleBackground(selectedStage != null && !string.IsNullOrEmpty(selectedStage.battleBackgroundAssetId) ? selectedStage.battleBackgroundAssetId : "bg_battle_meadow");
+            string enemySpriteId = state.encounter != null && state.encounter.enemy != null && !string.IsNullOrEmpty(state.encounter.enemy.spriteAssetId)
+                ? state.encounter.enemy.spriteAssetId
+                : selectedStage != null && selectedStage.enemy != null && !string.IsNullOrEmpty(selectedStage.enemy.spriteAssetId)
+                    ? selectedStage.enemy.spriteAssetId
+                    : "enemy_meadow_slime";
+            enemyView?.SetSprite(enemySpriteId);
+            string backgroundAssetId = state.encounter != null && !string.IsNullOrEmpty(state.encounter.battleBackgroundAssetId)
+                ? state.encounter.battleBackgroundAssetId
+                : selectedStage != null && !string.IsNullOrEmpty(selectedStage.battleBackgroundAssetId)
+                    ? selectedStage.battleBackgroundAssetId
+                    : "bg_battle_meadow";
+            SetBattleBackground(backgroundAssetId);
             enemyView?.PlayIdle();
             boardController?.SetInputLocked(state.currentTurnOwner != BattleTurnOwner.Player || state.inputLocked || state.isResolvingTurn || state.battleResult != BattleResultType.None);
             ShowStateDeltaFeedback(state);
@@ -816,6 +851,11 @@ namespace Isekai12Realms.Battle
             resultPopupOpening = true;
             yield return new WaitForSeconds(animationSettings.resultPopupDelay);
             screenManager?.OpenBattleResult(victory, exp, gold, drops, leveledUp);
+        }
+
+        private BattleEncounterData GetCurrentEncounter()
+        {
+            return battleService != null && battleService.State != null && battleService.State.encounter != null ? battleService.State.encounter : selectedEncounter;
         }
 
         private Vector3 EnemyPosition() => enemySpriteImage != null ? enemySpriteImage.transform.position : transform.position;
