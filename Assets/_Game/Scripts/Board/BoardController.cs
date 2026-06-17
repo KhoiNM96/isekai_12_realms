@@ -39,6 +39,7 @@ namespace Isekai12Realms.Board
         public event Action<BoardResolveResult, BattleTurnOwner> MoveResolved;
         public event Action<List<MatchGroup>, int> CascadeResolved;
         public event Action<string> BoardFeedback;
+        public event Action<BattleTurnOwner> InvalidMoveResolved;
 
         public void Initialize(int width, int height)
         {
@@ -332,6 +333,7 @@ namespace Isekai12Realms.Board
                 viewA.PlaySwapMove(posA, animationSettings.invalidSwapReturnDuration);
                 viewB.PlaySwapMove(posB, animationSettings.invalidSwapReturnDuration);
                 audioService?.PlaySfx("sfx_tile_invalid");
+                InvalidMoveResolved?.Invoke(owner);
                 yield return new WaitForSeconds(animationSettings.invalidSwapReturnDuration);
                 SyncAllTileViewsFromData(true);
                 ValidateBoardState();

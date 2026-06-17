@@ -201,6 +201,39 @@ namespace Isekai12Realms.Battle
             return true;
         }
 
+        public void ApplyTurnTimeoutPenalty()
+        {
+            if (State.battleResult != BattleResultType.None)
+            {
+                return;
+            }
+
+            if (State.currentTurnOwner == BattleTurnOwner.Player)
+            {
+                ApplyPlayerPenaltyDamage(10);
+                if (CheckWinLose() != BattleResultType.None)
+                {
+                    StateChanged?.Invoke();
+                    return;
+                }
+
+                SkipCurrentTurn();
+                StateChanged?.Invoke();
+            }
+        }
+
+        public void ApplyInvalidPlayerMovePenalty()
+        {
+            if (State.battleResult != BattleResultType.None || State.currentTurnOwner != BattleTurnOwner.Player)
+            {
+                return;
+            }
+
+            ApplyPlayerPenaltyDamage(10);
+            CheckWinLose();
+            StateChanged?.Invoke();
+        }
+
         public void MarkResolvingTurn(bool resolving)
         {
             State.isResolvingTurn = resolving;
@@ -313,6 +346,11 @@ namespace Isekai12Realms.Battle
             {
                 resolver.DamagePlayer(State, Mathf.Max(1, Mathf.RoundToInt(State.maxHp * 0.05f)));
             }
+        }
+
+        private void ApplyPlayerPenaltyDamage(int amount)
+        {
+            State.hp = Mathf.Max(0, State.hp - Mathf.Max(1, amount));
         }
 
         private void ApplyEnemyData(EnemyDefinition enemy, string displayName, int goldReward, int expReward)

@@ -558,26 +558,147 @@ namespace Isekai12Realms.UI
 
         private GameObject CreateMainTown()
         {
-            RectTransform root = CreateScreenRoot("MainTownUI", new Color(0.04f, 0.12f, 0.16f, 0.35f));
-            Panel(root, "TopHud", panelDark, Anchor.TopCenter, new Vector2(0f, -70f), new Vector2(1040f, 140f));
-            ImageAsset(root, "AvatarPlaceholder", "char_hero_flame_idle", Anchor.TopLeft, new Vector2(65f, -70f), new Vector2(96f, 96f));
-            Text(root, "Name_Text", "Guest Hero", 32, Color.white, Anchor.TopLeft, new Vector2(130f, -48f), new Vector2(240f, 48f));
-            Text(root, "Level_Text", "Lv. 1", 30, Color.white, Anchor.TopLeft, new Vector2(130f, -92f), new Vector2(160f, 42f));
-            ImageAsset(root, "Gold_Icon", "currency_gold", Anchor.TopCenter, new Vector2(55f, -70f), new Vector2(56f, 56f));
-            Text(root, "Gold_Text", "Gold: 0", 30, Color.white, Anchor.TopCenter, new Vector2(185f, -70f), new Vector2(220f, 52f));
-            ImageAsset(root, "Gems_Icon", "currency_soul_gem", Anchor.TopCenter, new Vector2(300f, -70f), new Vector2(56f, 56f));
-            Text(root, "Gems_Text", "Gems: 0", 30, Color.white, Anchor.TopCenter, new Vector2(430f, -70f), new Vector2(220f, 52f));
-            Button(root, "Button_Settings", "Settings", primary, Anchor.TopRight, new Vector2(-110f, -70f), new Vector2(170f, 82f), screenManager.OpenSettings);
+            RectTransform root = CreateScreenRoot("MainTownUI", new Color(0.05f, 0.12f, 0.19f, 0.26f));
 
-            Panel(root, "TownPanel", panelCream, Anchor.Center, new Vector2(0f, 60f), new Vector2(900f, 980f));
-            Text(root, "Town_Title", "Main Town", 48, textDark, Anchor.Center, new Vector2(0f, 200f), new Vector2(760f, 90f));
-            Panel(root, "QuestTracker", panelDark, Anchor.Center, new Vector2(0f, 390f), new Vector2(820f, 170f));
-            Text(root, "QuestTracker_Text", "Quest tracker loading...", 28, Color.white, Anchor.Center, new Vector2(-80f, 390f), new Vector2(600f, 120f));
-            Button(root, "Button_QuestTracker", "Go", primary, Anchor.Center, new Vector2(340f, 390f), new Vector2(120f, 78f), OpenTrackedQuest);
-            Button(root, "Button_QuestElder", "Quest Elder", secondary, Anchor.Center, new Vector2(-260f, -40f), new Vector2(240f, 104f), () => screenManager.ShowScreen(GameUIScreen.Quest));
-            Button(root, "Button_Blacksmith", "Blacksmith", new Color(0.5f, 0.62f, 0.72f, 1f), Anchor.Center, new Vector2(0f, -40f), new Vector2(240f, 104f), () => screenManager.ShowScreen(GameUIScreen.Equipment));
-            Button(root, "Button_ShopKeeper", "Shop Keeper", primary, Anchor.Center, new Vector2(260f, -40f), new Vector2(240f, 104f), () => screenManager.ShowScreen(GameUIScreen.Shop));
+            RectTransform backdropTint = EnsureChildRect(root, "BackdropTint");
+            Stretch(backdropTint);
+            EnsureImage(backdropTint.gameObject, new Color(0.02f, 0.08f, 0.16f, 0.18f)).raycastTarget = false;
+            backdropTint.SetAsLastSibling();
+
+            RectTransform topPlayerPanel = EnsureChildRect(root, "TopPlayerPanel");
+            SetRect(topPlayerPanel, Anchor.TopLeft, new Vector2(28f, -24f), new Vector2(360f, 214f));
+            EnsureImage(topPlayerPanel.gameObject, new Color(0.11f, 0.14f, 0.2f, 0.88f));
+            ImageAsset(topPlayerPanel, "PlayerPortrait", "portrait_hero_flame", Anchor.TopLeft, new Vector2(58f, -78f), new Vector2(96f, 96f));
+            Text(topPlayerPanel, "PlayerNameText", "Guest Hero", 34, Color.white, Anchor.TopLeft, new Vector2(138f, -46f), new Vector2(220f, 42f));
+            Text(topPlayerPanel, "PlayerLevelText", "Lv 1", 26, new Color(1f, 0.9f, 0.55f, 1f), Anchor.TopLeft, new Vector2(138f, -84f), new Vector2(140f, 34f));
+            Text(topPlayerPanel, "PlayerClassText", "Flame Squire", 24, new Color(0.9f, 0.95f, 1f, 1f), Anchor.TopLeft, new Vector2(138f, -118f), new Vector2(180f, 30f));
+            Bar(topPlayerPanel, "HpBar", Anchor.TopLeft, new Vector2(170f, -154f), new Vector2(150f, 26f), new Color(0.92f, 0.3f, 0.24f, 1f));
+            Bar(topPlayerPanel, "MpBar", Anchor.TopLeft, new Vector2(170f, -181f), new Vector2(150f, 26f), new Color(0.35f, 0.55f, 1f, 1f));
+            Bar(topPlayerPanel, "ExpBar", Anchor.TopLeft, new Vector2(170f, -208f), new Vector2(150f, 26f), new Color(0.98f, 0.75f, 0.18f, 1f));
+            Text(topPlayerPanel, "HpText", "HP 100/100", 18, Color.white, Anchor.TopLeft, new Vector2(58f, -165f), new Vector2(110f, 24f));
+            Text(topPlayerPanel, "MpText", "MP 0/100", 18, Color.white, Anchor.TopLeft, new Vector2(58f, -192f), new Vector2(110f, 24f));
+            Text(topPlayerPanel, "ExpText", "EXP 0%", 18, Color.white, Anchor.TopLeft, new Vector2(58f, -219f), new Vector2(150f, 24f));
+
+            RectTransform topCurrencyBar = EnsureChildRect(root, "TopCurrencyBar");
+            SetRect(topCurrencyBar, Anchor.TopCenter, new Vector2(0f, -24f), new Vector2(390f, 92f));
+            EnsureImage(topCurrencyBar.gameObject, new Color(0.11f, 0.14f, 0.2f, 0.88f));
+            CreateCurrencySlot(topCurrencyBar, "GoldSlot", "currency_gold", "0", new Vector2(12f, -16f), new Color(1f, 0.84f, 0.25f, 1f));
+            CreateCurrencySlot(topCurrencyBar, "GemSlot", "currency_soul_gem", "0", new Vector2(140f, -16f), new Color(0.45f, 0.78f, 1f, 1f));
+            CreateCurrencySlot(topCurrencyBar, "BagSlot", "icon_token_book", "0/0", new Vector2(268f, -16f), new Color(0.92f, 0.85f, 0.6f, 1f));
+
+            RectTransform topUtilityRow = EnsureChildRect(root, "TopUtilityRow");
+            SetRect(topUtilityRow, Anchor.TopRight, new Vector2(-36f, -28f), new Vector2(340f, 104f));
+            EnsureImage(topUtilityRow.gameObject, new Color(0.11f, 0.14f, 0.2f, 0f));
+            CreateIconActionButton(root, "MailButton", "Mail", "icon_token_book", Anchor.TopRight, new Vector2(-396f, -52f), new Vector2(88f, 88f), () => screenManager.ToastService?.ShowToast("Mail is not available yet."));
+            CreateIconActionButton(root, "EventsButton", "Events", "icon_token_star", Anchor.TopRight, new Vector2(-308f, -52f), new Vector2(88f, 88f), () => screenManager.ShowScreen(GameUIScreen.Quest));
+            CreateIconActionButton(root, "LoginButton", "Login", "currency_realm_token", Anchor.TopRight, new Vector2(-220f, -52f), new Vector2(88f, 88f), () => screenManager.OpenSettings());
+            CreateIconActionButton(root, "SettingsButton", "Settings", "icon_token_shield", Anchor.TopRight, new Vector2(-132f, -52f), new Vector2(88f, 88f), () => screenManager.OpenSettings());
+            CreateIconActionButton(root, "MenuButton", "Menu", "icon_token_coin", Anchor.TopRight, new Vector2(-44f, -52f), new Vector2(88f, 88f), () => screenManager.OpenSettings());
+
+            RectTransform questTracker = EnsureChildRect(root, "QuestTrackerPanel");
+            SetRect(questTracker, Anchor.TopLeft, new Vector2(28f, -248f), new Vector2(348f, 256f));
+            EnsureImage(questTracker.gameObject, new Color(0.09f, 0.13f, 0.17f, 0.88f));
+            Text(questTracker, "QuestTrackerTitleText", "Quest Tracker", 28, new Color(1f, 0.84f, 0.4f, 1f), Anchor.TopLeft, new Vector2(30f, -28f), new Vector2(220f, 34f));
+            Text(questTracker, "QuestTrackerBodyText", "Quest tracker loading...", 24, Color.white, Anchor.TopLeft, new Vector2(30f, -74f), new Vector2(250f, 120f));
+            Text(questTracker, "QuestTrackerProgressText", "(0/0)", 22, new Color(1f, 0.88f, 0.55f, 1f), Anchor.BottomRight, new Vector2(-22f, 22f), new Vector2(120f, 30f));
+            Button(questTracker, "Button_Go", "Go", secondary, Anchor.BottomRight, new Vector2(-22f, 64f), new Vector2(84f, 50f), OpenTrackedQuest);
+
+            RectTransform minimap = EnsureChildRect(root, "MinimapPanel");
+            SetRect(minimap, Anchor.TopRight, new Vector2(-28f, -248f), new Vector2(348f, 256f));
+            EnsureImage(minimap.gameObject, new Color(0.1f, 0.13f, 0.17f, 0.88f));
+            Text(minimap, "TownTitleText", "Main Town", 28, Color.white, Anchor.TopCenter, new Vector2(0f, -24f), new Vector2(220f, 34f));
+            Text(minimap, "TownSubtitleText", "Asteria Hub", 20, new Color(0.9f, 0.86f, 0.66f, 1f), Anchor.TopCenter, new Vector2(0f, -52f), new Vector2(220f, 28f));
+            ImageAsset(minimap, "PreviewImage", "bg_town_meadow", Anchor.Center, new Vector2(0f, -68f), new Vector2(300f, 150f));
+            Button(minimap, "Button_Plus", "+", primary, Anchor.BottomRight, new Vector2(-16f, 16f), new Vector2(54f, 54f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
+
+            RectTransform realmGate = EnsureChildRect(root, "RealmGatePanel");
+            SetRect(realmGate, Anchor.BottomLeft, new Vector2(28f, 456f), new Vector2(278f, 430f));
+            EnsureImage(realmGate.gameObject, new Color(0.08f, 0.12f, 0.18f, 0.9f));
+            Text(realmGate, "RealmGateTitleText", "Realm Gate", 32, new Color(0.92f, 0.92f, 1f, 1f), Anchor.TopCenter, new Vector2(0f, -34f), new Vector2(220f, 36f));
+            Text(realmGate, "RealmGateSubText", "Tap to enter the world", 18, new Color(0.82f, 0.88f, 1f, 1f), Anchor.TopCenter, new Vector2(0f, -68f), new Vector2(220f, 28f));
+            ImageAsset(realmGate, "GateIcon", "currency_realm_token", Anchor.Center, new Vector2(0f, -44f), new Vector2(180f, 180f));
+            Button(realmGate, "Button_Enter", "ENTER", primary, Anchor.BottomCenter, new Vector2(0f, 24f), new Vector2(170f, 56f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
+
+            RectTransform quickMenuStack = EnsureChildRect(root, "QuickMenuStack");
+            SetRect(quickMenuStack, Anchor.TopRight, new Vector2(-34f, -468f), new Vector2(156f, 620f));
+            EnsureImage(quickMenuStack.gameObject, new Color(0.09f, 0.11f, 0.15f, 0f));
+            CreateIconActionButton(root, "RealmMapButton", "Realm Map", "currency_realm_token", Anchor.TopRight, new Vector2(-110f, -430f), new Vector2(108f, 108f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
+            CreateIconActionButton(root, "CompanionsButton", "Companions", "icon_token_heart", Anchor.TopRight, new Vector2(-110f, -558f), new Vector2(108f, 108f), screenManager.ShowDisabledToast);
+            CreateIconActionButton(root, "DailyRewardsButton", "Daily Rewards", "icon_token_coin", Anchor.TopRight, new Vector2(-110f, -686f), new Vector2(108f, 108f), () => screenManager.ToastService?.ShowToast("Daily rewards are not wired yet."));
+            CreateIconActionButton(root, "AchievementsButton", "Achievements", "icon_token_star", Anchor.TopRight, new Vector2(-110f, -814f), new Vector2(108f, 108f), screenManager.ShowDisabledToast);
+            CreateIconActionButton(root, "HealerButton", "Healer", "icon_token_food", Anchor.TopRight, new Vector2(-110f, -942f), new Vector2(108f, 108f), () => screenManager.ShowScreen(GameUIScreen.Shop));
+
+            RectTransform npcZone = EnsureChildRect(root, "NPCInteractionZone");
+            SetRect(npcZone, Anchor.BottomCenter, new Vector2(0f, 454f), new Vector2(500f, 220f));
+            EnsureImage(npcZone.gameObject, new Color(0.09f, 0.13f, 0.16f, 0.76f));
+            Text(npcZone, "ZoneTitleText", "NPC Interaction Zone", 26, new Color(0.9f, 1f, 0.93f, 1f), Anchor.TopCenter, new Vector2(0f, -26f), new Vector2(280f, 30f));
+            ImageAsset(npcZone, "MerchantPortrait", "portrait_npc_shop_keeper", Anchor.BottomLeft, new Vector2(58f, 16f), new Vector2(104f, 104f));
+            ImageAsset(npcZone, "BlacksmithPortrait", "portrait_npc_brann_blacksmith", Anchor.BottomCenter, new Vector2(0f, 16f), new Vector2(104f, 104f));
+            ImageAsset(npcZone, "HealerPortrait", "portrait_npc_nami_healer", Anchor.BottomRight, new Vector2(-58f, 16f), new Vector2(104f, 104f));
+            Text(npcZone, "MerchantLabel", "Merchant", 20, Color.white, Anchor.BottomLeft, new Vector2(58f, 118f), new Vector2(120f, 24f));
+            Text(npcZone, "BlacksmithLabel", "Blacksmith", 20, Color.white, Anchor.BottomCenter, new Vector2(0f, 118f), new Vector2(130f, 24f));
+            Text(npcZone, "HealerLabel", "Healer", 20, Color.white, Anchor.BottomRight, new Vector2(-58f, 118f), new Vector2(120f, 24f));
+
+            RectTransform playerZone = EnsureChildRect(root, "PlayerCharacterZone");
+            SetRect(playerZone, Anchor.BottomCenter, new Vector2(0f, 326f), new Vector2(366f, 178f));
+            EnsureImage(playerZone.gameObject, new Color(0.09f, 0.13f, 0.17f, 0.76f));
+            Text(playerZone, "PlayerTitleText", "Asterion", 30, Color.white, Anchor.TopCenter, new Vector2(0f, -24f), new Vector2(220f, 34f));
+            Text(playerZone, "PlayerSubtitleText", "Beginner Explorer", 18, new Color(1f, 0.82f, 0.34f, 1f), Anchor.TopCenter, new Vector2(0f, -56f), new Vector2(200f, 28f));
+            ImageAsset(playerZone, "PlayerHeroImage", "char_hero_flame_idle", Anchor.BottomCenter, new Vector2(-32f, 4f), new Vector2(164f, 164f));
+            ImageAsset(playerZone, "CompanionImage", "npc_mira_mail_cat", Anchor.BottomLeft, new Vector2(34f, 12f), new Vector2(84f, 84f));
+            Text(playerZone, "CompanionLabel", "Sproutling", 18, new Color(0.75f, 1f, 0.68f, 1f), Anchor.BottomLeft, new Vector2(76f, 92f), new Vector2(120f, 24f));
+
+            RectTransform starterBoost = EnsureChildRect(root, "StarterBoostBanner");
+            SetRect(starterBoost, Anchor.BottomLeft, new Vector2(28f, 262f), new Vector2(278f, 118f));
+            EnsureImage(starterBoost.gameObject, new Color(0.15f, 0.1f, 0.24f, 0.86f));
+            Text(starterBoost, "BoostTitleText", "Starter Boost!", 24, new Color(1f, 0.92f, 0.52f, 1f), Anchor.TopCenter, new Vector2(0f, -24f), new Vector2(220f, 28f));
+            Text(starterBoost, "BoostBodyText", "7-Day Gifts\nfor New Explorers!", 20, Color.white, Anchor.Center, new Vector2(54f, -2f), new Vector2(140f, 66f));
+            ImageAsset(starterBoost, "GiftImage", "icon_token_book", Anchor.Center, new Vector2(-78f, -4f), new Vector2(82f, 82f));
+
+            Button(root, "MainCtaButton", "ENTER REALM", secondary, Anchor.BottomCenter, new Vector2(0f, 276f), new Vector2(462f, 114f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
+
+            RectTransform classPicker = EnsureChildRect(root, "ClassPickerPanel");
+            SetRect(classPicker, Anchor.BottomRight, new Vector2(-28f, 262f), new Vector2(288f, 146f));
+            EnsureImage(classPicker.gameObject, new Color(0.16f, 0.12f, 0.2f, 0.86f));
+            Text(classPicker, "ClassPickerTitleText", "Choose Your Path", 24, new Color(1f, 0.84f, 0.4f, 1f), Anchor.TopCenter, new Vector2(0f, -22f), new Vector2(220f, 28f));
+            Text(classPicker, "SelectedClassText", DisplayClass(selectedCreationClassId), 18, Color.white, Anchor.TopCenter, new Vector2(0f, -50f), new Vector2(220f, 24f));
+            CreateClassOption(classPicker, "Button_Flame", "Flame", "portrait_hero_flame", new Vector2(-88f, -72f), new Color(0.92f, 0.4f, 0.24f, 1f), () => SelectCreationClass("flame_squire"));
+            CreateClassOption(classPicker, "Button_Tide", "Tide", "portrait_hero_tide", new Vector2(0f, -72f), new Color(0.45f, 0.7f, 1f, 1f), () => SelectCreationClass("tide_acolyte"));
+            CreateClassOption(classPicker, "Button_Storm", "Storm", "portrait_hero_storm", new Vector2(88f, -72f), new Color(0.8f, 0.8f, 0.95f, 1f), () => SelectCreationClass("storm_scout"));
+
+            RectTransform chatBar = EnsureChildRect(root, "ChatBar");
+            SetRect(chatBar, Anchor.BottomCenter, new Vector2(0f, 20f), new Vector2(1000f, 64f));
+            EnsureImage(chatBar.gameObject, new Color(0.08f, 0.1f, 0.14f, 0.92f));
+            Button(chatBar, "ChatButton", "...", primary, Anchor.BottomLeft, new Vector2(52f, 12f), new Vector2(72f, 52f), screenManager.ShowDisabledToast);
+            Text(chatBar, "ChatText", "[World] AzureRonin: Anyone up for Frostpeak run?  \u2744\n[System] Welcome to Isekai 12 Realms Reborn!", 18, Color.white, Anchor.Center, new Vector2(110f, 0f), new Vector2(820f, 44f));
+            EnsureBottomNavigation(root);
             return root.gameObject;
+        }
+
+        private void CreateCurrencySlot(Transform parent, string name, string iconAssetId, string valueText, Vector2 pos, Color accentColor)
+        {
+            RectTransform slot = EnsureChildRect(parent, name);
+            SetRect(slot, Anchor.TopLeft, pos, new Vector2(110f, 60f));
+            EnsureImage(slot.gameObject, new Color(0f, 0f, 0f, 0.08f)).raycastTarget = false;
+            ImageAsset(slot, "Icon", iconAssetId, Anchor.Center, new Vector2(-32f, 0f), new Vector2(34f, 34f));
+            Text(slot, "ValueText", valueText, 22, accentColor, Anchor.Center, new Vector2(10f, 0f), new Vector2(86f, 28f));
+            Button(slot, "Button_Plus", "+", accentColor, Anchor.Center, new Vector2(40f, 0f), new Vector2(30f, 30f), screenManager != null ? (UnityEngine.Events.UnityAction)screenManager.OpenSettings : null);
+        }
+
+        private Button CreateIconActionButton(Transform parent, string name, string label, string iconAssetId, Anchor anchor, Vector2 pos, Vector2 size, UnityEngine.Events.UnityAction action)
+        {
+            Button button = Button(parent, name, string.Empty, new Color(0.16f, 0.2f, 0.26f, 0.95f), anchor, pos, size, action);
+            ImageAsset(button.transform, "Icon", iconAssetId, Anchor.Center, new Vector2(0f, 10f), new Vector2(size.x * 0.62f, size.y * 0.62f));
+            Text(button.transform, "Label", label, 16, Color.white, Anchor.BottomCenter, new Vector2(0f, -8f), new Vector2(size.x + 20f, 24f));
+            return button;
+        }
+
+        private Button CreateClassOption(Transform parent, string name, string label, string iconAssetId, Vector2 pos, Color accentColor, UnityEngine.Events.UnityAction action)
+        {
+            Button button = Button(parent, name, string.Empty, accentColor, Anchor.BottomCenter, pos, new Vector2(78f, 78f), action);
+            ImageAsset(button.transform, "Icon", iconAssetId, Anchor.Center, Vector2.zero, new Vector2(64f, 64f));
+            Text(button.transform, "Label", label, 14, Color.white, Anchor.BottomCenter, new Vector2(0f, -46f), new Vector2(90f, 18f));
+            return button;
         }
 
         private GameObject CreateWorldMap()
@@ -857,12 +978,12 @@ namespace Isekai12Realms.UI
         {
             RectTransform root = EnsureChildRect(parent, "BottomNavigation");
             Stretch(root);
-            Panel(root, "NavPanel", panelDark, Anchor.BottomCenter, new Vector2(0f, 75f), new Vector2(1040f, 150f));
-            Button(root, "Button_Adventure", "Adventure", primary, Anchor.BottomCenter, new Vector2(-420f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
-            Button(root, "Button_Hero", "Hero", primary, Anchor.BottomCenter, new Vector2(-210f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Hero));
-            Button(root, "Button_Bag", "Bag", primary, Anchor.BottomCenter, new Vector2(0f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Inventory));
-            Button(root, "Button_Quest", "Quest", primary, Anchor.BottomCenter, new Vector2(210f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Quest));
-            Button(root, "Button_Shop", "Shop", primary, Anchor.BottomCenter, new Vector2(420f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Shop));
+            Panel(root, "NavPanel", panelDark, Anchor.BottomCenter, new Vector2(0f, 140f), new Vector2(1040f, 150f));
+            CreateIconActionButton(root, "Button_Adventure", "Adventure", "icon_token_sword", Anchor.BottomCenter, new Vector2(-420f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.WorldMap));
+            CreateIconActionButton(root, "Button_Hero", "Hero", "icon_token_heart", Anchor.BottomCenter, new Vector2(-210f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Hero));
+            CreateIconActionButton(root, "Button_Bag", "Bag", "icon_token_book", Anchor.BottomCenter, new Vector2(0f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Inventory));
+            CreateIconActionButton(root, "Button_Quest", "Quest", "icon_token_star", Anchor.BottomCenter, new Vector2(210f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Quest));
+            CreateIconActionButton(root, "Button_Shop", "Shop", "icon_token_coin", Anchor.BottomCenter, new Vector2(420f, 75f), new Vector2(190f, 98f), () => screenManager.ShowScreen(GameUIScreen.Shop));
             root.gameObject.SetActive(false);
             return root;
         }
@@ -1388,6 +1509,7 @@ namespace Isekai12Realms.UI
             selectedCreationClassId = classId;
             SetText("CharacterCreationUI/HeroName_Text", "Hero Class: " + DisplayClass(classId));
             SetBoundImageAsset("CharacterCreationUI/Hero_Class_Preview", ClassIdleSpriteAssetId(classId));
+            SetText("MainTownUI/ClassPickerPanel/SelectedClassText", DisplayClass(classId));
         }
 
         private void SelectSkillClass(string classId)
@@ -1894,10 +2016,25 @@ namespace Isekai12Realms.UI
                 return;
             }
 
-            SetText("MainTownUI/Name_Text", save.playerName);
-            SetText("MainTownUI/Level_Text", $"Lv. {save.level}");
-            SetText("MainTownUI/Gold_Text", $"Gold: {save.gold}");
-            SetText("MainTownUI/Gems_Text", $"Gems: {save.soulGem}");
+            SetText("MainTownUI/TopPlayerPanel/PlayerNameText", save.playerName);
+            SetText("MainTownUI/TopPlayerPanel/PlayerLevelText", $"Lv {save.level}");
+            SetText("MainTownUI/TopPlayerPanel/PlayerClassText", DisplayClass(save.selectedClassId));
+            SetText("MainTownUI/TopPlayerPanel/HpText", $"HP {save.hp}/{save.maxHp}");
+            SetText("MainTownUI/TopPlayerPanel/MpText", $"MP {save.mana}/{save.maxMana}");
+            SetText("MainTownUI/TopPlayerPanel/ExpText", $"EXP {save.exp} / {progressionService.GetExpRequired(save.level)}");
+            SetBoundImageAsset("MainTownUI/TopPlayerPanel/PlayerPortrait", ClassPortraitAssetId(save.selectedClassId));
+            SetBoundImageAsset("MainTownUI/PlayerCharacterZone/PlayerHeroImage", ClassIdleSpriteAssetId(save.selectedClassId));
+            SetText("MainTownUI/PlayerCharacterZone/PlayerTitleText", save.playerName);
+            SetText("MainTownUI/PlayerCharacterZone/PlayerSubtitleText", DisplayClass(save.selectedClassId));
+            SetText("MainTownUI/TopCurrencyBar/GoldSlot/ValueText", save.gold.ToString("N0"));
+            SetText("MainTownUI/TopCurrencyBar/GemSlot/ValueText", save.soulGem.ToString("N0"));
+            SetText("MainTownUI/TopCurrencyBar/BagSlot/ValueText", $"{save.inventory.items.Count}/{save.inventory.capacity}");
+            SetText("MainTownUI/QuestTrackerPanel/QuestTrackerBodyText", BuildQuestTrackerText());
+            SetText("MainTownUI/QuestTrackerPanel/QuestTrackerProgressText", BuildQuestTrackerProgressText());
+            SetText("MainTownUI/MinimapPanel/TownTitleText", "Main Town");
+            SetText("MainTownUI/MinimapPanel/TownSubtitleText", contentService?.GetRealmById(save.currentRealmId)?.displayName ?? save.currentRealmId);
+            SetText("MainTownUI/StarterBoostBanner/BoostBodyText", BuildStarterBoostText());
+            SetText("MainTownUI/ClassPickerPanel/SelectedClassText", DisplayClass(selectedCreationClassId));
             SetText("TitleScreenUI/AccountStatus_Text", BuildTitleAccountStatus());
             Transform settings = popupLayer != null ? popupLayer.Find("SettingsPopup") : null;
             SetPopupText(settings, "ModalPanel/ScrollView/Viewport/Content/Section_Account/AccountStatus", BuildSettingsAccountStatus(save));
@@ -1926,7 +2063,6 @@ namespace Isekai12Realms.UI
             SetText("InventoryUI/ItemDetail_Text", BuildSelectedEquipmentText());
             SetText("EquipmentUI/EquipmentDetail_Text", BuildEquipmentText(save));
             SetText("QuestUI/QuestList_Text", BuildQuestListText());
-            SetText("MainTownUI/QuestTracker_Text", BuildQuestTrackerText());
             RefreshShopUi();
             RefreshEquipmentCards(save);
         }
@@ -2301,6 +2437,36 @@ namespace Isekai12Realms.UI
 
             QuestDefinition tracker = questService?.GetTrackerQuest();
             return tracker != null ? questService.BuildQuestProgressText(tracker) : "No active quest. Visit the Quest Elder.";
+        }
+
+        private string BuildQuestTrackerProgressText()
+        {
+            QuestDefinition claimable = FirstCompletedQuest();
+            if (claimable != null)
+            {
+                return "Ready";
+            }
+
+            QuestDefinition tracker = questService?.GetTrackerQuest();
+            if (tracker == null || questService == null)
+            {
+                return "0/0";
+            }
+
+            string progress = questService.BuildQuestProgressText(tracker);
+            int lineBreak = progress != null ? progress.IndexOf('\n') : -1;
+            return lineBreak > 0 ? progress.Substring(0, lineBreak) : progress;
+        }
+
+        private string BuildStarterBoostText()
+        {
+            PlayerSaveData save = progressionService?.CurrentSave;
+            if (save == null)
+            {
+                return "7-Day Gifts\nfor New Explorers!";
+            }
+
+            return save.level <= 5 ? "7-Day Gifts\nfor New Explorers!" : "Starter Boost\nClaimed";
         }
 
         private string BuildEquipmentText(PlayerSaveData save)

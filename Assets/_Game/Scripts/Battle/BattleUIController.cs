@@ -127,6 +127,8 @@ namespace Isekai12Realms.Battle
                 boardController.CascadeResolved += OnCascadeResolved;
                 boardController.BoardFeedback -= OnBoardFeedback;
                 boardController.BoardFeedback += OnBoardFeedback;
+                boardController.InvalidMoveResolved -= OnInvalidMoveResolved;
+                boardController.InvalidMoveResolved += OnInvalidMoveResolved;
             }
         }
 
@@ -148,6 +150,7 @@ namespace Isekai12Realms.Battle
                 boardController.MoveResolved -= OnBoardMoveResolved;
                 boardController.CascadeResolved -= OnCascadeResolved;
                 boardController.BoardFeedback -= OnBoardFeedback;
+                boardController.InvalidMoveResolved -= OnInvalidMoveResolved;
             }
         }
 
@@ -170,11 +173,8 @@ namespace Isekai12Realms.Battle
             bool expired = battleService.TickTurnTimer(Time.deltaTime, timerPaused);
             if (expired)
             {
-                if (battleService.State.currentTurnOwner == BattleTurnOwner.Player)
-                {
-                    battleService.SkipCurrentTurn();
-                }
-                else if (!enemyTurnRoutineRunning)
+                battleService.ApplyTurnTimeoutPenalty();
+                if (battleService.State.currentTurnOwner == BattleTurnOwner.Enemy && !enemyTurnRoutineRunning)
                 {
                     StartCoroutine(EnemyTurnFeedbackRoutine());
                 }
@@ -708,6 +708,20 @@ namespace Isekai12Realms.Battle
 
             battleService.State.lastPlayerMove = result != null ? $"groups={result.allMatchGroups.Count}, max={result.maxMatchSize}" : string.Empty;
             battleService.ApplyMoveResult(result, BattleTurnOwner.Player);
+        }
+
+        private void OnInvalidMoveResolved(BattleTurnOwner owner)
+        {
+            if (owner != BattleTurnOwner.Player || battleService.State.battleResult != BattleResultType.None)
+            {
+                return;
+            }
+
+            battleService.ApplyInvalidPlayerMovePenalty();
+            playerView?.PlayHurt();
+            vfxService?.PlayDamageVfx(PlayerPosition());
+            floatingText?.Show("-10", PlayerPosition(), new Color(1f, 0.25f, 0.18f, 1f), 42);
+            audioService?.PlaySfx("sfx_damage");
         }
 
         private void OnCascadeResolved(List<MatchGroup> groups, int combo)
