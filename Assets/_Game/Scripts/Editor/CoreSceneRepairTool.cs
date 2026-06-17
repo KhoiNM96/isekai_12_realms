@@ -22,6 +22,7 @@ namespace Isekai12Realms.Editor
             EnsureSceneFolder();
             Scene bootScene = OpenOrCreateBootScene();
             EnsureBootLoader();
+            EnsureBootLoadingSceneUi();
             EditorSceneManager.MarkSceneDirty(bootScene);
             EditorSceneManager.SaveScene(bootScene, BootScenePath);
 
@@ -88,13 +89,47 @@ namespace Isekai12Realms.Editor
 
         private static void EnsureBootLoader()
         {
-            Isekai12Realms.Core.BootLoader loader = UnityEngine.Object.FindObjectOfType<Isekai12Realms.Core.BootLoader>();
+            Isekai12Realms.Core.BootLoader loader = null;
+            GameObject[] sceneObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+            for (int i = 0; i < sceneObjects.Length; i++)
+            {
+                GameObject go = sceneObjects[i];
+                if (go == null || !go.scene.IsValid() || go.name != "BootLoader")
+                {
+                    continue;
+                }
+
+                Isekai12Realms.Core.BootLoader coreLoader = go.GetComponent<Isekai12Realms.Core.BootLoader>();
+                if (coreLoader != null && loader == null)
+                {
+                    loader = coreLoader;
+                    continue;
+                }
+
+                Object.DestroyImmediate(go);
+            }
+
             if (loader == null)
             {
                 GameObject boot = new GameObject("BootLoader");
                 loader = boot.AddComponent<Isekai12Realms.Core.BootLoader>();
             }
+
             EditorUtility.SetDirty(loader);
+        }
+
+        private static void EnsureBootLoadingSceneUi()
+        {
+            BootLoadingSceneUI bootLoadingUi = UnityEngine.Object.FindObjectOfType<BootLoadingSceneUI>();
+            if (bootLoadingUi == null)
+            {
+                GameObject go = new GameObject("BootLoadingUI");
+                bootLoadingUi = go.AddComponent<BootLoadingSceneUI>();
+            }
+
+            bootLoadingUi.EnsureHierarchy();
+            bootLoadingUi.Show();
+            EditorUtility.SetDirty(bootLoadingUi);
         }
 
         private static void EnsureMainCamera()

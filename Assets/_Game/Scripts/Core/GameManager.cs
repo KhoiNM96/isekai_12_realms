@@ -108,15 +108,15 @@ namespace Isekai12Realms.Core
             }
         }
 
-        private BootLoader GetOrCreateBootLoader()
+        private Isekai12Realms.Core.BootLoader GetOrCreateBootLoader()
         {
-            BootLoader loader = FindObjectOfType<BootLoader>();
+            Isekai12Realms.Core.BootLoader loader = FindObjectOfType<Isekai12Realms.Core.BootLoader>();
             if (loader == null)
             {
-                loader = GetComponent<BootLoader>();
+                loader = GetComponent<Isekai12Realms.Core.BootLoader>();
                 if (loader == null)
                 {
-                    loader = gameObject.AddComponent<BootLoader>();
+                    loader = gameObject.AddComponent<Isekai12Realms.Core.BootLoader>();
                 }
             }
 

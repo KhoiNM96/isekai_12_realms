@@ -8,12 +8,23 @@ namespace Isekai12Realms.Core
 {
     public class BootLoader : MonoBehaviour
     {
-        private const float MinimumLoadSeconds = 2.5f;
+        private const float MinimumLoadSeconds = 5f;
+
+        [Header("Fallback Overlay Layout")]
+        [SerializeField] private Vector2 loadingTextPosition = new Vector2(0f, -250f);
+        [SerializeField] private Vector2 loadingBarPosition = new Vector2(0f, -330f);
+        [SerializeField] private Vector2 loadingGlowPosition = new Vector2(0f, -470f);
+        [SerializeField] private Vector2 percentTextPosition = new Vector2(0f, 20f);
+        [SerializeField] private Vector2 progressBarPosition = new Vector2(0f, 74f);
+        [SerializeField] private Vector2 progressBarSize = new Vector2(688f, 22f);
+        [SerializeField] private Vector2 progressBarBackgroundSize = new Vector2(700f, 34f);
 
         private GameObject overlayRoot;
-        private Image fillImage;
+        private RawImage fillImage;
         private TextMeshProUGUI percentText;
         private Coroutine loadRoutine;
+        private RectTransform fillRect;
+        private BootLoadingSceneUI sceneUi;
 
         private void Awake()
         {
@@ -27,7 +38,16 @@ namespace Isekai12Realms.Core
                 return;
             }
 
-            CreateOverlay();
+            sceneUi = FindSceneUi();
+            if (sceneUi != null)
+            {
+                sceneUi.BeginLoading();
+            }
+            else
+            {
+                CreateOverlay();
+            }
+
             loadRoutine = StartCoroutine(LoadSceneRoutine(sceneName));
         }
 
@@ -44,18 +64,19 @@ namespace Isekai12Realms.Core
 
             loadOperation.allowSceneActivation = false;
 
+            float loadingDuration = sceneUi != null ? sceneUi.LoadingDuration : MinimumLoadSeconds;
+
             float elapsed = 0f;
             while (!loadOperation.isDone)
             {
                 elapsed += Time.unscaledDeltaTime;
 
-                float sceneProgress = Mathf.Clamp01(loadOperation.progress / 0.9f);
-                float timeProgress = Mathf.Clamp01(elapsed / MinimumLoadSeconds);
-                float shownProgress = Mathf.Clamp01(Mathf.Max(sceneProgress, timeProgress));
+                float timeProgress = Mathf.Clamp01(elapsed / loadingDuration);
+                float shownProgress = timeProgress;
 
                 UpdateProgress(shownProgress);
 
-                if (sceneProgress >= 1f && elapsed >= MinimumLoadSeconds)
+                if (loadOperation.progress >= 0.9f && elapsed >= loadingDuration)
                 {
                     UpdateProgress(1f);
                     loadOperation.allowSceneActivation = true;
@@ -65,6 +86,7 @@ namespace Isekai12Realms.Core
             }
 
             UpdateProgress(1f);
+            sceneUi?.FinishLoading();
             yield return null;
 
             if (overlayRoot != null)
@@ -92,63 +114,53 @@ namespace Isekai12Realms.Core
             overlayRoot.GetComponent<CanvasScaler>().referenceResolution = new Vector2(1080f, 1920f);
             overlayRoot.AddComponent<GraphicRaycaster>();
 
-            GameObject background = CreateUiObject("Background", overlayRoot.transform);
-            RectTransform bgRect = background.AddComponent<RectTransform>();
-            Stretch(bgRect);
-            Image bgImage = background.AddComponent<Image>();
-            bgImage.color = new Color(0.05f, 0.08f, 0.16f, 1f);
+            RawImage background = CreateLayer("Background", overlayRoot.transform, LoadTexture("BootLoading/loading_background"), Vector2.zero, true);
+            background.color = Color.white;
+
+            RawImage textLayer = CreateLayer("LoadingText", overlayRoot.transform, LoadTexture("BootLoading/loading_text"), loadingTextPosition, false);
+            textLayer.color = Color.white;
+
+            RawImage barLayer = CreateLayer("LoadingBar", overlayRoot.transform, LoadTexture("BootLoading/loading_bar"), loadingBarPosition, false);
+            barLayer.color = Color.white;
+
+            RawImage iconGlowLayer = CreateLayer("IconGlow", overlayRoot.transform, LoadTexture("BootLoading/loading_icon_glow"), loadingGlowPosition, false);
+            iconGlowLayer.color = Color.white;
 
             GameObject panel = CreateUiObject("Panel", overlayRoot.transform);
             RectTransform panelRect = panel.AddComponent<RectTransform>();
             panelRect.anchorMin = panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(880f, 360f);
-            panelRect.anchoredPosition = new Vector2(0f, -40f);
+            panelRect.sizeDelta = new Vector2(900f, 520f);
+            panelRect.anchoredPosition = new Vector2(0f, -260f);
             Image panelImage = panel.AddComponent<Image>();
-            panelImage.color = new Color(0.08f, 0.12f, 0.22f, 0.92f);
-
-            GameObject title = CreateTextObject("Title", panel.transform, "Loading...", 54, new Color(1f, 0.92f, 0.72f, 1f));
-            RectTransform titleRect = title.GetComponent<RectTransform>();
-            titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 1f);
-            titleRect.pivot = new Vector2(0.5f, 1f);
-            titleRect.sizeDelta = new Vector2(700f, 80f);
-            titleRect.anchoredPosition = new Vector2(0f, -42f);
-
-            GameObject subtitle = CreateTextObject("Subtitle", panel.transform, "Preparing the world", 28, new Color(0.92f, 0.96f, 1f, 0.9f));
-            RectTransform subtitleRect = subtitle.GetComponent<RectTransform>();
-            subtitleRect.anchorMin = subtitleRect.anchorMax = new Vector2(0.5f, 1f);
-            subtitleRect.pivot = new Vector2(0.5f, 1f);
-            subtitleRect.sizeDelta = new Vector2(700f, 50f);
-            subtitleRect.anchoredPosition = new Vector2(0f, -108f);
+            panelImage.color = new Color(0f, 0f, 0f, 0f);
 
             GameObject barBackground = CreateUiObject("BarBackground", panel.transform);
             RectTransform barBackgroundRect = barBackground.AddComponent<RectTransform>();
             barBackgroundRect.anchorMin = barBackgroundRect.anchorMax = new Vector2(0.5f, 0f);
             barBackgroundRect.pivot = new Vector2(0.5f, 0.5f);
-            barBackgroundRect.sizeDelta = new Vector2(680f, 34f);
-            barBackgroundRect.anchoredPosition = new Vector2(0f, 78f);
+            barBackgroundRect.sizeDelta = progressBarBackgroundSize;
+            barBackgroundRect.anchoredPosition = progressBarPosition;
             Image barBgImage = barBackground.AddComponent<Image>();
-            barBgImage.color = new Color(0f, 0f, 0f, 0.45f);
+            barBgImage.color = Color.white;
 
             GameObject fill = CreateUiObject("BarFill", barBackground.transform);
-            RectTransform fillRect = fill.AddComponent<RectTransform>();
-            fillRect.anchorMin = new Vector2(0f, 0f);
-            fillRect.anchorMax = new Vector2(1f, 1f);
-            fillRect.offsetMin = new Vector2(4f, 4f);
-            fillRect.offsetMax = new Vector2(-4f, -4f);
-            fillImage = fill.AddComponent<Image>();
-            fillImage.type = Image.Type.Filled;
-            fillImage.fillMethod = Image.FillMethod.Horizontal;
-            fillImage.fillOrigin = 0;
-            fillImage.fillAmount = 0f;
-            fillImage.color = new Color(0.25f, 0.82f, 0.9f, 1f);
+            fillRect = fill.AddComponent<RectTransform>();
+            fillRect.anchorMin = new Vector2(0f, 0.5f);
+            fillRect.anchorMax = new Vector2(0f, 0.5f);
+            fillRect.pivot = new Vector2(0f, 0.5f);
+            fillRect.sizeDelta = new Vector2(0f, progressBarSize.y);
+            fillRect.anchoredPosition = new Vector2(6f, 0f);
+            fillImage = fill.AddComponent<RawImage>();
+            fillImage.texture = CreateWhiteTexture();
+            fillImage.color = new Color(0.18f, 0.62f, 1f, 1f);
 
             GameObject percent = CreateTextObject("Percent", panel.transform, "0%", 42, Color.white);
             RectTransform percentRect = percent.GetComponent<RectTransform>();
             percentRect.anchorMin = percentRect.anchorMax = new Vector2(0.5f, 0f);
             percentRect.pivot = new Vector2(0.5f, 0.5f);
             percentRect.sizeDelta = new Vector2(220f, 56f);
-            percentRect.anchoredPosition = new Vector2(0f, 18f);
+            percentRect.anchoredPosition = percentTextPosition;
 
             percentText = percent.GetComponent<TextMeshProUGUI>();
             UpdateProgress(0f);
@@ -157,9 +169,15 @@ namespace Isekai12Realms.Core
         private void UpdateProgress(float progress)
         {
             float normalized = Mathf.Clamp01(progress);
+            if (sceneUi != null)
+            {
+                sceneUi.SetProgress(normalized);
+                return;
+            }
+
             if (fillImage != null)
             {
-                fillImage.fillAmount = normalized;
+                fillRect.sizeDelta = new Vector2(progressBarSize.x * normalized, progressBarSize.y);
             }
 
             if (percentText != null)
@@ -173,6 +191,61 @@ namespace Isekai12Realms.Core
             GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
             return go;
+        }
+
+        private static RawImage CreateLayer(string name, Transform parent, Texture2D texture, Vector2 anchoredPosition, bool stretch)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            RectTransform rect = go.GetComponent<RectTransform>();
+            if (stretch)
+            {
+                Stretch(rect);
+            }
+            else
+            {
+                rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                if (texture != null)
+                {
+                    rect.sizeDelta = new Vector2(texture.width, texture.height);
+                }
+                rect.anchoredPosition = anchoredPosition;
+            }
+            RawImage raw = go.AddComponent<RawImage>();
+            raw.texture = texture;
+            raw.color = texture != null ? Color.white : new Color(0f, 0f, 0f, 0f);
+            raw.raycastTarget = false;
+            return raw;
+        }
+
+        private static Texture2D LoadTexture(string resourcePath)
+        {
+            return Resources.Load<Texture2D>(resourcePath);
+        }
+
+        private static Texture2D CreateWhiteTexture()
+        {
+            Texture2D texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            texture.SetPixel(0, 0, Color.white);
+            texture.Apply();
+            texture.hideFlags = HideFlags.HideAndDontSave;
+            return texture;
+        }
+
+        private static BootLoadingSceneUI FindSceneUi()
+        {
+            BootLoadingSceneUI[] all = Resources.FindObjectsOfTypeAll<BootLoadingSceneUI>();
+            for (int i = 0; i < all.Length; i++)
+            {
+                BootLoadingSceneUI ui = all[i];
+                if (ui != null && ui.gameObject.scene.IsValid())
+                {
+                    return ui;
+                }
+            }
+
+            return null;
         }
 
         private static GameObject CreateTextObject(string name, Transform parent, string text, int fontSize, Color color)
