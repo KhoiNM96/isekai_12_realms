@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e328509f2ebf26b4cba670d4a5d0d439, type: 3}
+  m_Name: equip_charm_realm
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Equipment.EquipmentDefinition
+  id: equip_charm_realm
+  displayName: Realm Charm
+  description: Realm Charm prototype equipment.
+  iconAssetId: equip_charm_realm
+  slot: 5
+  rarity: 2
+  baseHp: 25
+  baseAtk: 0
+  baseMag: 5
+  baseDef: 0
+  baseSpd: 0
+  baseLuck: 2
+  maxLevel: 12
+  upgradeCosts:
+  - targetLevel: 2
+    goldCost: 180
+    materialItemId: mat_slime_jelly
+    materialAmount: 3
+  - targetLevel: 3
+    goldCost: 300
+    materialItemId: mat_slime_jelly
+    materialAmount: 5
+  - targetLevel: 4
+    goldCost: 480
+    materialItemId: mat_slime_jelly
+    materialAmount: 7
+  - targetLevel: 5
+    goldCost: 660
+    materialItemId: mat_slime_jelly
+    materialAmount: 9
+  - targetLevel: 6
+    goldCost: 840
+    materialItemId: mat_slime_jelly
+    materialAmount: 11
+  - targetLevel: 7
+    goldCost: 1020
+    materialItemId: mat_slime_jelly
+    materialAmount: 13
+  - targetLevel: 8
+    goldCost: 1200
+    materialItemId: mat_slime_jelly
+    materialAmount: 15
+  - targetLevel: 9
+    goldCost: 1380
+    materialItemId: mat_slime_jelly
+    materialAmount: 17
+  - targetLevel: 10
+    goldCost: 1560
+    materialItemId: mat_slime_jelly
+    materialAmount: 19
+  - targetLevel: 11
+    goldCost: 1740
+    materialItemId: mat_slime_jelly
+    materialAmount: 21
+  - targetLevel: 12
+    goldCost: 1920
+    materialItemId: mat_slime_jelly
+    materialAmount: 23

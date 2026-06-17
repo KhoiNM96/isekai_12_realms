@@ -18,5 +18,5 @@ MonoBehaviour:
     equipmentId: 
     minAmount: 1
     maxAmount: 1
-    chance: 0.3
+    chance: 0.25
     isEquipment: 0

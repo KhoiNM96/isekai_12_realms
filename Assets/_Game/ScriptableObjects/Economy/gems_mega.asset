@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2842f5595516d3248ab26964f028eb2e, type: 3}
+  m_Name: gems_mega
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Shop.IAPProductDefinition
+  productId: gems_mega
+  displayName: Mega Gem Pack
+  description: 3600 Soul Gems + 1800 bonus
+  platformProductId: gems_mega
+  soulGemAmount: 3600
+  bonusSoulGemAmount: 1800
+  priceTextPlaceholder: $19.99
+  enabled: 1

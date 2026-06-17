@@ -1,0 +1,11 @@
+{
+  "id": "splash_game_main",
+  "file": "splash_game_main_1080x1920.png",
+  "size": [1080, 1920],
+  "category": "background",
+  "usage": "Game splash screen background",
+  "style": "bright chibi fantasy placeholder 2D",
+  "transparent": false,
+  "replaceable": true,
+  "prompt": "original procedural placeholder for Game splash screen background, no copied art, no watermark"
+}

@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.DropTables.DropTableDefinition
   id: drop_stage_02_02
   drops:
-  - itemId: item_skill_scroll
+  - itemId: item_potion_small
     equipmentId: 
     minAmount: 1
     maxAmount: 1
-    chance: 0.2
+    chance: 0.25
     isEquipment: 0

@@ -38,51 +38,51 @@ MonoBehaviour:
   mapHeight: 1440
   playerSpawnPosition: {x: 180, y: -252}
   platforms:
-  - position: {x: 2880, y: -360}
+  - position: {x: 0, y: -360}
     size: {x: 5760, y: 120}
     oneWay: 0
     tierIndex: 1
-  - position: {x: 1756, y: -220}
+  - position: {x: 1660, y: -220}
     size: {x: 192, y: 64}
     oneWay: 1
     tierIndex: 2
-  - position: {x: 3172, y: -220}
+  - position: {x: 3076, y: -220}
     size: {x: 192, y: 64}
     oneWay: 1
     tierIndex: 2
-  - position: {x: 4492, y: -220}
+  - position: {x: 4396, y: -220}
     size: {x: 192, y: 64}
     oneWay: 1
     tierIndex: 2
-  - position: {x: 1756, y: -80}
+  - position: {x: 1660, y: -80}
     size: {x: 192, y: 64}
     oneWay: 1
     tierIndex: 3
-  - position: {x: 3172, y: -80}
+  - position: {x: 3076, y: -80}
     size: {x: 192, y: 64}
     oneWay: 1
     tierIndex: 3
-  - position: {x: 4492, y: -80}
+  - position: {x: 4396, y: -80}
     size: {x: 192, y: 64}
     oneWay: 1
     tierIndex: 3
   normalMonsterSpawns:
   - enemyId: enemy_thunder_01
-    spawnPosition: {x: 2856, y: -248}
+    spawnPosition: {x: 691.2, y: -248}
     patrolDistance: 2016
     isBoss: 0
     initiallyHidden: 0
     tierIndex: 1
     platformSegmentIndex: 0
   - enemyId: enemy_thunder_02
-    spawnPosition: {x: 3172, y: -136}
+    spawnPosition: {x: 3133.6, y: -136}
     patrolDistance: 120
     isBoss: 0
     initiallyHidden: 0
     tierIndex: 2
     platformSegmentIndex: 1
   - enemyId: enemy_thunder_03
-    spawnPosition: {x: 4516, y: 4}
+    spawnPosition: {x: 4488.16, y: 4}
     patrolDistance: 120
     isBoss: 0
     initiallyHidden: 0
@@ -103,54 +103,54 @@ MonoBehaviour:
     tier2Y: -220
     tier3Y: -80
     tier1Segments:
-    - position: {x: 2880, y: -360}
+    - position: {x: 0, y: -360}
       size: {x: 5760, y: 120}
       oneWay: 0
       tierIndex: 1
     tier2Segments:
-    - position: {x: 1756, y: -220}
+    - position: {x: 1660, y: -220}
       size: {x: 192, y: 64}
       oneWay: 1
       tierIndex: 2
-    - position: {x: 3172, y: -220}
+    - position: {x: 3076, y: -220}
       size: {x: 192, y: 64}
       oneWay: 1
       tierIndex: 2
-    - position: {x: 4492, y: -220}
+    - position: {x: 4396, y: -220}
       size: {x: 192, y: 64}
       oneWay: 1
       tierIndex: 2
     tier3Segments:
-    - position: {x: 1756, y: -80}
+    - position: {x: 1660, y: -80}
       size: {x: 192, y: 64}
       oneWay: 1
       tierIndex: 3
-    - position: {x: 3172, y: -80}
+    - position: {x: 3076, y: -80}
       size: {x: 192, y: 64}
       oneWay: 1
       tierIndex: 3
-    - position: {x: 4492, y: -80}
+    - position: {x: 4396, y: -80}
       size: {x: 192, y: 64}
       oneWay: 1
       tierIndex: 3
     playerSpawnPosition: {x: 180, y: -252}
     monsterSpawns:
     - enemyId: enemy_thunder_01
-      spawnPosition: {x: 2856, y: -248}
+      spawnPosition: {x: 691.2, y: -248}
       patrolDistance: 2016
       isBoss: 0
       initiallyHidden: 0
       tierIndex: 1
       platformSegmentIndex: 0
     - enemyId: enemy_thunder_02
-      spawnPosition: {x: 3172, y: -136}
+      spawnPosition: {x: 3133.6, y: -136}
       patrolDistance: 120
       isBoss: 0
       initiallyHidden: 0
       tierIndex: 2
       platformSegmentIndex: 1
     - enemyId: enemy_thunder_03
-      spawnPosition: {x: 4516, y: 4}
+      spawnPosition: {x: 4488.16, y: 4}
       patrolDistance: 120
       isBoss: 0
       initiallyHidden: 0

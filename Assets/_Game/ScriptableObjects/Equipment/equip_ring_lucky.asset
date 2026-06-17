@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e328509f2ebf26b4cba670d4a5d0d439, type: 3}
+  m_Name: equip_ring_lucky
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Equipment.EquipmentDefinition
+  id: equip_ring_lucky
+  displayName: Lucky Ring
+  description: Lucky Ring prototype equipment.
+  iconAssetId: equip_ring_lucky
+  slot: 4
+  rarity: 1
+  baseHp: 0
+  baseAtk: 0
+  baseMag: 0
+  baseDef: 0
+  baseSpd: 1
+  baseLuck: 3
+  maxLevel: 8
+  upgradeCosts:
+  - targetLevel: 2
+    goldCost: 100
+    materialItemId: mat_slime_jelly
+    materialAmount: 2
+  - targetLevel: 3
+    goldCost: 180
+    materialItemId: mat_slime_jelly
+    materialAmount: 3
+  - targetLevel: 4
+    goldCost: 280
+    materialItemId: mat_slime_jelly
+    materialAmount: 4
+  - targetLevel: 5
+    goldCost: 400
+    materialItemId: mat_slime_jelly
+    materialAmount: 5
+  - targetLevel: 6
+    goldCost: 520
+    materialItemId: mat_slime_jelly
+    materialAmount: 6
+  - targetLevel: 7
+    goldCost: 640
+    materialItemId: mat_slime_jelly
+    materialAmount: 7
+  - targetLevel: 8
+    goldCost: 760
+    materialItemId: mat_slime_jelly
+    materialAmount: 8

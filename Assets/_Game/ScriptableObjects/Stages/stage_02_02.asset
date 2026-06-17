@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
   id: stage_02_02
   realmId: realm_02_ember
-  displayName: Tiny Flame
-  description: Tiny Flame
+  displayName: Ember Village Stage 2
+  description: Skeleton placeholder stage.
   stageNumber: 2
-  recommendedLevel: 5
-  enemy: {fileID: 11400000, guid: 762a388ac41684c4fb623be8eebe4324, type: 2}
+  recommendedLevel: 8
+  enemy: {fileID: 11400000, guid: adce856c011eabc4cb1acf3ac114f376, type: 2}
   dropTable: {fileID: 11400000, guid: 643c5fdf85935c64693c11e6130a67b8, type: 2}
-  baseGoldReward: 75
-  baseExpReward: 110
+  baseGoldReward: 55
+  baseExpReward: 101
   requiredCompletedStageIds:
   - stage_02_01
   isBossStage: 0
   replayable: 1
-  battleBackgroundAssetId: bg_battle_ember
+  battleBackgroundAssetId: 

@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
   id: stage_03_02
   realmId: realm_03_tide
-  displayName: Tide Crab
-  description: Tide Crab
+  displayName: Tide Shrine Stage 2
+  description: Skeleton placeholder stage.
   stageNumber: 2
-  recommendedLevel: 8
-  enemy: {fileID: 11400000, guid: 4f92cbf3960f6884d9a5b687291ded9a, type: 2}
+  recommendedLevel: 11
+  enemy: {fileID: 11400000, guid: e6cce30a101d0a54cb38ac26766b0524, type: 2}
   dropTable: {fileID: 11400000, guid: b44e4ccf92e31084d9ad5eda87c6a6a8, type: 2}
-  baseGoldReward: 105
-  baseExpReward: 150
+  baseGoldReward: 65
+  baseExpReward: 119
   requiredCompletedStageIds:
   - stage_03_01
   isBossStage: 0
   replayable: 1
-  battleBackgroundAssetId: bg_battle_tide
+  battleBackgroundAssetId: 

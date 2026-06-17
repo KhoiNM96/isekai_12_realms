@@ -14,21 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.DropTables.DropTableDefinition
   id: drop_stage_01_02
   drops:
-  - itemId: mat_slime_jelly
-    equipmentId: 
-    minAmount: 2
-    maxAmount: 3
-    chance: 1
-    isEquipment: 0
   - itemId: item_potion_small
     equipmentId: 
     minAmount: 1
     maxAmount: 1
-    chance: 0.35
+    chance: 0.25
     isEquipment: 0
-  - itemId: 
-    equipmentId: equip_armor_traveler_coat
-    minAmount: 1
-    maxAmount: 1
-    chance: 0.15
-    isEquipment: 1

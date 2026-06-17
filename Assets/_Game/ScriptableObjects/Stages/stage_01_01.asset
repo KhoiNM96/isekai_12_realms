@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
   id: stage_01_01
   realmId: realm_01_meadow
-  displayName: First Slime
-  description: First Slime
+  displayName: Meadow Gate Stage 1
+  description: Skeleton placeholder stage.
   stageNumber: 1
-  recommendedLevel: 1
-  enemy: {fileID: 11400000, guid: 86f923636e108dc4096d4117c27fa77f, type: 2}
+  recommendedLevel: 4
+  enemy: {fileID: 11400000, guid: ddc8d206845a8df4ab05dfe88a961180, type: 2}
   dropTable: {fileID: 11400000, guid: 80bcf45acdf0a144ab7d70469cb1d4a0, type: 2}
-  baseGoldReward: 30
-  baseExpReward: 50
+  baseGoldReward: 40
+  baseExpReward: 73
   requiredCompletedStageIds: []
   isBossStage: 0
   replayable: 1
-  battleBackgroundAssetId: bg_battle_meadow
+  battleBackgroundAssetId: 

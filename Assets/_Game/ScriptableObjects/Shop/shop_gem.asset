@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47de19fac41be1448bd2165593c7f65e, type: 3}
+  m_Name: shop_gem
+  m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Shop.ShopDefinition
+  id: shop_gem
+  displayName: Gem Shop
+  shopType: 2
+  items:
+  - id: gem_gold_pack_small
+    displayName: Small Gold Pack
+    description: Trade Soul Gems for 1000 Gold.
+    iconAssetId: currency_gold
+    itemType: 2
+    itemId: 
+    equipmentId: 
+    cosmeticId: 
+    amount: 1000
+    priceCurrency: 1
+    priceAmount: 50
+    purchaseLimitPerDay: 3
+    purchaseLimitLifetime: 0
+    enabled: 1
+  - id: gem_inventory_slots_10
+    displayName: Inventory Slots +10
+    description: Increase inventory capacity by 10.
+    iconAssetId: gem_inventory_slots_10
+    itemType: 5
+    itemId: 
+    equipmentId: 
+    cosmeticId: 
+    amount: 10
+    priceCurrency: 1
+    priceAmount: 100
+    purchaseLimitPerDay: 0
+    purchaseLimitLifetime: 5
+    enabled: 1
+  - id: gem_lucky_cookie
+    displayName: Lucky Cookie
+    description: A treat for future lucky effects.
+    iconAssetId: item_lucky_cookie
+    itemType: 0
+    itemId: item_lucky_cookie
+    equipmentId: 
+    cosmeticId: 
+    amount: 1
+    priceCurrency: 1
+    priceAmount: 30
+    purchaseLimitPerDay: 5
+    purchaseLimitLifetime: 0
+    enabled: 1
+  refreshDaily: 0
+  refreshHourLocal: 4
+  iconAssetId: shop_gem

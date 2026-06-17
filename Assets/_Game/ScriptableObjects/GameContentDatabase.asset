@@ -175,10 +175,31 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ad9dff5e8b225204ba5d2088d25c45b1, type: 2}
   - {fileID: 11400000, guid: 93ec7b716f2eee744837dfc58571b3d6, type: 2}
   - {fileID: 11400000, guid: 9eeb02157825e864289d69007ea4f394, type: 2}
-  equipmentDefinitions: []
+  equipmentDefinitions:
+  - {fileID: 11400000, guid: 38a858b008f051346a351a33630c7035, type: 2}
+  - {fileID: 11400000, guid: 62dbabe0809c2bd4ab81880ac581fa76, type: 2}
+  - {fileID: 11400000, guid: d37ef74e98419ce49b03a8d4333dbebd, type: 2}
+  - {fileID: 11400000, guid: cba102ced01793540badf6dc16c8049d, type: 2}
+  - {fileID: 11400000, guid: 412dd61615970d3409b70bcc4e4358c9, type: 2}
+  - {fileID: 11400000, guid: 82fb1cced95f54b4e9cefaf0563911f7, type: 2}
+  - {fileID: 11400000, guid: f779591362546c049bb4072d71b7f4b9, type: 2}
+  - {fileID: 11400000, guid: e142e4a73e0c68e4887fd0ec086cf1d7, type: 2}
+  - {fileID: 11400000, guid: 1fc199e5aa364fe43b46c0ecdbe74fa4, type: 2}
+  - {fileID: 11400000, guid: 438cb32a22865604db5a841f4083c5b5, type: 2}
+  - {fileID: 11400000, guid: 6388860c787b19849850dfb0ec5b6bbf, type: 2}
   craftingRecipes: []
   quests: []
   tutorials: []
-  shops: []
-  iapProducts: []
+  shops:
+  - {fileID: 11400000, guid: 5d784b82432c05145886566016cece64, type: 2}
+  - {fileID: 11400000, guid: daadc3b07f2953d4eb4752ee6e8d20eb, type: 2}
+  - {fileID: 11400000, guid: a0ca5749f3c4245498fe90f91d12690d, type: 2}
+  - {fileID: 11400000, guid: 44b4a41b7dbafa841a47c516f6e381b7, type: 2}
+  - {fileID: 11400000, guid: a7c273d0f0ba12c45ba7bd9f9c2e3025, type: 2}
+  iapProducts:
+  - {fileID: 11400000, guid: 03abc99abb0681e4f9d183e2b069bc47, type: 2}
+  - {fileID: 11400000, guid: bb34573e9f7f22a4dae92c15b8e77318, type: 2}
+  - {fileID: 11400000, guid: 1bb7175d2e5bed7429413659b0b4550c, type: 2}
+  - {fileID: 11400000, guid: 4bce342cda186ec449ea47e9d5ce7fb4, type: 2}
+  - {fileID: 11400000, guid: b5fd24eaa0155ac4db7189ecea1a867c, type: 2}
   contentPacks: []

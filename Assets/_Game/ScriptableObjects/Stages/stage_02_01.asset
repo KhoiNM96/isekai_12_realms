@@ -14,16 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Isekai12Realms.Stages.StageDefinition
   id: stage_02_01
   realmId: realm_02_ember
-  displayName: Ember Piglet
-  description: Ember Piglet
+  displayName: Ember Village Stage 1
+  description: Skeleton placeholder stage.
   stageNumber: 1
-  recommendedLevel: 4
-  enemy: {fileID: 11400000, guid: 5759e57d2e172a74e80aa260565341d6, type: 2}
+  recommendedLevel: 7
+  enemy: {fileID: 11400000, guid: d5a87f212bf09e04fbbeec1064fa29e7, type: 2}
   dropTable: {fileID: 11400000, guid: deac0011d3203a34a81cb01341b0e4c1, type: 2}
-  baseGoldReward: 60
-  baseExpReward: 90
+  baseGoldReward: 50
+  baseExpReward: 91
   requiredCompletedStageIds:
   - stage_01_03
   isBossStage: 0
   replayable: 1
-  battleBackgroundAssetId: bg_battle_ember
+  battleBackgroundAssetId: 
