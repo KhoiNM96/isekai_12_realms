@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Isekai12Realms.Build;
 using Isekai12Realms.Services;
 using Isekai12Realms.UI;
@@ -36,6 +37,16 @@ namespace Isekai12Realms.Core
             EnsureSceneBootstrapper();
         }
 
+        private void OnEnable()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
         private void InitializeServices()
         {
             // 1. Game State Machine
@@ -63,7 +74,21 @@ namespace Isekai12Realms.Core
 
         private void Start()
         {
-            _stateMachine.TransitionTo(GameState.Title);
+            if (SceneManager.GetActiveScene().name != GameSceneBootstrapper.GameSceneName)
+            {
+                GetOrCreateBootLoader().BeginLoad(GameSceneBootstrapper.GameSceneName);
+                return;
+            }
+
+            EnterTitleState();
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == GameSceneBootstrapper.GameSceneName)
+            {
+                EnterTitleState();
+            }
         }
         
         public void SetPopupLayer(Transform layer)
@@ -80,6 +105,29 @@ namespace Isekai12Realms.Core
             if (GetComponent<GameSceneBootstrapper>() == null)
             {
                 gameObject.AddComponent<GameSceneBootstrapper>();
+            }
+        }
+
+        private BootLoader GetOrCreateBootLoader()
+        {
+            BootLoader loader = FindObjectOfType<BootLoader>();
+            if (loader == null)
+            {
+                loader = GetComponent<BootLoader>();
+                if (loader == null)
+                {
+                    loader = gameObject.AddComponent<BootLoader>();
+                }
+            }
+
+            return loader;
+        }
+
+        private void EnterTitleState()
+        {
+            if (_stateMachine != null && _stateMachine.CurrentState != GameState.Title)
+            {
+                _stateMachine.TransitionTo(GameState.Title);
             }
         }
     }

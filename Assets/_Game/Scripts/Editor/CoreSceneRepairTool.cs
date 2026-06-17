@@ -88,16 +88,12 @@ namespace Isekai12Realms.Editor
 
         private static void EnsureBootLoader()
         {
-            BootLoader loader = UnityEngine.Object.FindObjectOfType<BootLoader>();
+            Isekai12Realms.Core.BootLoader loader = UnityEngine.Object.FindObjectOfType<Isekai12Realms.Core.BootLoader>();
             if (loader == null)
             {
                 GameObject boot = new GameObject("BootLoader");
-                loader = boot.AddComponent<BootLoader>();
+                loader = boot.AddComponent<Isekai12Realms.Core.BootLoader>();
             }
-            BuildConfig config = AndroidBuildSettingsApplier.EnsureBuildConfig();
-            SerializedObject serialized = new SerializedObject(loader);
-            serialized.FindProperty("buildConfig").objectReferenceValue = config;
-            serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(loader);
         }
 

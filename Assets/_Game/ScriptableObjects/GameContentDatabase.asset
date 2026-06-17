@@ -196,6 +196,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a0ca5749f3c4245498fe90f91d12690d, type: 2}
   - {fileID: 11400000, guid: 44b4a41b7dbafa841a47c516f6e381b7, type: 2}
   - {fileID: 11400000, guid: a7c273d0f0ba12c45ba7bd9f9c2e3025, type: 2}
+  - {fileID: 11400000, guid: 7bb874b42819a1b40ad7a382c8ab54b3, type: 2}
   iapProducts:
   - {fileID: 11400000, guid: 03abc99abb0681e4f9d183e2b069bc47, type: 2}
   - {fileID: 11400000, guid: bb34573e9f7f22a4dae92c15b8e77318, type: 2}
